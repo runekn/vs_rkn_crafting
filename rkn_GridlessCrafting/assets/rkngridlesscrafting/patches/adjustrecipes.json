@@ -1,0 +1,3 @@
+[
+    { "file": "game:recipes/grid/slabs/plankslabs", "op": "addmerge", "path": "/attributes", "value": {"craftingSurface": true} }
+]
