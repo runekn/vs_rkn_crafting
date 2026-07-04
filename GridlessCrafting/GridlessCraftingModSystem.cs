@@ -5,7 +5,7 @@ using Vintagestory.API.Util;
 
 namespace RKN.GridlessCrafting;
 
-public class RknGridlessCraftingModSystem : ModSystem
+public class GridlessCraftingModSystem : ModSystem
 {
     private ICoreAPI api;
 

@@ -9,7 +9,7 @@
                 "build",
                 "-c",
                 "Debug",
-                "${workspaceFolder}/rkn_GridlessCrafting/RknGridlessCrafting.csproj"
+                "${workspaceFolder}/GridlessCrafting/GridlessCrafting.csproj"
             ],
             "problemMatcher": "$msCompile"
         },

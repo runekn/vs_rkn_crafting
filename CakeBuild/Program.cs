@@ -26,7 +26,7 @@ public static class Program
 
 public class BuildContext : FrostingContext
 {
-    public const string ProjectName = "rkn_ImmersiveGenericCrafting";
+    public const string ProjectName = "GridlessCrafting";
     public string BuildConfiguration { get; }
     public string Version { get; }
     public string Name { get; }
