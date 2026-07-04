@@ -14,16 +14,31 @@ public class RecipeCatalog
 
     public static void Initialize(ICoreAPI api)
     {
+        //catalog = api.World.GridRecipes.Select(r => { r = r.Clone(); r.Shapeless = true; return r; }).ToList();
         catalog = [.. api.World.GridRecipes];
         RecipeCatalog.api = api;
     }
 
-    public static List<GridRecipe> GetValidRecipes(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool)
+    public static bool IsInitialized()
+    {
+        return catalog != null;
+    }
+
+    public static GridRecipe? GetRecipeById(int id, bool idIsBlock)
+    {
+        if (idIsBlock)
+        {
+            return catalog.Find(r => r.Output?.ResolvedItemStack?.Block?.Id == id);
+        }
+        return catalog.Find(r => r.Output?.ResolvedItemStack?.Item?.Id == id);
+    }
+
+    public static List<GridRecipe> GetValidRecipesWithoutTools(List<ItemSlot> items)
     {
         List<GridRecipe> result = [];
         foreach (GridRecipe recipe in catalog)
         {
-            if (MatchesRecipe(items, primaryTool, offhandTool, recipe))
+            if (MatchesRecipe(items, null, null, recipe, true))
             {
                 result.Add(recipe);
             }
@@ -31,7 +46,7 @@ public class RecipeCatalog
         return result;
     }
 
-    public static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe)
+    public static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
     {
         if (!recipe.Enabled || recipe.ResolvedIngredients == null)
         {
@@ -44,58 +59,43 @@ public class RecipeCatalog
             {
                 continue;
             }
+            if (!MatchesIngredient(clonedItems, primaryTool, offhandTool, ingredient, ignoreTools))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools)
+    {
+        if (!ingredient.Consume) // TODO: Why does ingredient.IsTool not work? Try replacing with ingredient.Consume
+        {
+            if (ignoreTools)
+            {
+                return true;;
+            }
             if (primaryTool != null && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true))
             {
-                /*if (!ingredient.IsTool)
-                {
-                    api.Logger.Debug("Lying piece of shit");
-                }*/
-                continue;
+                return true;
             }
             else if (offhandTool != null && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true))
             {
-                /*if (!ingredient.IsTool)
-                {
-                    api.Logger.Debug("Lying piece of shit");
-                }*/
-                continue;
+                return true;
             }
-            foreach (ItemStack stack in clonedItems)
+            return false;
+        }
+        else
+        {
+            foreach (ItemStack stack in items)
             {
                 if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true))
                 {
                     stack.StackSize -= ingredient.Quantity;
-                    goto CONTINUE;
+                    return true;
                 }
             }
             return false;
-            CONTINUE:;
-            /*if (ingredient.IsTool != null) // TODO: Why does ingredient.IsTool not work? Try replacing with ingredient.Consume
-            {
-                if (primaryTool != null && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true))
-                {
-                    continue;
-                }
-                else if (offhandTool != null && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true))
-                {
-                    continue;
-                }
-                return false;
-            }
-            else
-            {
-                foreach (ItemStack stack in clonedItems)
-                {
-                    if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true))
-                    {
-                        stack.StackSize -= ingredient.Quantity;
-                        goto CONTINUE;
-                    }
-                }
-                return false;
-            }
-            CONTINUE:;*/
         }
-        return true;
     }
 }

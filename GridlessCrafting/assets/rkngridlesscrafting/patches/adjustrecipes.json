@@ -1,10 +1,12 @@
 [
-    { "file": "game:recipes/grid/slabs/plankslabs", "op": "replace", "path": "/ingredientPattern", "value": "PPH" },
-    { "file": "game:recipes/grid/slabs/plankslabs", "op": "addmerge", "path": "/ingredients/-", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } },
+    { "file": "game:recipes/grid/slabs/plankslabs", "side": "server", "op": "replace", "path": "/ingredientPattern", "value": "PPH" },
+    { "file": "game:recipes/grid/slabs/plankslabs", "side": "server", "op": "replace", "path": "/width", "value": 3 },
+    { "file": "game:recipes/grid/slabs/plankslabs", "side": "server", "op": "addmerge", "path": "/ingredients", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } },
 
-    { "file": "game:recipes/grid/planks", "op": "replace", "path": "/ingredientPattern", "value": "PP_,PPH" },
-    { "file": "game:recipes/grid/planks", "op": "addmerge", "path": "/ingredients/-", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } },
+    { "file": "game:recipes/grid/planks", "side": "server", "op": "replace", "path": "/0/ingredientPattern", "value": "PP_,PPH" },
+    { "file": "game:recipes/grid/planks", "side": "server", "op": "replace", "path": "/0/width", "value": 3 },
+    { "file": "game:recipes/grid/planks", "side": "server", "op": "addmerge", "path": "/0/ingredients", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } },
 
-    { "file": "game:recipes/grid/stairs/plankstairs", "op": "replace", "path": "/ingredientPattern", "value": "PH,PP" },
-    { "file": "game:recipes/grid/stairs/plankstairs", "op": "addmerge", "path": "/ingredients/-", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } }
+    { "file": "game:recipes/grid/stairs/plankstairs", "side": "server", "op": "replace", "path": "/ingredientPattern", "value": "PH,PP" },
+    { "file": "game:recipes/grid/stairs/plankstairs", "side": "server", "op": "addmerge", "path": "/ingredients", "value": { "H": { "type": "item", "tags": ["tool-hammer"], "isTool": true } } }
 ]

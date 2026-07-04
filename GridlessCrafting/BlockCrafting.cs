@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -24,7 +25,7 @@ public class BlockCrafting : Block
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return;
         }
-        if (!blockEntity.TryPut(byPlayer.InventoryManager.ActiveHotbarSlot, byPlayer))
+        if (!blockEntity.TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot, byPlayer))
         {
             api.Logger.Error("[rkngridlesscrafting] Could not put initial items into newly spawned crafting block!");
             api.World.BlockAccessor.BreakBlock(abovePos, null);
@@ -34,7 +35,7 @@ public class BlockCrafting : Block
 
     public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
-        BlockEntityCrafting? be = GetBE(world, blockSel);
+        BlockEntityCrafting? be = GetBE(world, blockSel.Position);
         if (be == null)
         {
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
@@ -44,14 +45,14 @@ public class BlockCrafting : Block
         {
             HandlePlayerAnimation(byPlayer, be.StartCrafting(world, byPlayer, this));
         } else {
-            be.TryPut(activeHotbarSlot, byPlayer);
+            be.TryPutIngredient(activeHotbarSlot, byPlayer);
         }
         return true;
     }
 
     public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
-        BlockEntityCrafting? be = GetBE(world, blockSel);
+        BlockEntityCrafting? be = GetBE(world, blockSel.Position);
         if (be == null)
         {
             return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
@@ -65,7 +66,7 @@ public class BlockCrafting : Block
     
     public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
-        BlockEntityCrafting? be = GetBE(world, blockSel);
+        BlockEntityCrafting? be = GetBE(world, blockSel.Position);
         if (be == null)
         {
             base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
@@ -75,6 +76,22 @@ public class BlockCrafting : Block
         {
             HandlePlayerAnimation(byPlayer, be.CancelCrafting(world, byPlayer, blockSel));
         }
+    }
+
+    public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+    {
+        if (api.Side == EnumAppSide.Client)
+        {
+            BlockEntityCrafting? be = GetBE(world, pos);
+            if (be != null)
+            {
+                if (be.IsCrafting(byPlayer))
+                {
+                    byPlayer.Entity.AnimManager.StopAllAnimations();
+                }
+            }
+        }
+        base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
     }
 
     private void HandlePlayerAnimation(IPlayer byPlayer, PlayerAnimationRequest? request)
@@ -95,12 +112,12 @@ public class BlockCrafting : Block
         }
     }
 
-    private static BlockEntityCrafting? GetBE(IWorldAccessor world, BlockSelection blockSel)
+    private static BlockEntityCrafting? GetBE(IWorldAccessor world, BlockPos blockPos)
     {
-        if (blockSel == null)
+        if (blockPos == null)
         {
             return null;
         }
-        return world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntityCrafting;
+        return world.BlockAccessor.GetBlockEntity(blockPos) as BlockEntityCrafting;
     }
 }
