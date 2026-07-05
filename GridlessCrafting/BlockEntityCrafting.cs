@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 
@@ -13,15 +14,13 @@ public class BlockEntityCrafting : BlockEntity
 {
     private InventoryGeneric inventory;
 
-    private GridRecipe? selectedRecipe;
-    private List<GridRecipe>? validRecipes;
+    private int selectedRecipe = -1;
+    private List<int>? validRecipes;
     private IPlayer? craftingPlayer;
     private EnumCraftingAnimation? craftingAnimation;
     private float timeoutTimer;
     private long tickListenerId;
     private float secondsLastCraft;
-    private int recipeId = -1;
-    private bool recipeIdIsBlock = false;
 
     public BlockEntityCrafting()
     {
@@ -32,9 +31,11 @@ public class BlockEntityCrafting : BlockEntity
     {
         base.Initialize(api);
         inventory.LateInitialize("crafting-" + Pos.ToString(), api);
-        if (recipeId > 0 && RecipeCatalog.IsInitialized())
+        if (validRecipes != null)
         {
-            selectedRecipe = RecipeCatalog.GetRecipeById(recipeId, recipeIdIsBlock);
+            // Don't persist selected recipe after server restart
+            // TODO: will this desync on chunk reload?
+            selectedRecipe = validRecipes[0];
         }
         if (Api.Side == EnumAppSide.Server)
         {
@@ -60,9 +61,20 @@ public class BlockEntityCrafting : BlockEntity
             sb.AppendLine();
         }
         sb.AppendLine();
-        if (selectedRecipe != null)
+        if (validRecipes != null)
         {
-            sb.AppendLine("Recipe: " + selectedRecipe.Output.ResolvedItemStack.GetName());
+            foreach (int recipeId in validRecipes)
+            {
+                if (recipeId == selectedRecipe)
+                {
+                    sb.Append("-) ");
+                }
+                else
+                {
+                    sb.Append("   ");
+                }
+                sb.AppendLine("Recipe: " + RecipeCatalog.GetRecipeById(recipeId).Output.ResolvedItemStack.GetName());
+            }
         }
     }
 
@@ -75,29 +87,26 @@ public class BlockEntityCrafting : BlockEntity
             inventory.FromTreeAttributes(treeAttribute);
         }
         timeoutTimer = tree.GetFloat("timeoutTimer");
-        recipeId = tree.GetInt("selectedRecipe");
-        recipeIdIsBlock = tree.GetBool("selectedRecipeIsBlockId");
-        if (RecipeCatalog.IsInitialized())
+        selectedRecipe = tree.GetInt("selectedRecipe", -1);
+        IAttribute validRecipesAttribute = tree["validRecipes"];
+        if (validRecipesAttribute != null && validRecipesAttribute is IntArrayAttribute)
         {
-            if (recipeId == -1)
-            {
-                selectedRecipe = null;
-            } else
-            {
-                selectedRecipe = RecipeCatalog.GetRecipeById(recipeId, recipeIdIsBlock);
-            }
+            validRecipes = [.. (validRecipesAttribute as IntArrayAttribute).value];
         }
     }
 
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
         base.ToTreeAttributes(tree);
-        TreeAttribute treeAttribute = new();
-        inventory.ToTreeAttributes(treeAttribute);
-        tree["inventory"] = treeAttribute;
+        TreeAttribute inventoryTree = new();
+        inventory.ToTreeAttributes(inventoryTree);
+        tree["inventory"] = inventoryTree;
         tree.SetFloat("timeoutTimer", timeoutTimer);
-        tree.SetBool("selectedRecipeIsBlockId", selectedRecipe?.Output?.ResolvedItemStack?.Block != null);
-        tree.SetInt("selectedRecipe", selectedRecipe?.Output?.ResolvedItemStack?.Item?.Id ?? selectedRecipe?.Output?.ResolvedItemStack?.Block?.Id ?? -1);
+        tree.SetInt("selectedRecipe", selectedRecipe);
+        if (validRecipes != null)
+        {
+            tree["validRecipes"] = new IntArrayAttribute(validRecipes.ToArray());
+        }
     }
 
     public override void OnBlockBroken(IPlayer? byPlayer = null)
@@ -117,18 +126,18 @@ public class BlockEntityCrafting : BlockEntity
     public PlayerAnimationRequest? StartCrafting(IWorldAccessor world, IPlayer byPlayer, BlockCrafting blockCrafting)
     {
         timeoutTimer = 0;
-        if (craftingPlayer != null || selectedRecipe == null)
+        if (craftingPlayer != null || selectedRecipe == -1)
         {
             return null;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
-        if (items == null)
+        if (items == null || !RecipeCatalog.MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
         {
             return null;
         }
         craftingPlayer = byPlayer;
         craftingAnimation = GetCraftingAnimation(selectedRecipe, primaryTool, offhandTool);
-        Api.Logger.Debug("[gridlesscrafting] Crafting {0} by {1}!", [selectedRecipe.Name, craftingPlayer.PlayerName]);
+        Api.Logger.Debug("[gridlesscrafting] Crafting {0} by {1}!", [RecipeCatalog.GetRecipeById(selectedRecipe).Name, craftingPlayer.PlayerName]);
         if (world.Api.Side == EnumAppSide.Server)
         {
             MarkDirty();
@@ -152,15 +161,19 @@ public class BlockEntityCrafting : BlockEntity
             if (items == null || items.Count == 0)
             {
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
+            } else
+            {
+                validRecipes = RecipeCatalog.GetValidRecipesWithoutTools(items);
             }
-            if (items == null || !RecipeCatalog.MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe, false))
+            if (items == null || !RecipeCatalog.MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
             {
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
                 ResetState();
-                selectedRecipe = null;
+                selectedRecipe = -1;
                 (Api as ICoreServerAPI).Network.GetChannel("rkngridlesscrafting").SendPacket(new CraftingStoppedMessage() {animation = enumCraftingAnimation}, [(byPlayer as IServerPlayer)]);
                 return new PlayerAnimationRequest(enumCraftingAnimation, EnumAnimationAction.STOP);
             }
+            MarkDirty(true, null);
             secondsLastCraft = secondsUsed;
         }
         return null;
@@ -211,8 +224,9 @@ public class BlockEntityCrafting : BlockEntity
                 slot.MarkDirty();
 
                 (List<ItemSlot>? items, ItemSlot? _, ItemSlot? _) = GetCraftingItems(byPlayer);
-                List<GridRecipe> recipes = RecipeCatalog.GetValidRecipesWithoutTools(items);
+                List<int> recipes = RecipeCatalog.GetValidRecipesWithoutTools(items);
                 validRecipes = recipes;
+                selectedRecipe = -1;
                 if (recipes.Count > 0)
                 {
                     selectedRecipe = validRecipes[0];
@@ -223,6 +237,23 @@ public class BlockEntityCrafting : BlockEntity
             }
         }
         return false;
+    }
+
+    public void SelectNextRecipe()
+    {
+        if (validRecipes == null || craftingPlayer != null)
+        {
+            return;
+        }
+        for (int i = 0; i < validRecipes.Count; i++)
+        {
+            if (validRecipes[i] == selectedRecipe)
+            {
+                selectedRecipe = i == validRecipes.Count-1 ? validRecipes[0] : validRecipes[i+1];
+                MarkDirty(true, null);
+                return;
+            }
+        }
     }
 
     public void OnTimeoutTick(float dt)
@@ -242,28 +273,34 @@ public class BlockEntityCrafting : BlockEntity
             {
                 continue;
             }
-            if (primaryTool != null && ingredient.ToolDurabilityCost > 0 && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true))
+            if (!ingredient.Consume)
             {
-                primaryTool.Itemstack.Collectible.DamageItem(world, craftingPlayer.Entity, primaryTool, ingredient.ToolDurabilityCost, ingredient.Break);
-                primaryTool.MarkDirty();
-                continue;
-            }
-            else if (offhandTool != null && ingredient.ToolDurabilityCost > 0 && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true))
-            {
-                offhandTool.Itemstack.Collectible.DamageItem(world, craftingPlayer.Entity, offhandTool, ingredient.ToolDurabilityCost, ingredient.Break);
-                offhandTool.MarkDirty();
-                continue;
-            }
-            foreach (ItemSlot stack in items)
-            {
-                if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack.Itemstack, true))
+                if (primaryTool != null && ingredient.ToolDurabilityCost > 0 && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true))
                 {
-                    stack.TakeOut(ingredient.Quantity);
-                    stack.MarkDirty();
-                    goto CONTINUE;
+                    primaryTool.Itemstack.Collectible.DamageItem(world, craftingPlayer.Entity, primaryTool, ingredient.ToolDurabilityCost, ingredient.Break);
+                    primaryTool.MarkDirty();
+                    continue;
+                }
+                else if (offhandTool != null && ingredient.ToolDurabilityCost > 0 && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true))
+                {
+                    offhandTool.Itemstack.Collectible.DamageItem(world, craftingPlayer.Entity, offhandTool, ingredient.ToolDurabilityCost, ingredient.Break);
+                    offhandTool.MarkDirty();
+                    continue;
                 }
             }
-            return;
+            else
+            {
+                foreach (ItemSlot stack in items)
+                {
+                    if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack.Itemstack, true))
+                    {
+                        stack.TakeOut(ingredient.Quantity);
+                        stack.MarkDirty();
+                        goto CONTINUE;
+                    }
+                }
+                return;
+            }
             CONTINUE:;
         }
     }
@@ -288,20 +325,27 @@ public class BlockEntityCrafting : BlockEntity
             return;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingPlayer);
-        if (items == null || !RecipeCatalog.MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe, false))
+        if (items == null || !RecipeCatalog.MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
         {
             return;
         }
-        Api.Logger.Debug("[gridlesscrafting] Crafted {0} by {1}!", [selectedRecipe.Name, craftingPlayer.PlayerName]);
-        Api.World.SpawnItemEntity(selectedRecipe.Output.ResolvedItemStack.Clone(), Pos); // TODO: call OnCreatedByCrafting
-        ConsumeRecipe(selectedRecipe, items, primaryTool, offhandTool, world);
+        GridRecipe gridRecipe = RecipeCatalog.GetRecipeById(selectedRecipe);
+        Api.Logger.Debug("[gridlesscrafting] Crafted {0} by {1}!", [gridRecipe.Name, craftingPlayer.PlayerName]);
+        ItemStack result = gridRecipe.Output.ResolvedItemStack.Clone();
+        if (!result.ResolveBlockOrItem(world))
+        {
+            return;
+        }
+        //result.Collectible.OnCreatedByCrafting(Array.Empty<ItemSlot>(), new DummySlot(result), gridRecipe);
+        Api.World.SpawnItemEntity(gridRecipe.Output.ResolvedItemStack.Clone(), Pos);
+        ConsumeRecipe(gridRecipe, items, primaryTool, offhandTool, world);
     }
 
-    private static EnumCraftingAnimation GetCraftingAnimation(GridRecipe recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
+    private static EnumCraftingAnimation GetCraftingAnimation(int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
     {
         if (primaryTool == null)
         {
-            if (recipe.Output?.ResolvedItemStack?.Item?.Tool != null) {
+            if (RecipeCatalog.GetRecipeById(recipe).Output?.ResolvedItemStack?.Item?.Tool != null) {
                 return EnumCraftingAnimation.HandsTool;
             }
             return EnumCraftingAnimation.HandsMixing;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Vintagestory.API.Client;
@@ -24,52 +25,63 @@ public class RecipeCatalog
         return catalog != null;
     }
 
-    public static GridRecipe? GetRecipeById(int id, bool idIsBlock)
+    public static int GetRecipe(GridRecipe recipe)
     {
-        if (idIsBlock)
-        {
-            return catalog.Find(r => r.Output?.ResolvedItemStack?.Block?.Id == id);
-        }
-        return catalog.Find(r => r.Output?.ResolvedItemStack?.Item?.Id == id);
+        return catalog.FindIndex(r => r == recipe);
     }
 
-    public static List<GridRecipe> GetValidRecipesWithoutTools(List<ItemSlot> items)
+    public static GridRecipe GetRecipeById(int id)
     {
-        List<GridRecipe> result = [];
-        foreach (GridRecipe recipe in catalog)
+        return catalog[id];
+    }
+
+    public static List<int> GetValidRecipesWithoutTools(List<ItemSlot> items)
+    {
+        List<int> result = [];
+        for (int i = 0; i < catalog.Count; i++)
         {
-            if (MatchesRecipe(items, null, null, recipe, true))
+            if (MatchesRecipe(items, null, null, catalog[i], true))
             {
-                result.Add(recipe);
+                result.Add(i);
             }
         }
         return result;
     }
 
-    public static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
+    public static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId)
+    {
+        return MatchesRecipe(items, primaryTool, offhandTool, catalog[recipeId], false);
+    }
+
+    private static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
     {
         if (!recipe.Enabled || recipe.ResolvedIngredients == null)
         {
             return false;
         }
-        IEnumerable<ItemStack> clonedItems = items.Select(i => i.Itemstack.Clone()).AsEnumerable();
+        IEnumerable<ItemStack> clonedItems = items.Select(i => i.Itemstack.Clone()).ToList();
+        ISet<ItemStack> unusedItems = clonedItems.ToHashSet();
         foreach (CraftingRecipeIngredient? ingredient in recipe.ResolvedIngredients)
         {
             if (ingredient == null)
             {
                 continue;
             }
-            if (!MatchesIngredient(clonedItems, primaryTool, offhandTool, ingredient, ignoreTools))
+            if (!MatchesIngredient(clonedItems, primaryTool, offhandTool, ingredient, ignoreTools, unusedItems))
             {
                 return false;
             }
         }
+        if (unusedItems.Count > 0)
+        {
+            return false;
+        }
         return true;
     }
 
-    private static bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools)
+    private static bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
     {
-        if (!ingredient.Consume) // TODO: Why does ingredient.IsTool not work? Try replacing with ingredient.Consume
+        if (!ingredient.Consume) // TODO: Why does ingredient.IsTool not work but ingredient.Consume does?
         {
             if (ignoreTools)
             {
@@ -91,6 +103,7 @@ public class RecipeCatalog
             {
                 if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true))
                 {
+                    unusedItems.Remove(stack);
                     stack.StackSize -= ingredient.Quantity;
                     return true;
                 }

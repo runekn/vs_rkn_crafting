@@ -40,6 +40,11 @@ public class BlockCrafting : Block
         {
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
+        if (api.Side == EnumAppSide.Client && (api as ICoreClientAPI).Input.IsHotKeyPressed("rkngridlesscrafting.start"))
+        {
+            (api as ICoreClientAPI).Network.GetChannel("rkngridlesscrafting").SendPacket(new SelectNextRecipeMessage() { Position = blockSel.Position });
+            return false;
+        }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
         if (activeHotbarSlot.Empty || activeHotbarSlot.Itemstack?.Item?.Tool != null)
         {
@@ -78,20 +83,14 @@ public class BlockCrafting : Block
         }
     }
 
-    public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+    public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
     {
-        if (api.Side == EnumAppSide.Client)
+        BlockPos lowerNeightbor = pos.DownCopy();
+        if (lowerNeightbor.Equals(neibpos) && world.BlockAccessor.GetBlock(lowerNeightbor).Id == 0)
         {
-            BlockEntityCrafting? be = GetBE(world, pos);
-            if (be != null)
-            {
-                if (be.IsCrafting(byPlayer))
-                {
-                    byPlayer.Entity.AnimManager.StopAllAnimations();
-                }
-            }
+            world.BlockAccessor.BreakBlock(pos, null);
         }
-        base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        base.OnNeighbourBlockChange(world, pos, neibpos);
     }
 
     private void HandlePlayerAnimation(IPlayer byPlayer, PlayerAnimationRequest? request)

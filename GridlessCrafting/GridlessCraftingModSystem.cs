@@ -1,4 +1,6 @@
-﻿using Vintagestory.API.Client;
+﻿using System;
+using HarmonyLib;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
@@ -17,6 +19,8 @@ public class GridlessCraftingModSystem : ModSystem
         api.RegisterBlockClass(Mod.Info.ModID + ".craftingblock", typeof(BlockCrafting));
         api.RegisterBlockEntityClass(Mod.Info.ModID + ".craftingblock", typeof(BlockEntityCrafting));
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".craftingsurface", typeof(BlockBehaviorCraftingSurface));
+        var harmony = new Harmony(Mod.Info.ModID);
+        harmony.PatchAll();
         api.Logger.Debug("[gridlesscrafting] Hello world!");
     }
 
@@ -26,6 +30,7 @@ public class GridlessCraftingModSystem : ModSystem
         IClientNetworkChannel channel = api.Network.RegisterChannel(Mod.Info.ModID);
         channel.RegisterMessageType<CreateCraftingBlockMessage>();
         channel.RegisterMessageType<CraftingStoppedMessage>();
+        channel.RegisterMessageType<SelectNextRecipeMessage>();
         channel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
         api.Input.RegisterHotKey("rkngridlesscrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
     }
@@ -35,8 +40,15 @@ public class GridlessCraftingModSystem : ModSystem
         IServerNetworkChannel channel = api.Network.RegisterChannel(Mod.Info.ModID);
         channel.RegisterMessageType<CreateCraftingBlockMessage>();
         channel.RegisterMessageType<CraftingStoppedMessage>();
+        channel.RegisterMessageType<SelectNextRecipeMessage>();
         channel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
+        channel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
         InitCatalog();
+    }
+
+    public void OnSelectNextRecipeMessage(IServerPlayer fromPlayer, SelectNextRecipeMessage message)
+    {
+        api.World.BlockAccessor.GetBlockEntity<BlockEntityCrafting>(message.Position).SelectNextRecipe();
     }
 
     public void OnCreateCraftingBlockMessage(IPlayer fromPlayer, CreateCraftingBlockMessage message)
