@@ -1,6 +1,5 @@
 ﻿using GridlessCrafting;
 using HarmonyLib;
-using RKN.GridlessCrafting.Network;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -12,7 +11,6 @@ namespace RKN.GridlessCrafting;
 public class GridlessCraftingModSystem : ModSystem
 {
     private ICoreAPI api;
-    private Harmony harmony;
 
     public override void Start(ICoreAPI api)
     {
@@ -22,7 +20,7 @@ public class GridlessCraftingModSystem : ModSystem
         api.RegisterBlockEntityClass(Mod.Info.ModID + ".craftingsurface", typeof(BlockEntityCraftingSurface));
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(BlockBehaviorSpawnCraftingSurface));
         api.RegisterCollectibleBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(CollectibleBehaviorSpawnCraftingSurface));
-        harmony = new Harmony(Mod.Info.ModID);
+        var harmony = new Harmony(Mod.Info.ModID);
         harmony.PatchAll();
         api.Logger.Debug("[gridlesscrafting] Hello world!");
     }
@@ -30,24 +28,26 @@ public class GridlessCraftingModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         api.Event.LevelFinalize += InitCatalog;
+        IClientNetworkChannel channel = api.Network.RegisterChannel(Mod.Info.ModID);
+        channel.RegisterMessageType<CreateCraftingBlockMessage>();
+        channel.RegisterMessageType<CraftingStoppedMessage>();
+        channel.RegisterMessageType<SelectNextRecipeMessage>();
+        channel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
         api.Input.RegisterHotKey("rkngridlesscrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
-        GridlessCraftingNetwork.Initialize(api, Mod.Info.ModID);
     }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
+        IServerNetworkChannel channel = api.Network.RegisterChannel(Mod.Info.ModID);
+        channel.RegisterMessageType<CreateCraftingBlockMessage>();
+        channel.RegisterMessageType<CraftingStoppedMessage>();
+        channel.RegisterMessageType<SelectNextRecipeMessage>();
+        channel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
+        channel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
         InitCatalog();
-        GridlessCraftingNetwork.Initialize(api, Mod.Info.ModID);
     }
 
-    public override void Dispose()
-    {
-        GridlessCraftingNetwork.Shutdown();
-        RecipeCatalog.Shutdown();
-        harmony.UnpatchAll(Mod.Info.ModID);
-    }
-
-    /*public override void AssetsFinalize(ICoreAPI api)
+    public override void AssetsFinalize(ICoreAPI api)
     {
         foreach (CollectibleObject collectible in api.World.Collectibles)
         {
@@ -62,7 +62,7 @@ public class GridlessCraftingModSystem : ModSystem
             CollectibleBehaviorSpawnCraftingSurface instance = new CollectibleBehaviorSpawnCraftingSurface(collectible);
             collectible.CollectibleBehaviors.Append(instance); // TODO: this isn't working...
         }
-    }*/
+    }
 
     public void OnSelectNextRecipeMessage(IServerPlayer fromPlayer, SelectNextRecipeMessage message)
     {

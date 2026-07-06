@@ -16,14 +16,8 @@ public class RecipeCatalog
     public static void Initialize(ICoreAPI api)
     {
         //catalog = api.World.GridRecipes.Select(r => { r = r.Clone(); r.Shapeless = true; return r; }).ToList();
-        catalog = [.. api.World.GridRecipes]; // TODO: dont need this if you're not gonna map the recipes somehow
+        catalog = [.. api.World.GridRecipes];
         RecipeCatalog.api = api;
-    }
-
-    public static void Shutdown()
-    {
-        api = null;
-        catalog = null;
     }
 
     public static bool IsInitialized()

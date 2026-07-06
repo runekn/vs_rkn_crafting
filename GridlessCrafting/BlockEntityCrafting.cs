@@ -1,56 +1,54 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace RKN.GridlessCrafting;
 
-public class BlockEntityCraftingSurface : BlockEntityDisplay
+public class BlockEntityCrafting : BlockEntity
 {
-
-    private int slotCount = 9;
     private InventoryGeneric inventory;
-
-    public override InventoryBase Inventory { get { return inventory; }}
-    public override string InventoryClassName { get { return "craftingsurface"; }}
 
     private int selectedRecipe = -1;
     private List<int>? validRecipes;
     private IPlayer? craftingPlayer;
     private EnumCraftingAnimation? craftingAnimation;
     private float timeoutTimer;
+    private long tickListenerId;
     private float secondsLastCraft;
 
-    public BlockEntityCraftingSurface()
+    public BlockEntityCrafting()
     {
-        inventory = new InventoryDisplayed(this, slotCount, "craftingsurface-0", null);
+        inventory = new InventoryGeneric(9, "craftingsurface", "0", null, null);
     }
 
     public override void Initialize(ICoreAPI api)
     {
         base.Initialize(api);
-        if (validRecipes != null && validRecipes.Count > 0)
+        inventory.LateInitialize("crafting-" + Pos.ToString(), api);
+        if (validRecipes != null)
         {
             // Don't persist selected recipe after server restart
             // TODO: will this desync on chunk reload?
             selectedRecipe = validRecipes[0];
         }
-    }
-
-    public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
-    {
-        //MarkMeshesDirty(); // TODO: Do something better
-        base.OnTesselation(mesher, tessThreadTesselator);
-        return true; // Prevent default cube from being rendered
+        if (Api.Side == EnumAppSide.Server)
+        {
+            tickListenerId = RegisterGameTickListener(OnTimeoutTick, 1000);
+        }
     }
 
     public override void GetBlockInfo(IPlayer forPlayer, StringBuilder sb)
     {
-        //base.GetBlockInfo(forPlayer, sb); // Just food perish stuff
+        base.GetBlockInfo(forPlayer, sb);
         foreach (ItemSlot itemSlot in inventory)
         {
             if (itemSlot.Empty)
@@ -86,6 +84,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
     {
         base.FromTreeAttributes(tree, worldForResolving);
+        ITreeAttribute treeAttribute = tree.GetTreeAttribute("inventory");
+        if (treeAttribute != null)
+        {
+            inventory.FromTreeAttributes(treeAttribute);
+        }
         timeoutTimer = tree.GetFloat("timeoutTimer");
         selectedRecipe = tree.GetInt("selectedRecipe", -1);
         IAttribute validRecipesAttribute = tree["validRecipes"];
@@ -98,6 +101,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
         base.ToTreeAttributes(tree);
+        TreeAttribute inventoryTree = new();
+        inventory.ToTreeAttributes(inventoryTree);
+        tree["inventory"] = inventoryTree;
         tree.SetFloat("timeoutTimer", timeoutTimer);
         tree.SetInt("selectedRecipe", selectedRecipe);
         if (validRecipes != null)
@@ -106,39 +112,169 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
     }
 
-    protected override float[][] genTransformationMatrices()
+    public override void OnBlockBroken(IPlayer? byPlayer = null)
     {
-        float[][] tfMatrices = new float[slotCount][];
-
-        for (int index = 0; index < slotCount; index++)
+        base.OnBlockBroken(byPlayer);
+        if (Api != null && Api.Side == EnumAppSide.Server)
         {
-            float x = 0;
-            float z = 0;
-            float s = 0.30f;
-            (x, z, s) = index switch
-            {
-                0 => (0.5f, 0.5f, s),
-                1 => (0.2f, 0.2f, s * 0.95f),
-                2 => (0.8f, 0.8f, s * 1.02f),
-                3 => (0.8f, 0.2f, s * 1.02f),
-                4 => (0.2f, 0.8f, s * 1.02f),
-                5 => (0.5f, 0.2f, s * 1.02f),
-                6 => (0.2f, 0.5f, s * 1.01f),
-                7 => (0.9f, 0.5f, s * 0.97f),
-                8 => (0.5f, 0.9f, s * 0.98f),
-            };
-
-            tfMatrices[index] =
-                new Matrixf()
-                .Scale(s, s, s)
-                .Translate(-0.5f, 0, -0.5f)
-                .RotateYDeg(Block.Shape.rotateY)
-                .Translate(x / s, 0, z / s)
-                .Values
-            ;
+            inventory.DropAll(Pos.ToVec3d().Add(0.5, 0.5, 0.5), 0);
         }
+    }
 
-        return tfMatrices;
+    public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
+    {
+        ICoreClientAPI? capi = Api as ICoreClientAPI;
+        for (int i = 0; i < inventory.Count; i++)
+        {
+            ItemSlot slot = inventory[i];
+            if (slot?.Itemstack == null || slot.Itemstack.StackSize == 0)
+            {
+                continue;
+            }
+            ItemStack itemstack = slot.Itemstack;
+            MeshData? meshData = null;
+            if (itemstack.Class == EnumItemClass.Block)
+            {
+                meshData = capi.TesselatorManager.GetDefaultBlockMesh(itemstack.Block).Clone();
+            }
+            else
+            {
+                IContainedMeshSource containedMeshSource = itemstack.Collectible?.GetCollectibleInterface<IContainedMeshSource>();
+                if (containedMeshSource != null)
+                {
+                    meshData = containedMeshSource.GenMesh(slot, capi.BlockTextureAtlas, Pos);
+                }
+            }
+            if (meshData == null)
+            {
+                continue;
+            }
+            meshData.Scale(0.25f, 0.25f, 0.25f);
+            MeshSurfaceTranslate(meshData, i);
+            BottomCenterMesh(meshData);
+            mesher.AddMeshData(meshData);
+        }
+        return true;
+    }
+
+    private void MeshSurfaceTranslate(MeshData meshData, int slot)
+    {
+        if (meshData.VerticesCount == 0)
+        {
+            return;
+        }
+        /*Random random = new();
+        meshData.Translate((random.NextSingle() - 0.5f) % 0.5f, 0, (random.NextSingle() - 0.5f) % 0.5f);*/
+        if (slot == 1)
+        {
+            meshData.Translate(0.3f, 0, 0.3f);
+            meshData.Scale(0.95f, 0.95f, 0.95f);
+        }
+        else if (slot == 2)
+        {
+            meshData.Translate(-0.3f, 0, 0.3f);
+            meshData.Scale(1.05f, 1.05f, 1.05f);
+        }
+        else if (slot == 3)
+        {
+            meshData.Translate(-0.3f, 0, -0.3f);
+            meshData.Scale(1.02f, 1.02f, 1.02f);
+        }
+        else if (slot == 4)
+        {
+            meshData.Translate(0.3f, 0, -0.3f);
+            meshData.Scale(0.98f, 0.98f, 0.98f);
+        }
+        else if (slot == 5)
+        {
+            meshData.Translate(0.3f, 0, 0);
+            meshData.Scale(0.90f, 0.90f, 0.90f);
+        }
+        else if (slot == 6)
+        {
+            meshData.Translate(0, 0, 0.3f);
+            meshData.Scale(1.02f, 1.02f, 1.02f);
+        }
+        else if (slot == 7)
+        {
+            meshData.Translate(-0.3f, 0, 0);
+            meshData.Scale(0.93f, 0.93f, 0.93f);
+        }
+        else if (slot == 8)
+        {
+            meshData.Translate(0, 0, -0.3f);
+            meshData.Scale(1.04f, 1.04f, 1.04f);
+        }
+    }
+
+    private float[] NormalizeSize(float[] size)
+    {
+        float num = size[0];
+        if (size[1] > num)
+        {
+            num = size[1];
+        }
+        if (size[2] > num)
+        {
+            num = size[2];
+        }
+        if (num <= 0.0001f)
+        {
+            return new float[3] { 1f, 1f, 1f };
+        }
+        return new float[3]
+        {
+            size[0] / num,
+            size[1] / num,
+            size[2] / num
+        };
+    }
+
+    private void BottomCenterMesh(MeshData mesh)
+    {
+        if (mesh.VerticesCount <= 0)
+        {
+            return;
+        }
+        GetMeshBounds(mesh, out Vec3f min, out Vec3f max);
+        mesh.Translate(new Vec3f(0, -min.Y, 0));
+    }
+
+    private static void GetMeshBounds(MeshData mesh, out Vec3f min, out Vec3f max)
+    {
+        min = new Vec3f(float.MaxValue, float.MaxValue, float.MaxValue);
+        max = new Vec3f(float.MinValue, float.MinValue, float.MinValue);
+        for (int i = 0; i < mesh.VerticesCount; i++)
+        {
+            int num = i * 3;
+            float num2 = mesh.xyz[num];
+            float num3 = mesh.xyz[num + 1];
+            float num4 = mesh.xyz[num + 2];
+            if (num2 < min.X)
+            {
+                min.X = num2;
+            }
+            if (num3 < min.Y)
+            {
+                min.Y = num3;
+            }
+            if (num4 < min.Z)
+            {
+                min.Z = num4;
+            }
+            if (num2 > max.X)
+            {
+                max.X = num2;
+            }
+            if (num3 > max.Y)
+            {
+                max.Y = num3;
+            }
+            if (num4 > max.Z)
+            {
+                max.Z = num4;
+            }
+        }
     }
 
     public bool IsCrafting(IPlayer byPlayer)
@@ -223,6 +359,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool TryPutIngredient(ItemSlot slot, IPlayer byPlayer)
     {
         timeoutTimer = 0;
+        if (Api.Side != EnumAppSide.Server)
+        {
+            return false;
+        }
         if (slot.Itemstack?.Item?.Tool != null)
         {
             return false;
@@ -242,20 +382,16 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 }
                 slot.MarkDirty();
 
-                if (Api.Side == EnumAppSide.Server)
+                (List<ItemSlot>? items, ItemSlot? _, ItemSlot? _) = GetCraftingItems(byPlayer);
+                List<int> recipes = RecipeCatalog.GetValidRecipesWithoutTools(items);
+                validRecipes = recipes;
+                selectedRecipe = -1;
+                if (recipes.Count > 0)
                 {
-                    (List<ItemSlot>? items, ItemSlot? _, ItemSlot? _) = GetCraftingItems(byPlayer);
-                    List<int> recipes = RecipeCatalog.GetValidRecipesWithoutTools(items);
-                    validRecipes = recipes;
-                    selectedRecipe = -1;
-                    if (recipes.Count > 0)
-                    {
-                        selectedRecipe = validRecipes[0];
-                    }
+                    selectedRecipe = validRecipes[0];
                 }
 
                 MarkDirty(true, null);
-                MarkMeshesDirty();
                 return true;
             }
         }
@@ -279,9 +415,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
     }
 
-    protected override void OnTick(float dt)
+    public void OnTimeoutTick(float dt)
     {
-        base.OnTick(dt);
         timeoutTimer += dt;
         if(timeoutTimer >= 120)
         {

@@ -1,5 +1,4 @@
 ﻿using RKN.GridlessCrafting;
-using RKN.GridlessCrafting.Network;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -35,7 +34,7 @@ public class CollectibleBehaviorSpawnCraftingSurface : CollectibleBehavior
         {
             return;
         }
-        GridlessCraftingNetwork.SpawnCraftingSurface(blockSel.Position);
+        clientApi.Network.GetChannel("rkngridlesscrafting").SendPacket(new CreateCraftingBlockMessage() { Position = blockSel.Position });
         handling = EnumHandling.PreventSubsequent;
         handHandling = EnumHandHandling.PreventDefaultAction; // TODO: does not prevent default placing of block, which causes crash since block has already been moved to crafting surface.
     }
