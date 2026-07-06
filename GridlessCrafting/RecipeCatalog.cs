@@ -1,52 +1,35 @@
-using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace RKN.GridlessCrafting;
 
 public class RecipeCatalog
 {
-    private static List<GridRecipe> catalog;
-    private static ICoreAPI api;
+    private ICoreAPI api;
 
-    public static void Initialize(ICoreAPI api)
+    public RecipeCatalog(ICoreAPI api)
     {
         //catalog = api.World.GridRecipes.Select(r => { r = r.Clone(); r.Shapeless = true; return r; }).ToList();
-        catalog = [.. api.World.GridRecipes]; // TODO: dont need this if you're not gonna map the recipes somehow
-        RecipeCatalog.api = api;
+        this.api = api;
     }
 
-    public static void Shutdown()
+    public int GetRecipe(GridRecipe recipe)
     {
-        api = null;
-        catalog = null;
+        return api.World.GridRecipes.FindIndex(r => r == recipe);
     }
 
-    public static bool IsInitialized()
+    public GridRecipe GetRecipeById(int id)
     {
-        return catalog != null;
+        return api.World.GridRecipes[id];
     }
 
-    public static int GetRecipe(GridRecipe recipe)
-    {
-        return catalog.FindIndex(r => r == recipe);
-    }
-
-    public static GridRecipe GetRecipeById(int id)
-    {
-        return catalog[id];
-    }
-
-    public static List<int> GetValidRecipesWithoutTools(List<ItemSlot> items)
+    public List<int> GetValidRecipesWithoutTools(List<ItemSlot> items)
     {
         List<int> result = [];
-        for (int i = 0; i < catalog.Count; i++)
+        for (int i = 0; i < api.World.GridRecipes.Count; i++)
         {
-            if (MatchesRecipe(items, null, null, catalog[i], true))
+            if (MatchesRecipe(items, null, null, api.World.GridRecipes[i], true))
             {
                 result.Add(i);
             }
@@ -54,12 +37,12 @@ public class RecipeCatalog
         return result;
     }
 
-    public static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId)
+    public bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId)
     {
-        return MatchesRecipe(items, primaryTool, offhandTool, catalog[recipeId], false);
+        return MatchesRecipe(items, primaryTool, offhandTool, api.World.GridRecipes[recipeId], false);
     }
 
-    private static bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
+    private bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
     {
         if (!recipe.Enabled || recipe.ResolvedIngredients == null)
         {
@@ -85,7 +68,7 @@ public class RecipeCatalog
         return true;
     }
 
-    private static bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
+    private bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
     {
         if (!ingredient.Consume) // TODO: Why does ingredient.IsTool not work but ingredient.Consume does?
         {
@@ -116,5 +99,13 @@ public class RecipeCatalog
             }
             return false;
         }
+    }
+}
+
+public static class ApiCatalogExtension
+{
+    public static RecipeCatalog RecipeCatalog(this ICoreAPI api)
+    {
+        return api.ModLoader.GetModSystem<GridlessCraftingModSystem>().RecipeCatalog;
     }
 }

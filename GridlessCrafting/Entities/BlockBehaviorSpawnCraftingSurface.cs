@@ -3,14 +3,10 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting;
+namespace RKN.GridlessCrafting.Entities;
 
-public class BlockBehaviorSpawnCraftingSurface : BlockBehavior
+public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(block)
 {
-    public BlockBehaviorSpawnCraftingSurface(Block block) : base(block)
-    {
-    }
-
     public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref EnumHandling handling)
     {
         if (blockSel.Face != BlockFacing.UP)
@@ -22,7 +18,7 @@ public class BlockBehaviorSpawnCraftingSurface : BlockBehavior
         {
             return true;
         }
-        bool r = (world.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot);
+        bool r = (world.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCraftingSurface).TryPlace(byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot);
         if (!r) {
             return true;
         }

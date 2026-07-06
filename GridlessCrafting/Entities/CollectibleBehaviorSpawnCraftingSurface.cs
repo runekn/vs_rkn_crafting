@@ -1,20 +1,12 @@
-﻿using RKN.GridlessCrafting;
-using RKN.GridlessCrafting.Network;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RKN.GridlessCrafting.Network;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace GridlessCrafting;
+namespace RKN.GridlessCrafting.Entities;
 
-public class CollectibleBehaviorSpawnCraftingSurface : CollectibleBehavior
+public class CollectibleBehaviorSpawnCraftingSurface(CollectibleObject collObj) : CollectibleBehavior(collObj)
 {
-    public CollectibleBehaviorSpawnCraftingSurface(CollectibleObject collObj) : base(collObj)
-    {
-    }
-
     public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
     {
         if (blockSel.Face != BlockFacing.UP)
@@ -30,7 +22,7 @@ public class CollectibleBehaviorSpawnCraftingSurface : CollectibleBehavior
         {
             return;
         }
-        bool r = (byEntity.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(player.Player, blockSel.Position, slot);
+        bool r = (byEntity.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCraftingSurface).TryPlace(player.Player, blockSel.Position, slot);
         if (!r)
         {
             return;

@@ -1,13 +1,11 @@
 using RKN.GridlessCrafting.Network;
-using System;
-using System.Data;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting;
+namespace RKN.GridlessCrafting.Entities;
 
-public class BlockCrafting : Block
+public class BlockCraftingSurface : Block
 {
 
     public bool TryPlace(IPlayer byPlayer, BlockPos blockPos, ItemSlot slot)

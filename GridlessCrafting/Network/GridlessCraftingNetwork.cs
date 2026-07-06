@@ -1,8 +1,4 @@
-﻿using RKN.GridlessCrafting;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using RKN.GridlessCrafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -15,10 +11,12 @@ public class GridlessCraftingNetwork
     private ICoreAPI api;
     private INetworkChannel channel;
 
+#pragma warning disable CS8603
     private IServerNetworkChannel ServerChannel { get { return channel as IServerNetworkChannel; } }
     private IClientNetworkChannel ClientChannel { get { return channel as IClientNetworkChannel; } }
     private ICoreClientAPI ClientApi { get { return api as ICoreClientAPI; } }
     private ICoreServerAPI ServerApi { get { return api as ICoreServerAPI; } }
+#pragma warning restore CS8603
 
     public GridlessCraftingNetwork(ICoreClientAPI api, string modId)
     {
@@ -60,7 +58,7 @@ public class GridlessCraftingNetwork
 
     protected void OnCreateCraftingBlockMessage(IPlayer fromPlayer, CreateCraftingBlockMessage message)
     {
-        (api.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(fromPlayer, message.Position, fromPlayer.InventoryManager.ActiveHotbarSlot);
+        (api.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCraftingSurface).TryPlace(fromPlayer, message.Position, fromPlayer.InventoryManager.ActiveHotbarSlot);
     }
 
     public void StopCraftingAnimation(IPlayer craftingPlayer, EnumCraftingAnimation enumCraftingAnimation)

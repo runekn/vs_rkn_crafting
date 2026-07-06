@@ -1,26 +1,28 @@
-﻿using GridlessCrafting;
-using HarmonyLib;
+﻿using RKN.GridlessCrafting.Entities;
 using RKN.GridlessCrafting.Network;
+using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 
 namespace RKN.GridlessCrafting;
 
 public class GridlessCraftingModSystem : ModSystem
 {
+#pragma warning disable CS8618
     private ICoreAPI api;
     private Harmony harmony;
 
     public GridlessCraftingNetwork Network { get; internal set; }
+    public RecipeCatalog RecipeCatalog { get; internal set; }
+#pragma warning restore CS8618
 
     public override void Start(ICoreAPI api)
     {
         base.Start(api);
         this.api = api;
-        api.RegisterBlockClass(Mod.Info.ModID + ".craftingsurface", typeof(BlockCrafting));
+        api.RegisterBlockClass(Mod.Info.ModID + ".craftingsurface", typeof(BlockCraftingSurface));
         api.RegisterBlockEntityClass(Mod.Info.ModID + ".craftingsurface", typeof(BlockEntityCraftingSurface));
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(BlockBehaviorSpawnCraftingSurface));
         api.RegisterCollectibleBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(CollectibleBehaviorSpawnCraftingSurface));
@@ -44,7 +46,6 @@ public class GridlessCraftingModSystem : ModSystem
 
     public override void Dispose()
     {
-        RecipeCatalog.Shutdown();
         harmony.UnpatchAll(Mod.Info.ModID);
     }
 
@@ -67,6 +68,6 @@ public class GridlessCraftingModSystem : ModSystem
 
     public void InitCatalog()
     {
-        RecipeCatalog.Initialize(api);
+        RecipeCatalog = new RecipeCatalog(api);
     }
 }
