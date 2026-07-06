@@ -26,7 +26,7 @@ public class BlockBehaviorSpawnCraftingSurface : BlockBehavior
         if (!r) {
             return true;
         }
-        GridlessCraftingNetwork.SpawnCraftingSurface(blockSel.Position);
+        world.Api.GridlessCraftingNetwork().SpawnCraftingSurface(blockSel.Position);
         handling = EnumHandling.PreventSubsequent;
         // It would be better if I could return false to prevent default server message as we have done that ourselves.
         // But that will also enable default behavior to place block, which causes game to crash because we have now removed the block from inventory.

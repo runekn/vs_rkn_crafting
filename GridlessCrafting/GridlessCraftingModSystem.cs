@@ -14,6 +14,8 @@ public class GridlessCraftingModSystem : ModSystem
     private ICoreAPI api;
     private Harmony harmony;
 
+    public GridlessCraftingNetwork Network { get; internal set; }
+
     public override void Start(ICoreAPI api)
     {
         base.Start(api);
@@ -31,18 +33,17 @@ public class GridlessCraftingModSystem : ModSystem
     {
         api.Event.LevelFinalize += InitCatalog;
         api.Input.RegisterHotKey("rkngridlesscrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
-        GridlessCraftingNetwork.Initialize(api, Mod.Info.ModID);
+        Network = new GridlessCraftingNetwork(api, Mod.Info.ModID);
     }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
         InitCatalog();
-        GridlessCraftingNetwork.Initialize(api, Mod.Info.ModID);
+        Network = new GridlessCraftingNetwork(api, Mod.Info.ModID);
     }
 
     public override void Dispose()
     {
-        GridlessCraftingNetwork.Shutdown();
         RecipeCatalog.Shutdown();
         harmony.UnpatchAll(Mod.Info.ModID);
     }

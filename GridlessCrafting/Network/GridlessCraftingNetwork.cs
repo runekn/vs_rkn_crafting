@@ -12,68 +12,73 @@ namespace RKN.GridlessCrafting.Network;
 
 public class GridlessCraftingNetwork
 {
-    private static ICoreAPI api;
-    private static string modId;
-    private static ICoreClientAPI ClientApi { get { return api as ICoreClientAPI; } }
-    private static ICoreServerAPI ServerApi { get { return api as ICoreServerAPI; } }
+    private ICoreAPI api;
+    private INetworkChannel channel;
 
-    public static void Initialize(ICoreClientAPI api, string modId)
+    private IServerNetworkChannel ServerChannel { get { return channel as IServerNetworkChannel; } }
+    private IClientNetworkChannel ClientChannel { get { return channel as IClientNetworkChannel; } }
+    private ICoreClientAPI ClientApi { get { return api as ICoreClientAPI; } }
+    private ICoreServerAPI ServerApi { get { return api as ICoreServerAPI; } }
+
+    public GridlessCraftingNetwork(ICoreClientAPI api, string modId)
     {
-        GridlessCraftingNetwork.api = api;
-        GridlessCraftingNetwork.modId = modId;
-        IClientNetworkChannel channel = api.Network.RegisterChannel(modId);
-        channel.RegisterMessageType<CreateCraftingBlockMessage>();
-        channel.RegisterMessageType<CraftingStoppedMessage>();
-        channel.RegisterMessageType<SelectNextRecipeMessage>();
-        channel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
+        this.api = api;
+        channel = api.Network.RegisterChannel(modId);
+
+        ClientChannel.RegisterMessageType<CreateCraftingBlockMessage>();
+        ClientChannel.RegisterMessageType<CraftingStoppedMessage>();
+        ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
+        ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
     }
 
-    public static void Shutdown()
+    public GridlessCraftingNetwork(ICoreServerAPI api, string modId)
     {
-        api = null;
-        modId = null;
+        this.api = api;
+        channel = api.Network.RegisterChannel(modId);
+
+        ServerChannel.RegisterMessageType<CreateCraftingBlockMessage>();
+        ServerChannel.RegisterMessageType<CraftingStoppedMessage>();
+        ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
+        ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
+        ServerChannel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
     }
 
-    public static void Initialize(ICoreServerAPI api, string modId)
+    public void SelectNextRecipe(BlockPos pos)
     {
-        GridlessCraftingNetwork.api = api;
-        GridlessCraftingNetwork.modId = modId;
-        IServerNetworkChannel channel = api.Network.RegisterChannel(modId);
-        channel.RegisterMessageType<CreateCraftingBlockMessage>();
-        channel.RegisterMessageType<CraftingStoppedMessage>();
-        channel.RegisterMessageType<SelectNextRecipeMessage>();
-        channel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
-        channel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
+        ClientChannel.SendPacket(new SelectNextRecipeMessage() { Position = pos });
     }
 
-    public static void SelectNextRecipe(BlockPos pos)
-    {
-        ClientApi.Network.GetChannel(modId).SendPacket(new SelectNextRecipeMessage() { Position = pos });
-    }
-
-    protected static void OnSelectNextRecipeMessage(IServerPlayer fromPlayer, SelectNextRecipeMessage message)
+    protected void OnSelectNextRecipeMessage(IServerPlayer fromPlayer, SelectNextRecipeMessage message)
     {
         api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).SelectNextRecipe();
     }
 
-    public static void SpawnCraftingSurface(BlockPos pos)
+    public void SpawnCraftingSurface(BlockPos pos)
     {
-        ClientApi.Network.GetChannel(modId).SendPacket(new CreateCraftingBlockMessage() { Position = pos });
+        ClientChannel.SendPacket(new CreateCraftingBlockMessage() { Position = pos });
     }
 
-    protected static void OnCreateCraftingBlockMessage(IPlayer fromPlayer, CreateCraftingBlockMessage message)
+    protected void OnCreateCraftingBlockMessage(IPlayer fromPlayer, CreateCraftingBlockMessage message)
     {
         (api.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(fromPlayer, message.Position, fromPlayer.InventoryManager.ActiveHotbarSlot);
     }
 
-    public static void StopCraftingAnimation(IPlayer craftingPlayer, EnumCraftingAnimation enumCraftingAnimation)
+    public void StopCraftingAnimation(IPlayer craftingPlayer, EnumCraftingAnimation enumCraftingAnimation)
     {
-        ServerApi.Network.GetChannel(modId).SendPacket(new CraftingStoppedMessage() { animation = enumCraftingAnimation }, [(craftingPlayer as IServerPlayer)]);
+        ServerChannel.SendPacket(new CraftingStoppedMessage() { animation = enumCraftingAnimation }, [(craftingPlayer as IServerPlayer)]);
     }
 
-    protected static void OnCraftingStoppedMessage(CraftingStoppedMessage message)
+    protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
         IPlayer player = ClientApi.World.Player;
         player.Entity.AnimManager.StopAnimation(PlayerAnimationRequest.ToAnimationCode(message.animation));
+    }
+}
+
+public static class ApiNetworkExtension
+{
+    public static GridlessCraftingNetwork GridlessCraftingNetwork(this ICoreAPI api)
+    {
+        return api.ModLoader.GetModSystem<GridlessCraftingModSystem>().Network;
     }
 }

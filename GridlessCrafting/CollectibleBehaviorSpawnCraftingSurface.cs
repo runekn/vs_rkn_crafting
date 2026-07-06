@@ -35,7 +35,7 @@ public class CollectibleBehaviorSpawnCraftingSurface : CollectibleBehavior
         {
             return;
         }
-        GridlessCraftingNetwork.SpawnCraftingSurface(blockSel.Position);
+        byEntity.World.Api.GridlessCraftingNetwork().SpawnCraftingSurface(blockSel.Position);
         handling = EnumHandling.PreventSubsequent;
         handHandling = EnumHandHandling.PreventDefaultAction; // TODO: does not prevent default placing of block, which causes crash since block has already been moved to crafting surface.
     }

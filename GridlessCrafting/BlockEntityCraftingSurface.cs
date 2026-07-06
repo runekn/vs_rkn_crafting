@@ -194,7 +194,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
                 ResetState();
                 selectedRecipe = -1;
-                GridlessCraftingNetwork.StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
+                Api.GridlessCraftingNetwork().StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
                 return new PlayerAnimationRequest(enumCraftingAnimation, EnumAnimationAction.STOP);
             }
             MarkDirty(true, null);

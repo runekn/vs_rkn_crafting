@@ -44,7 +44,7 @@ public class BlockCrafting : Block
         }
         if (api.Side == EnumAppSide.Client && (api as ICoreClientAPI).Input.IsHotKeyPressed("rkngridlesscrafting.start"))
         {
-            GridlessCraftingNetwork.SelectNextRecipe(blockSel.Position);
+            api.GridlessCraftingNetwork().SelectNextRecipe(blockSel.Position);
             return false;
         }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
