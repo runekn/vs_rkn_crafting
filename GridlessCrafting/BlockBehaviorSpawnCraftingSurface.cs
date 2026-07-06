@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-using System.Numerics;
-=======
 using RKN.GridlessCrafting.Network;
->>>>>>> parent of 7927691 (Revert "move network related to one class")
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Vintagestory.Common;
 
 namespace RKN.GridlessCrafting;
 
@@ -27,19 +22,14 @@ public class BlockBehaviorSpawnCraftingSurface : BlockBehavior
         {
             return true;
         }
-        // TODO: Causes crash when spawning with block as initial ingredient. Because default action is not being prevented, and it when fails with NPE because block is already removed.
-        /*bool r = (world.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot);
+        bool r = (world.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCrafting).TryPlace(byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot);
         if (!r) {
             return true;
-        }*/
+        }
         GridlessCraftingNetwork.SpawnCraftingSurface(blockSel.Position);
         handling = EnumHandling.PreventSubsequent;
-<<<<<<< HEAD
         // It would be better if I could return false to prevent default server message as we have done that ourselves.
         // But that will also enable default behavior to place block, which causes game to crash because we have now removed the block from inventory.
         return true; 
-=======
-        return false; // Prevent default server message as we have done that ourselves
->>>>>>> parent of 7927691 (Revert "move network related to one class")
     }
 }
