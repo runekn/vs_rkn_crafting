@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Vintagestory.API.Common;
 
-namespace RKN.Crafting;
+namespace RKN.Crafting.Patches;
 
 [HarmonyPatch(typeof(RecipeBase), "GenerateRecipesForTagOnlyIngredients")]
 public class GridRecipePatch
