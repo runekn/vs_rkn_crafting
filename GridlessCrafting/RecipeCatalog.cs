@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
@@ -56,7 +57,7 @@ public class RecipeCatalog
             {
                 continue;
             }
-            if (!MatchesIngredient(clonedItems, primaryTool, offhandTool, ingredient, ignoreTools, unusedItems))
+            if (!MatchesIngredient(recipe, clonedItems, primaryTool, offhandTool, ingredient, ignoreTools, unusedItems))
             {
                 return false;
             }
@@ -68,19 +69,19 @@ public class RecipeCatalog
         return true;
     }
 
-    private bool MatchesIngredient(IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
+    private bool MatchesIngredient(GridRecipe recipe, IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
     {
         if (!ingredient.Consume) // TODO: Why does ingredient.IsTool not work but ingredient.Consume does?
         {
             if (ignoreTools)
             {
-                return true;;
+                return true;
             }
-            if (primaryTool != null && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true))
+            if (primaryTool != null && ingredient.SatisfiesAsIngredient(primaryTool.Itemstack, true) && primaryTool.Itemstack.Collectible.MatchesForCrafting(primaryTool.Itemstack, recipe, ingredient))
             {
                 return true;
             }
-            else if (offhandTool != null && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true))
+            else if (offhandTool != null && ingredient.SatisfiesAsIngredient(offhandTool.Itemstack, true) && offhandTool.Itemstack.Collectible.MatchesForCrafting(offhandTool.Itemstack, recipe, ingredient))
             {
                 return true;
             }
@@ -90,7 +91,7 @@ public class RecipeCatalog
         {
             foreach (ItemStack stack in items)
             {
-                if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true))
+                if (stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true) && stack.Collectible.MatchesForCrafting(stack, recipe, ingredient))
                 {
                     unusedItems.Remove(stack);
                     stack.StackSize -= ingredient.Quantity;
