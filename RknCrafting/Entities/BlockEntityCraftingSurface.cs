@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
@@ -49,6 +50,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             // TODO: will this desync on chunk reload?
             selectedRecipe = validRecipes[0];
         }
+        CraftingSpeedModifier = api.World.BlockAccessor.GetBlock(Pos.DownCopy(1)).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingSpeedModifier;
     }
 
     public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)

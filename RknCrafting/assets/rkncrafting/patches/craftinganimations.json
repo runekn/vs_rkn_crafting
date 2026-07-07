@@ -1,0 +1,344 @@
+[
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "addmerge",
+    "path": "/animations",
+    "value": [
+      {
+        "animation": "RknCrafting.HandsMixing",
+        "code": "rkncrafting.handsmixing",
+        "quantityframes": 30,
+        "onActivityStopped": "EaseOut",
+        "onAnimationEnd": "Repeat",
+        "blendMode": "AddAverage",
+        "weight": 20,
+        "keyframes": [
+          {
+            "frame": 0,
+            "elements": {
+              "UpperArmL": {
+                "offsetX": 0.2,
+                "offsetY": 0.0,
+                "offsetZ": 0.5,
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -58.0
+              },
+              "LowerArmL": {
+                "rotationX": -8.0,
+                "rotationY": -22.0,
+                "rotationZ": -33.0
+              },
+              "UpperArmR": {
+                "offsetX": 0.0,
+                "offsetY": 0.0,
+                "offsetZ": -0.5,
+                "rotationX": 0.0,
+                "rotationY": 0.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 6.0,
+                "rotationY": 33.0,
+                "rotationZ": -36.0
+              }
+            }
+          },
+          {
+            "frame": 10,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -3.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 19.0,
+                "rotationY": 30.0,
+                "rotationZ": -39.0
+              },
+              "UpperArmR": {
+                "rotationX": 0.0,
+                "rotationY": 2.0,
+                "rotationZ": -52.0
+              }
+            }
+          },
+          {
+            "frame": 20,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -53.0
+              },
+              "LowerArmL": {
+                "rotationX": 6.0,
+                "rotationY": -25.0,
+                "rotationZ": -33.0
+              },
+              "LowerArmR": {
+                "rotationX": 0.0,
+                "rotationY": 30.0,
+                "rotationZ": -33.0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "animation": "RknCrafting.HandsMixing-fp",
+        "code": "rkncrafting.handsmixing-fp",
+        "quantityframes": 30,
+        "onActivityStopped": "EaseOut",
+        "onAnimationEnd": "Repeat",
+        "blendMode": "AddAverage",
+        "weight": 20,
+        "keyframes": [
+          {
+            "frame": 0,
+            "elements": {
+              "UpperArmL": {
+                "offsetX": 0.2,
+                "offsetY": 0.0,
+                "offsetZ": 0.5,
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -58.0
+              },
+              "LowerArmL": {
+                "rotationX": -8.0,
+                "rotationY": -22.0,
+                "rotationZ": -33.0
+              },
+              "UpperArmR": {
+                "offsetX": 0.0,
+                "offsetY": 0.0,
+                "offsetZ": -0.5,
+                "rotationX": 0.0,
+                "rotationY": 0.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 6.0,
+                "rotationY": 33.0,
+                "rotationZ": -36.0
+              }
+            }
+          },
+          {
+            "frame": 10,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -3.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 19.0,
+                "rotationY": 30.0,
+                "rotationZ": -39.0
+              },
+              "UpperArmR": {
+                "rotationX": 0.0,
+                "rotationY": 2.0,
+                "rotationZ": -52.0
+              }
+            }
+          },
+          {
+            "frame": 20,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -53.0
+              },
+              "LowerArmL": {
+                "rotationX": 6.0,
+                "rotationY": -25.0,
+                "rotationZ": -33.0
+              },
+              "LowerArmR": {
+                "rotationX": 0.0,
+                "rotationY": 30.0,
+                "rotationZ": -33.0
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "addmerge",
+    "path": "/client/animations",
+    "value": [
+      {
+        "animation": "RknCrafting.HandsMixing",
+        "code": "rkncrafting.handsmixing",
+        "quantityframes": 30,
+        "onActivityStopped": "EaseOut",
+        "onAnimationEnd": "Repeat",
+        "blendMode": "AddAverage",
+        "weight": 20,
+        "keyframes": [
+          {
+            "frame": 0,
+            "elements": {
+              "UpperArmL": {
+                "offsetX": 0.2,
+                "offsetY": 0.0,
+                "offsetZ": 0.5,
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -58.0
+              },
+              "LowerArmL": {
+                "rotationX": -8.0,
+                "rotationY": -22.0,
+                "rotationZ": -33.0
+              },
+              "UpperArmR": {
+                "offsetX": 0.0,
+                "offsetY": 0.0,
+                "offsetZ": -0.5,
+                "rotationX": 0.0,
+                "rotationY": 0.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 6.0,
+                "rotationY": 33.0,
+                "rotationZ": -36.0
+              }
+            }
+          },
+          {
+            "frame": 10,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -3.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 19.0,
+                "rotationY": 30.0,
+                "rotationZ": -39.0
+              },
+              "UpperArmR": {
+                "rotationX": 0.0,
+                "rotationY": 2.0,
+                "rotationZ": -52.0
+              }
+            }
+          },
+          {
+            "frame": 20,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -53.0
+              },
+              "LowerArmL": {
+                "rotationX": 6.0,
+                "rotationY": -25.0,
+                "rotationZ": -33.0
+              },
+              "LowerArmR": {
+                "rotationX": 0.0,
+                "rotationY": 30.0,
+                "rotationZ": -33.0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "animation": "RknCrafting.HandsMixing-fp",
+        "code": "rkncrafting.handsmixing-fp",
+        "quantityframes": 30,
+        "onActivityStopped": "EaseOut",
+        "onAnimationEnd": "Repeat",
+        "blendMode": "AddAverage",
+        "weight": 20,
+        "keyframes": [
+          {
+            "frame": 0,
+            "elements": {
+              "UpperArmL": {
+                "offsetX": 0.2,
+                "offsetY": 0.0,
+                "offsetZ": 0.5,
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -58.0
+              },
+              "LowerArmL": {
+                "rotationX": -8.0,
+                "rotationY": -22.0,
+                "rotationZ": -33.0
+              },
+              "UpperArmR": {
+                "offsetX": 0.0,
+                "offsetY": 0.0,
+                "offsetZ": -0.5,
+                "rotationX": 0.0,
+                "rotationY": 0.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 6.0,
+                "rotationY": 33.0,
+                "rotationZ": -36.0
+              }
+            }
+          },
+          {
+            "frame": 10,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -3.0,
+                "rotationZ": -55.0
+              },
+              "LowerArmR": {
+                "rotationX": 19.0,
+                "rotationY": 30.0,
+                "rotationZ": -39.0
+              },
+              "UpperArmR": {
+                "rotationX": 0.0,
+                "rotationY": 2.0,
+                "rotationZ": -52.0
+              }
+            }
+          },
+          {
+            "frame": 20,
+            "elements": {
+              "UpperArmL": {
+                "rotationX": -6.0,
+                "rotationY": -6.0,
+                "rotationZ": -53.0
+              },
+              "LowerArmL": {
+                "rotationX": 6.0,
+                "rotationY": -25.0,
+                "rotationZ": -33.0
+              },
+              "LowerArmR": {
+                "rotationX": 0.0,
+                "rotationY": 30.0,
+                "rotationZ": -33.0
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

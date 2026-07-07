@@ -19,7 +19,7 @@ public class PlayerAnimationRequest : Tuple<EnumCraftingAnimation, EnumAnimation
         // knifescrape
         // knifecut
         // chiselhit
-        EnumCraftingAnimation.HandsMixing    => "breakhand",
+        EnumCraftingAnimation.HandsMixing    => "rkncrafting.handsmixing",
         EnumCraftingAnimation.HandsTool    => "breakhand", // TODO
         EnumCraftingAnimation.Hammer => "hammerhit",
         EnumCraftingAnimation.Axe => "axechop",

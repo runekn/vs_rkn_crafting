@@ -35,8 +35,6 @@ public class BlockCraftingSurface : Block
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
-        float craftingSpeedModifier = api.World.BlockAccessor.GetBlock(blockPos).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingSpeedModifier;
-        blockEntity.CraftingSpeedModifier = craftingSpeedModifier;
         return true;
     }
 
@@ -152,7 +150,7 @@ public class BlockCraftingSurface : Block
         api.RCLogger().Debug("Animation change {0} {1} ", [request.Action, anim]);
         if (request.Action == EnumAnimationAction.START)
         {
-            byPlayer.Entity.StartAnimation(anim);
+            byPlayer.Entity.AnimManager.StartAnimation(anim);
         }
         else
         {
