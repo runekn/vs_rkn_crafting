@@ -189,7 +189,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         craftingPlayer = byPlayer;
         craftingAnimation = GetCraftingAnimation(selectedRecipe, primaryTool, offhandTool);
-        Api.Logger.Debug("Crafting {0} by {1}!", [Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingPlayer.PlayerName]);
+        Api.RCLogger().Debug("Crafting {0} by {1}!", [Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingPlayer.PlayerName]);
         if (world.Api.Side == EnumAppSide.Server)
         {
             MarkDirty();
@@ -220,9 +220,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
             {
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
+                Api.RCNetwork().StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
                 ResetState();
                 selectedRecipe = -1;
-                Api.RCNetwork().StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
                 return new PlayerAnimationRequest(enumCraftingAnimation, EnumAnimationAction.STOP);
             }
             MarkDirty(true, null);
@@ -244,7 +244,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return null;
         }
-        Api.Logger.Debug("Cancelled crafting by {0}!", [craftingPlayer.PlayerName]);
+        Api.RCLogger().Debug("Cancelled crafting by {0}!", [craftingPlayer.PlayerName]);
         EnumCraftingAnimation anim = GetCraftingAnimation();
         ResetState();
         return new PlayerAnimationRequest(anim, EnumAnimationAction.STOP);

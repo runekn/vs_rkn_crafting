@@ -68,6 +68,7 @@ public class RknCraftingNetwork
 
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
+        ClientApi.RCLogger().Debug("Received stop crafting message!");
         IPlayer player = ClientApi.World.Player;
         player.Entity.AnimManager.StopAnimation(PlayerAnimationRequest.ToAnimationCode(message.animation));
     }
