@@ -14,7 +14,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 {
 
     private int slotCount = 9;
+    private float craftingBaseSeconds = 1.0f;
     private InventoryGeneric inventory;
+    public float CraftingSpeedModifier { get; set; }
 
     public override InventoryBase Inventory { get { return inventory; }}
     public override string InventoryClassName { get { return "craftingsurface"; }}
@@ -202,7 +204,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return null;
         }
         timeoutTimer = 0;
-        if (secondsUsed > (secondsLastCraft + 1) && IsCrafting(byPlayer))
+        if (secondsUsed > (secondsLastCraft + GetCraftingTime()) && IsCrafting(byPlayer))
         {
             CreateOutput(world);
             
@@ -227,6 +229,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             secondsLastCraft = secondsUsed;
         }
         return null;
+    }
+
+    private float GetCraftingTime()
+    {
+        // TODO: add recipe output modifier
+        return craftingBaseSeconds / CraftingSpeedModifier;
     }
 
     public PlayerAnimationRequest? CancelCrafting(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

@@ -35,6 +35,8 @@ public class BlockCraftingSurface : Block
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
+        float craftingSpeedModifier = api.World.BlockAccessor.GetBlock(blockPos).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingSpeedModifier;
+        blockEntity.CraftingSpeedModifier = craftingSpeedModifier;
         return true;
     }
 

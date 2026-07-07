@@ -2,9 +2,131 @@
 	{
 		"file": "game:blocktypes/wood/table",
 		"op": "addmerge",
-		"path": "/behaviors/-",
-		"value": {
-			"name": "rkncrafting.spawncraftingsurface"
-		}
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 2
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/soil/*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 0.9
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/soil/cob",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.1
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/soil/rammed",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.3
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/soil/packeddirt",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.2
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/stone/*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.3
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/stone/cobble/*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 0.9
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/stone/polished/*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 2
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/stone/stonebrick/*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.5
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/chiseled/chiseledblock",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingSpeedModifier": 1.3
+				}
+			}
+		]
 	}
 ]
