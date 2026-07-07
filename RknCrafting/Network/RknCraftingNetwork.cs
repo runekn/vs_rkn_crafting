@@ -1,12 +1,12 @@
-﻿using RKN.GridlessCrafting.Entities;
+﻿using RKN.Crafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace RKN.GridlessCrafting.Network;
+namespace RKN.Crafting.Network;
 
-public class GridlessCraftingNetwork
+public class RknCraftingNetwork
 {
     private ICoreAPI api;
     private INetworkChannel channel;
@@ -18,7 +18,7 @@ public class GridlessCraftingNetwork
     private ICoreServerAPI ServerApi { get { return api as ICoreServerAPI; } }
 #pragma warning restore CS8603
 
-    public GridlessCraftingNetwork(ICoreClientAPI api, string modId)
+    public RknCraftingNetwork(ICoreClientAPI api, string modId)
     {
         this.api = api;
         channel = api.Network.RegisterChannel(modId);
@@ -29,7 +29,7 @@ public class GridlessCraftingNetwork
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
     }
 
-    public GridlessCraftingNetwork(ICoreServerAPI api, string modId)
+    public RknCraftingNetwork(ICoreServerAPI api, string modId)
     {
         this.api = api;
         channel = api.Network.RegisterChannel(modId);

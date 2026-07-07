@@ -1,23 +1,21 @@
-using GridlessCrafting;
-using RKN.GridlessCrafting.Network;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting.Entities;
+namespace RKN.Crafting.Entities;
 
 public class BlockCraftingSurface : Block
 {
 
     public static bool TryPlace(ICoreAPI api, IPlayer byPlayer, BlockPos blockPos, ItemSlot slot)
     {
-        BlockCraftingSurface? block = api.World.GetBlock(new AssetLocation("rkngridlesscrafting:craftingsurface")) as BlockCraftingSurface;
+        BlockCraftingSurface? block = api.World.GetBlock(new AssetLocation("rkncrafting:craftingsurface")) as BlockCraftingSurface;
         if (block == null)
         {
-            api.GCLogger().Error("Crafting block did not spawn with BlockEntityCraftingSurface!");
+            api.RCLogger().Error("Crafting block did not spawn with BlockEntityCraftingSurface!");
             return false;
         }
-        api.GCLogger().Debug("Trying to place crafting block at " + blockPos.ToString());
+        api.RCLogger().Debug("Trying to place crafting block at " + blockPos.ToString());
         BlockPos abovePos = blockPos.UpCopy(1);
         if (api.World.BlockAccessor.GetBlock(abovePos).Replaceable < 6000)
         {
@@ -27,13 +25,13 @@ public class BlockCraftingSurface : Block
         BlockEntityCraftingSurface? blockEntity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(abovePos);
         if (blockEntity == null)
         {
-            api.GCLogger().Error("Crafting block did not spawn with BlockEntityCraftingSurface!");
+            api.RCLogger().Error("Crafting block did not spawn with BlockEntityCraftingSurface!");
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
         if (!blockEntity.TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot, byPlayer))
         {
-            api.GCLogger().Error("Could not put initial items into newly spawned crafting block!");
+            api.RCLogger().Error("Could not put initial items into newly spawned crafting block!");
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
@@ -49,7 +47,7 @@ public class BlockCraftingSurface : Block
         }
         if (api.Side == EnumAppSide.Client && (api as ICoreClientAPI).Input.IsHoldingCraftingButton())
         {
-            api.GCNetwork().SelectNextRecipe(blockSel.Position);
+            api.RCNetwork().SelectNextRecipe(blockSel.Position);
             return false;
         }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
@@ -149,7 +147,7 @@ public class BlockCraftingSurface : Block
             return;
         }
         string anim = PlayerAnimationRequest.ToAnimationCode(request.Animation);
-        api.GCLogger().Debug("Animation change {0} {1} ", [request.Action, anim]);
+        api.RCLogger().Debug("Animation change {0} {1} ", [request.Action, anim]);
         if (request.Action == EnumAnimationAction.START)
         {
             byPlayer.Entity.StartAnimation(anim);

@@ -1,5 +1,3 @@
-using GridlessCrafting;
-using RKN.GridlessCrafting.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +8,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace RKN.GridlessCrafting.Entities;
+namespace RKN.Crafting.Entities;
 
 public class BlockEntityCraftingSurface : BlockEntityDisplay
 {
@@ -80,7 +78,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 {
                     sb.Append("   ");
                 }
-                sb.AppendLine("Recipe: " + Api.GCRecipeCatalog().GetRecipeById(recipeId).Output.ResolvedItemStack.GetName());
+                sb.AppendLine("Recipe: " + Api.RCRecipeCatalog().GetRecipeById(recipeId).Output.ResolvedItemStack.GetName());
             }
         }
     }
@@ -183,13 +181,13 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return null;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
-        if (items == null || !Api.GCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
+        if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
         {
             return null;
         }
         craftingPlayer = byPlayer;
         craftingAnimation = GetCraftingAnimation(selectedRecipe, primaryTool, offhandTool);
-        Api.Logger.Debug("Crafting {0} by {1}!", [Api.GCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingPlayer.PlayerName]);
+        Api.Logger.Debug("Crafting {0} by {1}!", [Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingPlayer.PlayerName]);
         if (world.Api.Side == EnumAppSide.Server)
         {
             MarkDirty();
@@ -215,14 +213,14 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
             } else
             {
-                validRecipes = Api.GCRecipeCatalog().GetValidRecipesWithoutTools(items);
+                validRecipes = Api.RCRecipeCatalog().GetValidRecipesWithoutTools(items);
             }
-            if (items == null || !Api.GCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
+            if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
             {
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
                 ResetState();
                 selectedRecipe = -1;
-                Api.GCNetwork().StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
+                Api.RCNetwork().StopCraftingAnimation(craftingPlayer, enumCraftingAnimation);
                 return new PlayerAnimationRequest(enumCraftingAnimation, EnumAnimationAction.STOP);
             }
             MarkDirty(true, null);
@@ -274,7 +272,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 if (Api.Side == EnumAppSide.Server)
                 {
                     (List<ItemSlot>? items, ItemSlot? _, ItemSlot? _) = GetCraftingItems(byPlayer);
-                    List<int> recipes = Api.GCRecipeCatalog().GetValidRecipesWithoutTools(items);
+                    List<int> recipes = Api.RCRecipeCatalog().GetValidRecipesWithoutTools(items);
                     validRecipes = recipes;
                     selectedRecipe = -1;
                     if (recipes.Count > 0)
@@ -365,12 +363,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingPlayer);
-        if (items == null || !Api.GCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
+        if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
         {
             return;
         }
-        GridRecipe gridRecipe = Api.GCRecipeCatalog().GetRecipeById(selectedRecipe);
-        Api.GCLogger().Debug("Crafted {0} by {1}!", [gridRecipe.Name, craftingPlayer.PlayerName]);
+        GridRecipe gridRecipe = Api.RCRecipeCatalog().GetRecipeById(selectedRecipe);
+        Api.RCLogger().Debug("Crafted {0} by {1}!", [gridRecipe.Name, craftingPlayer.PlayerName]);
         ItemStack result = gridRecipe.Output.ResolvedItemStack.Clone();
         if (!result.ResolveBlockOrItem(world))
         {
@@ -385,7 +383,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         if (primaryTool == null)
         {
-            if (Api.GCRecipeCatalog().GetRecipeById(recipe).Output?.ResolvedItemStack?.Item?.Tool != null) {
+            if (Api.RCRecipeCatalog().GetRecipeById(recipe).Output?.ResolvedItemStack?.Item?.Tool != null) {
                 return EnumCraftingAnimation.HandsTool;
             }
             return EnumCraftingAnimation.HandsMixing;

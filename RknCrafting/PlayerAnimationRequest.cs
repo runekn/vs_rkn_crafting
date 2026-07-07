@@ -1,6 +1,6 @@
 using System;
 
-namespace RKN.GridlessCrafting;
+namespace RKN.Crafting;
 
 public class PlayerAnimationRequest : Tuple<EnumCraftingAnimation, EnumAnimationAction>
 {

@@ -1,10 +1,10 @@
 using ProtoBuf;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting.Network;
+namespace RKN.Crafting.Network;
 
 [ProtoContract]
-public class SelectNextRecipeMessage
+public class CreateCraftingBlockMessage
 {
     [ProtoMember(1)]
     public required BlockPos Position;

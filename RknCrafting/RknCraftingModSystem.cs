@@ -1,21 +1,20 @@
-﻿using RKN.GridlessCrafting.Entities;
-using RKN.GridlessCrafting.Network;
+﻿using RKN.Crafting.Entities;
+using RKN.Crafting.Network;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
-using GridlessCrafting;
 
-namespace RKN.GridlessCrafting;
+namespace RKN.Crafting;
 
-public class GridlessCraftingModSystem : ModSystem
+public class RknCraftingModSystem : ModSystem
 {
 #pragma warning disable CS8618
     private ICoreAPI api;
     private Harmony harmony;
 
-    public GridlessCraftingNetwork Network { get; internal set; }
+    public RknCraftingNetwork Network { get; internal set; }
     public RecipeCatalog RecipeCatalog { get; internal set; }
 #pragma warning restore CS8618
 
@@ -29,20 +28,20 @@ public class GridlessCraftingModSystem : ModSystem
         api.RegisterCollectibleBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(CollectibleBehaviorSpawnCraftingSurface));
         harmony = new Harmony(Mod.Info.ModID);
         harmony.PatchAll();
-        api.GCLogger().Debug("Hello world!");
+        api.RCLogger().Debug("Hello world!");
     }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
         api.Event.LevelFinalize += InitCatalog;
-        api.Input.RegisterHotKey("rkngridlesscrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
-        Network = new GridlessCraftingNetwork(api, Mod.Info.ModID);
+        api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
+        Network = new RknCraftingNetwork(api, Mod.Info.ModID);
     }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
         InitCatalog();
-        Network = new GridlessCraftingNetwork(api, Mod.Info.ModID);
+        Network = new RknCraftingNetwork(api, Mod.Info.ModID);
     }
 
     public override void Dispose()

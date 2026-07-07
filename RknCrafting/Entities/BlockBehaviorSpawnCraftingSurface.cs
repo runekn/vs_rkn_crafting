@@ -1,10 +1,8 @@
-using GridlessCrafting;
-using RKN.GridlessCrafting.Network;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting.Entities;
+namespace RKN.Crafting.Entities;
 
 public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(block)
 {
@@ -23,7 +21,7 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
         if (!r) {
             return true;
         }
-        world.Api.GCNetwork().SpawnCraftingSurface(blockSel.Position);
+        world.Api.RCNetwork().SpawnCraftingSurface(blockSel.Position);
         handling = EnumHandling.PreventSubsequent;
         // It would be better if I could return false to prevent default server message as we have done that ourselves.
         // But that will also enable default behavior to place block, which causes game to crash because we have now removed the block from inventory.

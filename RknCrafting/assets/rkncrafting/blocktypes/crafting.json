@@ -1,7 +1,7 @@
 {
 	"code": "craftingsurface",
-    "class": "rkngridlesscrafting.craftingsurface",
-	"entityClass": "rkngridlesscrafting.craftingsurface",
+    "class": "rkncrafting.craftingsurface",
+	"entityClass": "rkncrafting.craftingsurface",
 	"replaceable": 900,
 	"resistance": 0.2,
 	"lightAbsorption": 0,

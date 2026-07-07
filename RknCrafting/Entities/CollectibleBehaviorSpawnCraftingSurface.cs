@@ -1,10 +1,8 @@
-﻿using GridlessCrafting;
-using RKN.GridlessCrafting.Network;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace RKN.GridlessCrafting.Entities;
+namespace RKN.Crafting.Entities;
 
 public class CollectibleBehaviorSpawnCraftingSurface(CollectibleObject collObj) : CollectibleBehavior(collObj)
 {
@@ -15,7 +13,7 @@ public class CollectibleBehaviorSpawnCraftingSurface(CollectibleObject collObj) 
             return;
         }
         ICoreClientAPI? clientApi = byEntity.World.Api as ICoreClientAPI;
-        if (clientApi == null || !clientApi.Input.IsHotKeyPressed("rkngridlesscrafting.start") || slot?.Itemstack?.Item?.Tool != null)
+        if (clientApi == null || !clientApi.Input.IsHoldingCraftingButton() || slot?.Itemstack?.Item?.Tool != null)
         {
             return;
         }
@@ -28,7 +26,7 @@ public class CollectibleBehaviorSpawnCraftingSurface(CollectibleObject collObj) 
         {
             return;
         }
-        byEntity.World.Api.GCNetwork().SpawnCraftingSurface(blockSel.Position);
+        byEntity.World.Api.RCNetwork().SpawnCraftingSurface(blockSel.Position);
         handling = EnumHandling.PreventSubsequent;
         handHandling = EnumHandHandling.PreventDefaultAction; // TODO: does not prevent default placing of block, which causes crash since block has already been moved to crafting surface.
     }
