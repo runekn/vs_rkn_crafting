@@ -1,5 +1,6 @@
 ﻿using RKN.Crafting.Animation;
 using RKN.Crafting.Entities;
+using RknCrafting;
 using System;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -29,8 +30,10 @@ public class RknCraftingNetwork
         ClientChannel.RegisterMessageType<CraftingStoppedMessage>();
         ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ClientChannel.RegisterMessageType<RecipeConsumedMessage>();
+        ClientChannel.RegisterMessageType<ConfigMessage>();
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
         ClientChannel.SetMessageHandler<RecipeConsumedMessage>(OnRecipeConsumedMessage);
+        ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
     }
 
     public RknCraftingNetwork(ICoreServerAPI api, string modId)
@@ -42,6 +45,7 @@ public class RknCraftingNetwork
         ServerChannel.RegisterMessageType<CraftingStoppedMessage>();
         ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ServerChannel.RegisterMessageType<RecipeConsumedMessage>();
+        ServerChannel.RegisterMessageType<ConfigMessage>();
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
         ServerChannel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
     }
@@ -88,5 +92,17 @@ public class RknCraftingNetwork
     {
         api.RCLogger().Debug("Received recipe consumed message!");
         BlockEntityCraftingSurface.OnRecipeConsumed(ClientApi, packet.Position);
+    }
+
+    public void TransferConfig(RknCraftingConfig config, IServerPlayer player)
+    {
+        api.RCLogger().Debug("Sending config to player {0}: {1}", [player.PlayerName, config]);
+        ServerChannel.SendPacket(new ConfigMessage() { Config = config }, [player]);
+    }
+
+    private void OnConfigMessage(ConfigMessage message)
+    {
+        api.RCLogger().Debug("Received config from server: {0}", [message.Config]);
+        api.RCSetConfig(message.Config);
     }
 }

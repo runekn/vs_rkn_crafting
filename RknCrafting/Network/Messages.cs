@@ -1,5 +1,6 @@
 ﻿using ProtoBuf;
 using RKN.Crafting.Animation;
+using RknCrafting;
 using Vintagestory.API.MathTools;
 
 namespace RKN.Crafting.Network;
@@ -30,4 +31,11 @@ public class RecipeConsumedMessage
 {
     [ProtoMember(1)]
     public required BlockPos Position;
+}
+
+[ProtoContract]
+public class ConfigMessage
+{
+    [ProtoMember(1)]
+    public required RknCraftingConfig Config;
 }

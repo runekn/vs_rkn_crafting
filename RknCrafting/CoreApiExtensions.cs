@@ -1,6 +1,7 @@
 ﻿using RKN.Crafting;
 using RKN.Crafting.Animation;
 using RKN.Crafting.Network;
+using RknCrafting;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -24,6 +25,16 @@ public static class CoreApiExtensions
     public static CraftingAnimator RCAnimator(this ICoreAPI api)
     {
         return api.ModLoader.GetModSystem<RknCraftingModSystem>().Animator;
+    }
+
+    public static RknCraftingConfig RCConfig(this ICoreAPI api)
+    {
+        return api.ModLoader.GetModSystem<RknCraftingModSystem>().Config;
+    }
+
+    public static void RCSetConfig(this ICoreAPI api, RknCraftingConfig config)
+    {
+        api.ModLoader.GetModSystem<RknCraftingModSystem>().Config = config;
     }
 
     public static ILogger RCLogger(this ICoreAPI api)

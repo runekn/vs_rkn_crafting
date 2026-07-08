@@ -15,9 +15,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 {
 
     private int slotCount = 9;
-    private float craftingBaseSeconds = 1.0f;
     private InventoryGeneric inventory;
-    public float craftingSpeedModifier = 1.0f;
+    private float craftingSpeedModifier = 1.0f;
+    private float baseCraftingTimeSeconds;
+    private int autoDeleteTimerSeconds;
+
 
     public override InventoryBase Inventory { get { return inventory; }}
     public override string InventoryClassName { get { return "craftingsurface"; }}
@@ -51,6 +53,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             selectedRecipe = validRecipes[0];
         }
         craftingSpeedModifier = api.World.BlockAccessor.GetBlock(Pos.DownCopy(1)).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingSpeedModifier;
+        autoDeleteTimerSeconds = api.RCConfig().AutoDeleteTimeSeconds;
+        baseCraftingTimeSeconds = api.RCConfig().BaseCraftingTimeSeconds;
     }
 
     public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
@@ -242,7 +246,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private float GetCraftingTime()
     {
         // TODO: add recipe output modifier
-        return craftingBaseSeconds / craftingSpeedModifier;
+        return baseCraftingTimeSeconds / craftingSpeedModifier;
     }
 
     public void CancelCrafting(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -279,6 +283,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 {
                     quantity = slot.StackSize;
                 }
+                // TODO: Don't pull from slot if gamemode is creative
                 if (slot.TryPutInto(Api.World, invSlot, quantity) < 1)
                 {
                     return false;
@@ -326,7 +331,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         base.OnTick(dt);
         timeoutTimer += dt;
-        if(timeoutTimer >= 120)
+        if(timeoutTimer >= autoDeleteTimerSeconds)
         {
             Api.World.BlockAccessor.BreakBlock(Pos, null);
         }

@@ -6,6 +6,8 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using RKN.Crafting.Animation;
+using RknCrafting;
+using System;
 
 namespace RKN.Crafting;
 
@@ -18,6 +20,7 @@ public class RknCraftingModSystem : ModSystem
     public RknCraftingNetwork Network { get; internal set; }
     public RecipeCatalog RecipeCatalog { get; internal set; }
     public CraftingAnimator Animator{ get; internal set; }
+    public RknCraftingConfig Config{ get; internal set; }
 #pragma warning restore CS8618
 
     public override void Start(ICoreAPI api)
@@ -32,6 +35,7 @@ public class RknCraftingModSystem : ModSystem
         harmony = new Harmony(Mod.Info.ModID);
         harmony.PatchAll();
         Animator = new CraftingAnimator(api);
+
         api.RCLogger().Debug("Hello world!");
     }
 
@@ -45,7 +49,14 @@ public class RknCraftingModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         InitCatalog();
+        TryLoadConfig();
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
+        api.Event.PlayerJoin += SendConfig;
+    }
+
+    private void SendConfig(IServerPlayer byPlayer)
+    {
+        Network.TransferConfig(Config, byPlayer);
     }
 
     public override void Dispose()
@@ -70,7 +81,28 @@ public class RknCraftingModSystem : ModSystem
         }
     }*/
 
-    public void InitCatalog()
+    private void TryLoadConfig()
+    {
+        string filename = Mod.Info.ModID + ".json";
+        try
+        {
+            RknCraftingConfig config = api.LoadModConfig<RknCraftingConfig>(filename);
+            if (config == null)
+            {
+                config = new RknCraftingConfig();
+            }
+            api.StoreModConfig<RknCraftingConfig>(config, filename);
+            Config = config;
+        }
+        catch (Exception e)
+        {
+            Mod.Logger.Error("Could not load config! Loading default settings instead.");
+            Mod.Logger.Error(e);
+            Config = new RknCraftingConfig();
+        }
+    }
+
+    private void InitCatalog()
     {
         RecipeCatalog = new RecipeCatalog(api);
     }
