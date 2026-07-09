@@ -21,7 +21,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private RknCraftingConfig config;
 
     public override InventoryBase Inventory { get { return inventory; }}
-    public override string InventoryClassName { get { return "craftingsurface"; }}
+    public override string InventoryClassName { get { return "craftingsurface"; } }
+    public override string AttributeTransformCode => "craftingIngredientTransform";
 
     // Runtime fields
     private int selectedRecipe = -1;
@@ -124,40 +125,50 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
         for (int index = 0; index < slotCount; index++)
         {
-            float x = 0;
-            float z = 0;
-            float s = 0.30f;
             ItemSlot itemSlot = inventory[index];
-            if (!itemSlot.Empty && itemSlot.Itemstack.StackSize > 0)
+            ModelTransform? customTransform = null;
+            if (itemSlot.Empty || itemSlot.Itemstack.StackSize <= 0)
             {
+                continue;
+            }
+
+            FastVec3f scale = Vec3f.One;
+
+            customTransform = itemSlot.Itemstack.Collectible.Attributes[AttributeTransformCode].AsObject<ModelTransform>();
+            if (customTransform == null)
+            {
+                scale = scale.Mul(0.30f);
                 MeshData meshData = getMesh(itemSlot);
                 if (meshData != null)
                 {
                     float itemSize = GetMeshXZSize(meshData);
-                    s = s / itemSize;
+                    scale = scale.Set(scale.X / itemSize, scale.Y / itemSize, scale.Z / itemSize);
                 }
             }
-            (x, z, s) = index switch
+
+            // Get grid slot translations, and a tiny bit of scale variance.
+            (float gridSlotX, float gridSlotY, float scaleModifier) = index switch
             {
-                0 => (0.5f, 0.5f, s),
-                1 => (0.2f, 0.2f, s * 0.95f),
-                2 => (0.8f, 0.8f, s * 1.02f),
-                3 => (0.8f, 0.2f, s * 1.02f),
-                4 => (0.2f, 0.8f, s * 1.02f),
-                5 => (0.5f, 0.2f, s * 1.02f),
-                6 => (0.2f, 0.5f, s * 1.01f),
-                7 => (0.9f, 0.5f, s * 0.97f),
-                8 => (0.5f, 0.9f, s * 0.98f),
+                0 => (0.5f, 0.5f, 1),
+                1 => (0.2f, 0.2f, 0.95f),
+                2 => (0.8f, 0.8f, 1.02f),
+                3 => (0.8f, 0.2f, 1.02f),
+                4 => (0.2f, 0.8f, 1.02f),
+                5 => (0.5f, 0.2f, 1.02f),
+                6 => (0.2f, 0.5f, 1.01f),
+                7 => (0.9f, 0.5f, 0.97f),
+                8 => (0.5f, 0.9f, 0.98f),
             };
 
-            tfMatrices[index] =
-                new Matrixf()
-                .Scale(s, s, s)
-                .Translate(-0.5f, 0, -0.5f)
-                .RotateYDeg(Block.Shape.rotateY)
-                .Translate(x / s, 0, z / s)
-                .Values
-            ;
+            scale = scale.Mul(scaleModifier);
+
+            Matrixf matrixf = new Matrixf()
+                .Scale(scale.X, scale.Y, scale.Z)                       // First scale
+                .Translate(-0.5f, 0, -0.5f)                             // Then center it
+                .Translate(gridSlotX / scale.X, 0, gridSlotY / scale.Y) // Move to correct slot
+                .RotateYDeg(Block.Shape.rotateY);                       // Rotate according to block
+
+            tfMatrices[index] = matrixf.Values;
         }
 
         return tfMatrices;
