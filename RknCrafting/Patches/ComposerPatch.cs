@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -12,17 +13,24 @@ namespace RKN.Crafting.Patches;
 [HarmonyPatch(typeof(GuiDialogInventory), "ComposeSurvivalInvDialog")]
 public class GuiComposerPatchComposeSurvivalInvDialog
 {
+    static FieldInfo capiField = AccessTools.Field(typeof(GuiDialogInventory), "capi");
+    static FieldInfo backpackInvField = AccessTools.Field(typeof(GuiDialogInventory), "backpackInv");
+    static FieldInfo prevRowsField = AccessTools.Field(typeof(GuiDialogInventory), "prevRows");
+    static MethodInfo onNewScrollbarValueMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "OnNewScrollbarvalue");
+    static MethodInfo sendInvPacketMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "SendInvPacket");
+    static MethodInfo closeIconPressedMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "CloseIconPressed");
+
     static bool Prefix(GuiDialogInventory __instance)
     {
-        ICoreClientAPI capi = AccessTools.Field(typeof(GuiDialogInventory), "capi").GetValue(__instance) as ICoreClientAPI;
-        IInventory backpackInv = AccessTools.Field(typeof(GuiDialogInventory), "backpackInv").GetValue(__instance) as IInventory;
+        ICoreClientAPI capi = capiField.GetValue(__instance) as ICoreClientAPI;
+        IInventory backpackInv = backpackInvField.GetValue(__instance) as IInventory;
 
-        Action<float> OnNewScrollbarvalue = (Action<float>) Delegate.CreateDelegate(typeof(Action<float>), __instance, AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "OnNewScrollbarvalue"));
-        Action<object> SendInvPacket = (Action<object>) Delegate.CreateDelegate(typeof(Action<object>), __instance, AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "SendInvPacket"));
-        Action CloseIconPressed = (Action) Delegate.CreateDelegate(typeof(Action), __instance, AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "CloseIconPressed"));
+        Action<float> OnNewScrollbarvalue = (Action<float>) Delegate.CreateDelegate(typeof(Action<float>), __instance, onNewScrollbarValueMethod);
+        Action<object> SendInvPacket = (Action<object>) Delegate.CreateDelegate(typeof(Action<object>), __instance, sendInvPacketMethod);
+        Action CloseIconPressed = (Action) Delegate.CreateDelegate(typeof(Action), __instance, closeIconPressedMethod);
 
         int prevRows = (int)Math.Ceiling((float)backpackInv.Count / 6f);
-        AccessTools.Field(typeof(GuiDialogInventory), "prevRows").SetValue(__instance, prevRows);
+        prevRowsField.SetValue(__instance, prevRows);
         int rows = prevRows;
 
         GuiComposer survivalInvDialog;
@@ -75,14 +83,21 @@ public class GuiComposerPatchComposeSurvivalInvDialog
 [HarmonyPatch(typeof(GuiDialogInventory), "OnGuiClosed")]
 public class GuiComposerPatchOnGuiClosed
 {
+    static FieldInfo capiField = AccessTools.Field(typeof(GuiDialogInventory), "capi");
+    static FieldInfo creativeInvField = AccessTools.Field(typeof(GuiDialogInventory), "creativeInv");
+    static FieldInfo craftingInvField = AccessTools.Field(typeof(GuiDialogInventory), "craftingInv");
+    static FieldInfo backpackInvField = AccessTools.Field(typeof(GuiDialogInventory), "backpackInv");
+    static FieldInfo survivalInvDialogField = AccessTools.Field(typeof(GuiDialogInventory), "survivalInvDialog");
+    static FieldInfo creativeInvDialogField = AccessTools.Field(typeof(GuiDialogInventory), "creativeInvDialog");
+
     static bool Prefix(GuiDialogInventory __instance)
     {
-        ICoreClientAPI capi = AccessTools.Field(typeof(GuiDialogInventory), "capi").GetValue(__instance) as ICoreClientAPI;
-        IInventory creativeInv = AccessTools.Field(typeof(GuiDialogInventory), "creativeInv").GetValue(__instance) as IInventory;
-        IInventory craftingInv = AccessTools.Field(typeof(GuiDialogInventory), "craftingInv").GetValue(__instance) as IInventory;
-        IInventory backpackInv = AccessTools.Field(typeof(GuiDialogInventory), "backpackInv").GetValue(__instance) as IInventory;
-        GuiComposer survivalInvDialog = AccessTools.Field(typeof(GuiDialogInventory), "survivalInvDialog").GetValue(__instance) as GuiComposer;
-        GuiComposer creativeInvDialog = AccessTools.Field(typeof(GuiDialogInventory), "creativeInvDialog").GetValue(__instance) as GuiComposer;
+        ICoreClientAPI capi = capiField.GetValue(__instance) as ICoreClientAPI;
+        IInventory creativeInv = creativeInvField.GetValue(__instance) as IInventory;
+        IInventory craftingInv = craftingInvField.GetValue(__instance) as IInventory;
+        IInventory backpackInv = backpackInvField.GetValue(__instance) as IInventory;
+        GuiComposer survivalInvDialog = survivalInvDialogField.GetValue(__instance) as GuiComposer;
+        GuiComposer creativeInvDialog = creativeInvDialogField.GetValue(__instance) as GuiComposer;
 
         // ---- START CODE ----
         if (capi.World.Player.WorldData.CurrentGameMode == EnumGameMode.Creative)
