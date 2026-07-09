@@ -28,11 +28,11 @@ Where `baseCraftingTimeSeconds` is configurable, `craftingSurfaceTimeModifier` d
 
 As an example for `craftingSurfaceTimeModifier`: tables provides the fastest crafting speed, while cobble stone is a bit slower, and soil is the slowest.
 
-For `recipeCraftingTimeModifier` the only recipes currently that modifies this are tool and weapon recipies.
+For `recipeCraftingTimeModifier` the only recipes currently that modifies this are tool and weapon recipes.
 
 ## Adjusted recipes
 
-In order to work with the mod, some recipes had to be adjusted. These are recipies that in vanilla require more than two tools, or combination of tools that did not fit the animation set.
+In order to work with the mod, some recipes had to be adjusted. These are recipes that in vanilla require more than two tools, or combination of tools that did not fit the animation set.
 
 * All figureheads have reduced required tools from four to two.
 * Many mechanical parts have reduced required tools to two.
