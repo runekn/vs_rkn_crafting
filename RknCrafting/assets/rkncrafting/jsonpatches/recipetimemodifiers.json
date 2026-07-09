@@ -1,0 +1,24 @@
+[
+  {
+    "file": "@@game:recipes\/grid\/tool\/(axe|blade|bow|bowstave|club|knife|roundshield|shield|shovel|sling)",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "@@game:recipes\/grid\/tool\/(cleaver|hackingspear|hammer|hoe|pickaxe|saw|scythe|solderingiron|spear|tongs|wormgrunter)",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  }
+]
