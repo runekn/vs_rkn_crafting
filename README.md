@@ -57,6 +57,10 @@ File: `%AppData%/Roaming/VintagestoryData/ModConfig/rkncrafting.json`
 | BulkBaseCraftingTimeSeconds | 2.0 | Base seconds to craft if using bulk crafting.| Server |
 | DisableUICraftingGrid | true | Disabled the inventory UI crafting grid. | Client |
 
+## Required dependencies
+
+* [JSON Patches lib](https://mods.vintagestory.at/jsonpatcheslib)
+
 ## Compatibility
 
 Fully safe to add to existing save. It is recommended that all crafting surfaces are deleted before removing from existing save. Though given the auto-delete feature this should be trivial.
