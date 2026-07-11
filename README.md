@@ -7,7 +7,7 @@ Generic gridless crafting system that completely replaces all UI grid recipes.
 Right click with any non-tool item or block on a solid surface, while holding the crafting button (ALT, rebindable), to create a crafting surface.
 Right click with additional items or blocks to add more ingredients. Once all the required ingredients has been added, hold right click with the appropriate tool or hands to craft.
 
-Once crafting has completed, the ingredients will despawn, and the recipe output will spawned.
+Once crafting has completed, the ingredients will despawn, and the recipe output will spawn.
 
 If there are enough remaining ingredients to continue crafting, then continuing to hold rick click will continue crafting at a slightly faster pace.
 
@@ -55,7 +55,7 @@ File: `%AppData%/Roaming/VintagestoryData/ModConfig/rkncrafting.json`
 | ConsecutiveCraftingTimeModifierMin | 0.5 | The minimum amount that crafting time can be decreased during consecutive crafting. | Server |
 | EnableBulkCrafting | false | Allows for holding SHIFT while crafting to craft as many items as possible at once.| Server |
 | BulkBaseCraftingTimeSeconds | 2.0 | Base seconds to craft if using bulk crafting.| Server |
-| DisableUICraftingGrid | true | Disabled the inventory UI crafting grid. | Client |
+| DisableUICraftingGrid | true | Disables the inventory UI crafting grid. | Client |
 
 ## Required dependencies
 
@@ -92,7 +92,8 @@ Any mod that disables grid recipes will also disable for this mod.
 
 ## Known issues
 
-This mod is untested in true multiplayer environment.
+* This mod is untested in true multiplayer environment.
+* Some recipes have the same name and are indistinguishable in the recipe selection.
 
 ## Changelog
 
