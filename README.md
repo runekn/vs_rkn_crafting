@@ -87,13 +87,14 @@ Any mod that disables grid recipes will also disable for this mod.
 	* Estimated difficulty: HARD
 * Pressing H while looking at crafting surface opens selected recipe output
 	* Estimated difficulty: MEDIUM
-* Support adding ingredient while is mouse mode
+* Support adding ingredient while in mouse mode
 	* Estimated difficulty: MEDIUM
 
 ## Known issues
 
-* This mod is untested in true multiplayer environment.
+* Other players in multiplayer do not see the same ingredients, or with the same size, unless they add to it.
 * Some recipes have the same name and are indistinguishable in the recipe selection.
+* Clothes are already tattered when crafted.
 
 ## Changelog
 

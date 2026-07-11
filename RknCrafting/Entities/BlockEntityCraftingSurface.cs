@@ -38,6 +38,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public static void OnRecipeConsumed(ICoreClientAPI api, BlockPos pos)
     {
         BlockEntityCraftingSurface entity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(pos);
+        if (entity == null)
+        {
+            return;
+        }
         entity.MarkMeshesDirty();
         entity.MarkDirty(true);
     }
@@ -456,11 +460,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        //result.Collectible.OnCreatedByCrafting(Array.Empty<ItemSlot>(), new DummySlot(result), gridRecipe);
+        result.Collectible.OnCreatedByCrafting(items.ToArray(), new DummySlot(result), gridRecipe);
         int amount = ConsumeRecipe(gridRecipe, items, primaryTool, offhandTool, world);
-        ItemStack output = gridRecipe.Output.ResolvedItemStack.Clone();
-        output.StackSize = amount;
-        Api.World.SpawnItemEntity(output, Pos);
+        result.StackSize = amount;
+        Api.World.SpawnItemEntity(result, Pos);
         Api.RCLogger().Debug("Crafted {0} by {1}!", [gridRecipe.Name, craftingParams.player.PlayerName]);
     }
 
@@ -478,5 +481,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         public EnumCraftingAnimation animation;
         public float nextCraftingTime;
         public int amount;
+    }
+
+    // We don't use the DummySlot that comes with VanillaAPI, because the game assumes it is only used by handbook.
+    private class DummySlot : ItemSlot
+    {
+        public DummySlot(ItemStack stack) : base(null)
+        {
+            base.Itemstack = stack;
+            this.MarkDirty();
+        }
     }
 }
