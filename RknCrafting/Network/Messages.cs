@@ -27,7 +27,7 @@ public class SelectNextRecipeMessage
 }
 
 [ProtoContract]
-public class RecipeConsumedMessage
+public class InventoryChanged
 {
     [ProtoMember(1)]
     public required BlockPos Position;

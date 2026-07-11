@@ -13,10 +13,13 @@ public class RknCraftingNetwork
 {
     private ICoreAPI api;
     private INetworkChannel channel;
+    private INetworkChannel channelUdp;
 
 #pragma warning disable CS8603
     private IServerNetworkChannel ServerChannel { get { return channel as IServerNetworkChannel; } }
     private IClientNetworkChannel ClientChannel { get { return channel as IClientNetworkChannel; } }
+    private IServerNetworkChannel ServerChannelUdp { get { return channelUdp as IServerNetworkChannel; } }
+    private IClientNetworkChannel ClientChannelUdp { get { return channelUdp as IClientNetworkChannel; } }
     private ICoreClientAPI ClientApi { get { return api as ICoreClientAPI; } }
     private ICoreServerAPI ServerApi { get { return api as ICoreServerAPI; } }
 #pragma warning restore CS8603
@@ -25,29 +28,36 @@ public class RknCraftingNetwork
     {
         this.api = api;
         channel = api.Network.RegisterChannel(modId);
+        channelUdp = api.Network.RegisterUdpChannel(modId + "-udp");
 
         ClientChannel.RegisterMessageType<CreateCraftingBlockMessage>();
         ClientChannel.RegisterMessageType<CraftingStoppedMessage>();
         ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
-        ClientChannel.RegisterMessageType<RecipeConsumedMessage>();
+        ClientChannel.RegisterMessageType<InventoryChanged>();
         ClientChannel.RegisterMessageType<ConfigMessage>();
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
-        ClientChannel.SetMessageHandler<RecipeConsumedMessage>(OnRecipeConsumedMessage);
+        ClientChannel.SetMessageHandler<InventoryChanged>(OnInventoryChangedMessage);
         ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
+
+        ClientChannelUdp.RegisterMessageType<InventoryChanged>();
+        ClientChannelUdp.SetMessageHandler<InventoryChanged>(OnInventoryChangedMessage);
     }
 
     public RknCraftingNetwork(ICoreServerAPI api, string modId)
     {
         this.api = api;
         channel = api.Network.RegisterChannel(modId);
+        channelUdp = api.Network.RegisterUdpChannel(modId + "-udp");
 
         ServerChannel.RegisterMessageType<CreateCraftingBlockMessage>();
         ServerChannel.RegisterMessageType<CraftingStoppedMessage>();
         ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
-        ServerChannel.RegisterMessageType<RecipeConsumedMessage>();
+        ServerChannel.RegisterMessageType<InventoryChanged>();
         ServerChannel.RegisterMessageType<ConfigMessage>();
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
         ServerChannel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
+
+        ServerChannelUdp.RegisterMessageType<InventoryChanged>();
     }
 
     public void SelectNextRecipe(BlockPos pos)
@@ -85,13 +95,13 @@ public class RknCraftingNetwork
     public void RecipeConsumed(BlockPos pos)
     {
         api.RCLogger().Debug("Broadcasting recipe consumed message!");
-        ServerChannel.BroadcastPacket(new RecipeConsumedMessage() { Position = pos });
+        ServerChannel.BroadcastPacket(new InventoryChanged() { Position = pos });
     }
 
-    private void OnRecipeConsumedMessage(RecipeConsumedMessage packet)
+    private void OnInventoryChangedMessage(InventoryChanged packet)
     {
         api.RCLogger().Debug("Received recipe consumed message!");
-        BlockEntityCraftingSurface.OnRecipeConsumed(ClientApi, packet.Position);
+        BlockEntityCraftingSurface.OnInventoryUpdated(ClientApi, packet.Position);
     }
 
     public void TransferConfig(RknCraftingConfig config, IServerPlayer player)
@@ -104,5 +114,10 @@ public class RknCraftingNetwork
     {
         api.RCLogger().Debug("Received config from server: {0}", [message.Config]);
         api.RCSetConfig(message.Config);
+    }
+
+    public void IngredientAdded(BlockPos pos, IPlayer byPlayer)
+    {
+        ServerChannelUdp.BroadcastPacket(new InventoryChanged() { Position = pos }, [byPlayer as IServerPlayer]);
     }
 }

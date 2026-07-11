@@ -6,8 +6,10 @@ using System.Linq;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace RKN.Crafting.Entities;
@@ -35,11 +37,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         inventory = new InventoryDisplayed(this, slotCount, "craftingsurface-0", null);
     }
 
-    public static void OnRecipeConsumed(ICoreClientAPI api, BlockPos pos)
+    public static void OnInventoryUpdated(ICoreClientAPI api, BlockPos pos)
     {
         BlockEntityCraftingSurface entity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(pos);
         if (entity == null)
         {
+            api.RCLogger().Debug("Got OnInventoryUpdated for non-existing block: [{0},{1},{2}]", pos.X, pos.Y, pos.Z);
             return;
         }
         entity.MarkMeshesDirty();
@@ -54,6 +57,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             // Don't persist recipes after server restart
             UpdateValidRecipes();
         }
+        craftingParams = null;
         craftingSurfaceTimeModifier = api.World.BlockAccessor.GetBlock(Pos.DownCopy(1)).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingTimeModifier;
         config = api.RCConfig();
     }
@@ -109,6 +113,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             validRecipes = [.. (validRecipesAttribute as IntArrayAttribute).value];
         }
+        if (craftingParams == null)
+        {
+            craftingParams = CraftingParams.FromTreeAttributes(tree, Api);
+        }
     }
 
     public override void ToTreeAttributes(ITreeAttribute tree)
@@ -119,6 +127,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         if (validRecipes != null)
         {
             tree["validRecipes"] = new IntArrayAttribute(validRecipes.ToArray());
+        }
+        if (craftingParams != null)
+        {
+            craftingParams.ToTreeAttributes(tree);
         }
     }
 
@@ -204,11 +216,17 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         timeoutTimer = 0;
         if (craftingParams != null || selectedRecipe == -1)
         {
+            if (craftingParams != null && !IsCrafting(byPlayer))
+            {
+                (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.surfacealreadycrafting", Lang.Get("rkncrafting:error-surfacealreadycrafting"));
+                return;
+            }
             return;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
         if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
         {
+            (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.missingtools", Lang.Get("rkncrafting:error-missingtools"));
             return;
         }
         bool bulk = byPlayer.Entity.Controls.CtrlKey && Api.RCConfig().EnableBulkCrafting;
@@ -220,7 +238,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             recipeCraftingTimeModifier = GetRecipeOutputCraftingModifier(),
         };
         craftingParams.nextCraftingTime = GetCraftingTime();
-        Api.RCLogger().Debug("Crafting {0} by {1}!", [Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingParams.player.PlayerName]);
+        Api.RCLogger().Debug("Crafting {0} by {1}!", Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingParams.player.PlayerName);
         if (world.Api.Side == EnumAppSide.Server)
         {
             MarkDirty(); // TODO: why?
@@ -283,7 +301,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         float @base = craftingParams.bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float) Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.recipeCraftingTimeModifier * consecutiveModifer;
-        Api.RCLogger().Debug("Next crafting time: {0}", [r]);
+        Api.RCLogger().Debug("Next crafting time: {0}", r);
         return r;
     }
 
@@ -300,7 +318,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        Api.RCLogger().Debug("Cancelled crafting by {0}!", [craftingParams.player.PlayerName]);
+        Api.RCLogger().Debug("Cancelled crafting by {0}!", craftingParams.player.PlayerName);
         EnumCraftingAnimation anim = GetCraftingAnimation();
         Api.RCAnimator().StopCrafting(byPlayer, anim);
         ResetState();
@@ -333,16 +351,19 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 }
                 if (slot.TryPutInto(Api.World, invSlot, quantity) < 1)
                 {
+                    (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.craftingsurfacefull", Lang.Get("rkncrafting:error-surfacefull"));
                     return false;
                 }
+                Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
                 slot.MarkDirty();
 
                 if (Api.Side == EnumAppSide.Server)
                 {
                     UpdateValidRecipes();
+                    Api.RCNetwork().IngredientAdded(Pos, byPlayer);
                 }
 
-                MarkDirty(true, null);
+                MarkDirty(true, byPlayer);
                 MarkMeshesDirty();
                 return true;
             }
@@ -418,7 +439,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 }
             }
             amount++;
-            if (!craftingParams.bulk || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
+            if (!craftingParams.bulk || !items.Any(i => i != null) || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
             {
                 return amount;
             }
@@ -462,9 +483,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         result.Collectible.OnCreatedByCrafting(items.ToArray(), new DummySlot(result), gridRecipe);
         int amount = ConsumeRecipe(gridRecipe, items, primaryTool, offhandTool, world);
-        result.StackSize = amount;
+        result.StackSize *= amount;
         Api.World.SpawnItemEntity(result, Pos);
-        Api.RCLogger().Debug("Crafted {0} by {1}!", [gridRecipe.Name, craftingParams.player.PlayerName]);
+        Api.RCLogger().Debug("Crafted {0} by {1}!", gridRecipe.Name, craftingParams.player.PlayerName);
     }
 
     private void ResetState()
@@ -481,6 +502,34 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         public EnumCraftingAnimation animation;
         public float nextCraftingTime;
         public int amount;
+
+        internal static CraftingParams? FromTreeAttributes(ITreeAttribute tree, ICoreAPI api)
+        {
+            ITreeAttribute paramsTree = tree.GetTreeAttribute("craftingParams");
+            if (paramsTree == null)
+            {
+                return null;
+            }
+            else
+            {
+                // Just add a few random fields for now. Important thing is just that CraftingParams is non-null
+                bool bulk = paramsTree.GetBool("bulk");
+                float recipeCraftingTimeModifier = paramsTree.GetFloat("recipeCraftingTimeModifier");
+                return new CraftingParams()
+                {
+                    bulk = bulk,
+                    recipeCraftingTimeModifier  = recipeCraftingTimeModifier
+                };
+            }
+        }
+
+        internal void ToTreeAttributes(ITreeAttribute tree)
+        {
+            TreeAttribute paramsTree = new TreeAttribute();
+            paramsTree.SetBool("bulk", bulk);
+            paramsTree.SetFloat("recipeCraftingTimeModifier", recipeCraftingTimeModifier);
+            tree["craftingParams"] = paramsTree;
+        }
     }
 
     // We don't use the DummySlot that comes with VanillaAPI, because the game assumes it is only used by handbook.

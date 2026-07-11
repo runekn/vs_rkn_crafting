@@ -94,7 +94,6 @@ Any mod that disables grid recipes will also disable for this mod.
 
 * Other players in multiplayer do not see the same ingredients, or with the same size, unless they add to it.
 * Some recipes have the same name and are indistinguishable in the recipe selection.
-* Clothes are already tattered when crafted.
 
 ## Changelog
 

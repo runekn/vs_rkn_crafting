@@ -43,7 +43,7 @@ public class RknCraftingModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         api.Event.LevelFinalize += InitCatalog;
-        api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("hotkey-crafting"), GlKeys.AltLeft);
+        api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("rkncrafting:hotkey-crafting"), GlKeys.AltLeft);
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
     }
 

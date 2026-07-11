@@ -64,7 +64,11 @@ public class RecipeCatalog
         {
             return false;
         }
-        IEnumerable<ItemStack> clonedItems = items.Select(i => i.Itemstack.Clone()).ToList();
+        List<ItemStack> clonedItems = items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
+        if (clonedItems.Count == 0)
+        {
+            return false;
+        }
         ISet<ItemStack> unusedItems = clonedItems.ToHashSet();
         foreach (CraftingRecipeIngredient? ingredient in recipe.ResolvedIngredients)
         {
