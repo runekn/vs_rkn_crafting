@@ -41,7 +41,7 @@ public class RecipeCatalog
             {
                 foreach (var recipe in pair.Value)
                 {
-                    if (MatchesRecipe(items, null, null, recipe as GridRecipe, true))
+                    if (recipe is GridRecipe gridRecipe && MatchesRecipe(items, null, null, gridRecipe, true))
                     {
                         result.Add(recipe.RecipeId);
                     }
