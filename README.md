@@ -1,4 +1,4 @@
-# RKN Gridless Crafting
+# RKN Generic Crafting
 
 Generic gridless crafting system that completely replaces all UI grid recipes.
 
