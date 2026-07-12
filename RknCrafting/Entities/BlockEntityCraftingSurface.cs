@@ -224,9 +224,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         (List<ItemSlot>? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
-        if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
+        if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe, byPlayer))
         {
-            (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.missingtools", Lang.Get("rkncrafting:error-missingtools"));
+            (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.missingreciperequirement", Lang.Get("rkncrafting:error-missingreciperequirement"));
             return;
         }
         bool bulk = byPlayer.Entity.Controls.CtrlKey && Api.RCConfig().EnableBulkCrafting;

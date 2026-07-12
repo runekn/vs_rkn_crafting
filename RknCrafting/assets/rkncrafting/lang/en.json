@@ -3,5 +3,5 @@
 	"hotkey-crafting": "RKN Crafting modifier",
 	"error-surfacefull": "Crafting surface is full",
 	"error-surfacealreadycrafting": "Someone is already crafting here!",
-	"error-missingtools": "Incorrect tool(s) for crafting"
+	"error-missingreciperequirement": "Missing requirement for crafting"
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace RKN.Crafting;
@@ -53,9 +54,15 @@ public class RecipeCatalog
         return result;
     }
 
-    public bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId)
+    public bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId, IPlayer byPlayer = null)
     {
-        return MatchesRecipe(items, primaryTool, offhandTool, api.World.GridRecipes[recipeId], false);
+        GridRecipe gridRecipe = api.World.GridRecipes[recipeId];
+        if (!api.Event.TriggerMatchesRecipe(byPlayer, gridRecipe, items.ToArray()))
+        {
+            (api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.missingtools", "fuck you");
+            return false;
+        }
+        return MatchesRecipe(items, primaryTool, offhandTool, gridRecipe, false);
     }
 
     private bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
