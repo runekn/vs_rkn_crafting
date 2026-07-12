@@ -59,7 +59,7 @@ public class RecipeCatalog
         GridRecipe gridRecipe = api.World.GridRecipes[recipeId];
         if (!api.Event.TriggerMatchesRecipe(byPlayer, gridRecipe, items.ToArray()))
         {
-            (api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.missingtools", "fuck you");
+            (api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.classrestricted", "Class restricted recipe");
             return false;
         }
         return MatchesRecipe(items, primaryTool, offhandTool, gridRecipe, false);
