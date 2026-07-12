@@ -58,7 +58,7 @@
           "code": "game:knife-generic-*",
           "allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze" ],
           "isTool": true,
-          "toolDurabilityCost": 100
+          "toolDurabilityCost": 200
         },
         "C": {
           "type": "item",
@@ -95,7 +95,7 @@
           "code": "game:knife-generic-*",
           "allowedVariants": [ "iron" ],
           "isTool": true,
-          "toolDurabilityCost": 40
+          "toolDurabilityCost": 800
         },
         "I": {
           "type": "item",
