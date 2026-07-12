@@ -7,7 +7,7 @@ namespace RKN.Crafting.Entities;
 public class BlockCraftingSurface : Block
 {
 
-    public static bool TryPlace(ICoreAPI api, IPlayer byPlayer, BlockPos blockPos, ItemSlot slot)
+    public static bool TryPlace(ICoreAPI api, IPlayer? byPlayer, BlockPos blockPos, ItemSlot slot)
     {
         BlockCraftingSurface? block = api.World.GetBlock(new AssetLocation("rkncrafting:craftingsurface")) as BlockCraftingSurface;
         if (block == null)
@@ -29,7 +29,7 @@ public class BlockCraftingSurface : Block
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
-        if (!blockEntity.TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot, byPlayer))
+        if (!blockEntity.TryPutIngredient(slot, byPlayer))
         {
             api.RCLogger().Error("Could not put initial items into newly spawned crafting block!");
             api.World.BlockAccessor.BreakBlock(abovePos, null);

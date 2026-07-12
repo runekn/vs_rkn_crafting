@@ -238,11 +238,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             recipeCraftingTimeModifier = GetRecipeOutputCraftingModifier(),
         };
         craftingParams.nextCraftingTime = GetCraftingTime();
+        MarkDirty();
         Api.RCLogger().Debug("Crafting {0} by {1}!", Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Name, craftingParams.player.PlayerName);
-        if (world.Api.Side == EnumAppSide.Server)
-        {
-            MarkDirty(); // TODO: why?
-        }
     }
 
     public void OnCraftingStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -282,7 +279,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             {
                 validRecipes = Api.RCRecipeCatalog().GetValidRecipesWithoutTools(items);
             }
-            Api.RCNetwork().RecipeConsumed(Pos);
             if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe))
             {
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
@@ -297,7 +293,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private float GetCraftingTime()
     {
-        // TODO: add recipe output modifier
         float @base = craftingParams.bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float) Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.recipeCraftingTimeModifier * consecutiveModifer;
@@ -329,7 +324,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.animation == null ? EnumCraftingAnimation.HandsGeneric : craftingParams.animation;
     }
 
-    public bool TryPutIngredient(ItemSlot slot, IPlayer byPlayer)
+    public bool TryPutIngredient(ItemSlot slot, IPlayer? byPlayer = null)
     {
         timeoutTimer = 0;
         if (slot.Itemstack?.Item?.Tool != null)
@@ -341,11 +336,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             if (invSlot.CanTakeFrom(slot))
             {
                 int quantity = 1;
-                if (byPlayer.Entity.Controls.CtrlKey)
+                if (byPlayer != null && byPlayer.Entity.Controls.CtrlKey)
                 {
                     quantity = slot.StackSize;
                 }
-                if (byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
+                if (byPlayer != null && byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
                 {
                     // TODO: Don't pull from slot if gamemode is creative
                 }
@@ -354,13 +349,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                     (Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.craftingsurfacefull", Lang.Get("rkncrafting:error-surfacefull"));
                     return false;
                 }
-                Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
+                if (byPlayer != null)
+                {
+                    Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
+                }
                 slot.MarkDirty();
 
                 if (Api.Side == EnumAppSide.Server)
                 {
                     UpdateValidRecipes();
-                    Api.RCNetwork().IngredientAdded(Pos, byPlayer);
                 }
 
                 MarkDirty(true, byPlayer);

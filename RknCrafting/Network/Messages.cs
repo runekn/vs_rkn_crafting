@@ -10,6 +10,8 @@ public class CreateCraftingBlockMessage
 {
     [ProtoMember(1)]
     public required BlockPos Position;
+    [ProtoMember(2)]
+    public bool asPlayer = true;
 }
 
 [ProtoContract]

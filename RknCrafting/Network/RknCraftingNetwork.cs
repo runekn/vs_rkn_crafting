@@ -33,14 +33,9 @@ public class RknCraftingNetwork
         ClientChannel.RegisterMessageType<CreateCraftingBlockMessage>();
         ClientChannel.RegisterMessageType<CraftingStoppedMessage>();
         ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
-        ClientChannel.RegisterMessageType<InventoryChanged>();
         ClientChannel.RegisterMessageType<ConfigMessage>();
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
-        ClientChannel.SetMessageHandler<InventoryChanged>(OnInventoryChangedMessage);
         ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
-
-        ClientChannelUdp.RegisterMessageType<InventoryChanged>();
-        ClientChannelUdp.SetMessageHandler<InventoryChanged>(OnInventoryChangedMessage);
     }
 
     public RknCraftingNetwork(ICoreServerAPI api, string modId)
@@ -52,12 +47,9 @@ public class RknCraftingNetwork
         ServerChannel.RegisterMessageType<CreateCraftingBlockMessage>();
         ServerChannel.RegisterMessageType<CraftingStoppedMessage>();
         ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
-        ServerChannel.RegisterMessageType<InventoryChanged>();
         ServerChannel.RegisterMessageType<ConfigMessage>();
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
         ServerChannel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
-
-        ServerChannelUdp.RegisterMessageType<InventoryChanged>();
     }
 
     public void SelectNextRecipe(BlockPos pos)
@@ -70,9 +62,9 @@ public class RknCraftingNetwork
         api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).SelectNextRecipe();
     }
 
-    public void SpawnCraftingSurface(BlockPos pos)
+    public void SpawnCraftingSurface(BlockPos pos, bool asPlayer = true)
     {
-        ClientChannel.SendPacket(new CreateCraftingBlockMessage() { Position = pos });
+        ClientChannel.SendPacket(new CreateCraftingBlockMessage() { Position = pos, asPlayer = asPlayer });
     }
 
     protected void OnCreateCraftingBlockMessage(IPlayer fromPlayer, CreateCraftingBlockMessage message)
@@ -82,7 +74,7 @@ public class RknCraftingNetwork
 
     public void StopCrafting(IPlayer craftingPlayer, EnumCraftingAnimation enumCraftingAnimation)
     {
-        ServerChannel.SendPacket(new CraftingStoppedMessage() { animation = enumCraftingAnimation }, [(craftingPlayer as IServerPlayer)]);
+        ServerChannel.SendPacket(new CraftingStoppedMessage() { animation = enumCraftingAnimation }, craftingPlayer as IServerPlayer);
     }
 
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
@@ -92,32 +84,15 @@ public class RknCraftingNetwork
         api.RCAnimator().StopCrafting(player, message.animation);
     }
 
-    public void RecipeConsumed(BlockPos pos)
-    {
-        api.RCLogger().Debug("Broadcasting recipe consumed message!");
-        ServerChannel.BroadcastPacket(new InventoryChanged() { Position = pos });
-    }
-
-    private void OnInventoryChangedMessage(InventoryChanged packet)
-    {
-        api.RCLogger().Debug("Received recipe consumed message!");
-        BlockEntityCraftingSurface.OnInventoryUpdated(ClientApi, packet.Position);
-    }
-
     public void TransferConfig(RknCraftingConfig config, IServerPlayer player)
     {
         api.RCLogger().Debug("Sending config to player {0}: {1}", [player.PlayerName, config]);
-        ServerChannel.SendPacket(new ConfigMessage() { Config = config }, [player]);
+        ServerChannel.SendPacket(new ConfigMessage() { Config = config }, player);
     }
 
     private void OnConfigMessage(ConfigMessage message)
     {
-        api.RCLogger().Debug("Received config from server: {0}", [message.Config]);
+        api.RCLogger().Debug("Received config from server: {0}", message.Config);
         api.RCSetConfig(message.Config);
-    }
-
-    public void IngredientAdded(BlockPos pos, IPlayer byPlayer)
-    {
-        ServerChannelUdp.BroadcastPacket(new InventoryChanged() { Position = pos }, [byPlayer as IServerPlayer]);
     }
 }

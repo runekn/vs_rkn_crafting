@@ -6,9 +6,11 @@ using RKN.Crafting.Patches;
 using RknCrafting;
 using System;
 using System.Formats.Asn1;
+using System.Numerics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.Client.NoObf;
 
@@ -45,6 +47,7 @@ public class RknCraftingModSystem : ModSystem
         api.Event.LevelFinalize += InitCatalog;
         api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("rkncrafting:hotkey-crafting"), GlKeys.AltLeft);
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
+        api.Event.BlockChanged += UpdateCraftingSurface; // Why is this neccessary? Vanilla shelf seems to work just fine without.
     }
 
     public override void StartServerSide(ICoreServerAPI api)
@@ -53,6 +56,28 @@ public class RknCraftingModSystem : ModSystem
         TryLoadConfig();
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
         api.Event.PlayerJoin += SendConfig;
+
+        api.ChatCommands.Create("addcraft")
+            .WithDescription("Spawn crafting surface with held item, without player replication. For testing.")
+            .RequiresPrivilege(Privilege.controlserver)
+            .RequiresPlayer()
+            .HandleWith((args) =>
+            {
+                IPlayer byPlayer = args.Caller.Player;
+                BlockPos position = byPlayer.CurrentBlockSelection.Position;
+                if (api.World.BlockAccessor.GetBlock(position) is BlockCraftingSurface)
+                {
+                    api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(position).TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot);
+                }
+                else
+                {
+                    if (!BlockCraftingSurface.TryPlace(api, null, position, byPlayer.InventoryManager.ActiveHotbarSlot))
+                    {
+                        return TextCommandResult.Error("Could not place crafting surface there");
+                    }
+                }
+                return TextCommandResult.Success();
+            });
     }
 
     private void SendConfig(IServerPlayer byPlayer)
@@ -81,6 +106,14 @@ public class RknCraftingModSystem : ModSystem
             collectible.CollectibleBehaviors.Append(instance); // TODO: this isn't working...
         }
     }*/
+
+    private void UpdateCraftingSurface(BlockPos pos, Block oldBlock)
+    {
+        if (oldBlock is BlockCraftingSurface)
+        {
+            BlockEntityCraftingSurface.OnInventoryUpdated(api as ICoreClientAPI, pos);
+        }
+    }
 
     private void ApplyHarmonyPatches()
     {
