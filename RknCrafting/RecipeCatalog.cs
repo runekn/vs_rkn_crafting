@@ -42,10 +42,10 @@ public class RecipeCatalog
         return recipes[id];
     }
 
-    public List<int> GetValidRecipes(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, bool gridless, IPlayer byPlayer)
+    public List<int> GetValidRecipes(RecipeInputSlots inputSlots, bool gridless, IPlayer byPlayer)
     {
         List<int> result = [];
-        ItemStack? sample = items.First(i => i != null && !i.Empty)?.Itemstack;
+        ItemStack? sample = inputSlots.Items.First(i => i != null && !i.Empty)?.Itemstack;
         if (sample == null)
         {
             return result;
@@ -62,7 +62,7 @@ public class RecipeCatalog
                         continue;
                     }
                     GridRecipeWrapper wrapper = recipes[gridRecipe.RecipeId];
-                    if (MatchesRecipe(items, primaryTool, offhandTool, wrapper, gridless, byPlayer))
+                    if (MatchesRecipe(inputSlots, wrapper, gridless, byPlayer))
                     { 
                         result.Add(wrapper.Id);
                     }
@@ -74,13 +74,13 @@ public class RecipeCatalog
         return result;
     }
 
-    public bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId, bool gridless, IPlayer byPlayer)
+    public bool MatchesRecipe(RecipeInputSlots inputSlots, int recipeId, bool gridless, IPlayer byPlayer)
     {
         GridRecipeWrapper wrapper = recipes[recipeId];
-        return MatchesRecipe(items, primaryTool, offhandTool, wrapper, gridless, byPlayer);
+        return MatchesRecipe(inputSlots, wrapper, gridless, byPlayer);
     }
 
-    private bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipeWrapper wrapper, bool gridless, IPlayer byPlayer)
+    private bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, IPlayer byPlayer)
     {
         if (!wrapper.RecipeWithoutTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
         {
@@ -91,21 +91,21 @@ public class RecipeCatalog
             // Use custom implementation, because vanilla shapeless matching does not handle scenarios:
                 // - Multiple recipe slots of same ingredient fulfilled by one large input stack.
                 // - Probably more...
-            if (!MatchesRecipeGridless(items, primaryTool, offhandTool, wrapper.RecipeWithoutTools, byPlayer))
+            if (!MatchesRecipeGridless(inputSlots, wrapper.RecipeWithoutTools, byPlayer))
             {
                 return false;
             }
         } else
         {
-            if (!wrapper.RecipeWithoutTools.Matches(byPlayer, api.World, items, 3))
+            if (!wrapper.RecipeWithoutTools.Matches(byPlayer, api.World, inputSlots.Items, 3))
             {
                 return false;
             }
         }
         foreach (CraftingRecipeIngredient ingredient in wrapper.ToolIngredients)
         {
-            if (!IngredientSatisfied(ingredient, primaryTool?.Itemstack, wrapper.RecipeWithoutTools) && 
-                !IngredientSatisfied(ingredient, offhandTool?.Itemstack, wrapper.RecipeWithoutTools))
+            if (!IngredientSatisfied(ingredient, inputSlots.PrimaryTool?.Itemstack, wrapper.RecipeWithoutTools) && 
+                !IngredientSatisfied(ingredient, inputSlots.OffhandTool?.Itemstack, wrapper.RecipeWithoutTools))
             {
                 return false;
             }
@@ -113,13 +113,13 @@ public class RecipeCatalog
         return true;
     }
 
-    private bool MatchesRecipeGridless(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, IPlayer byPlayer)
+    private bool MatchesRecipeGridless(RecipeInputSlots inputSlots, GridRecipe recipe, IPlayer byPlayer)
     {
-        if (!api.Event.TriggerMatchesRecipe(byPlayer, recipe, items))
+        if (!api.Event.TriggerMatchesRecipe(byPlayer, recipe, inputSlots.Items))
         {
             return false;
         }
-        List<ItemStack> clonedItems = items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
+        List<ItemStack> clonedItems = inputSlots.Items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
         if (clonedItems.Count == 0)
         {
             return false;
@@ -133,7 +133,7 @@ public class RecipeCatalog
             {
                 continue;
             }
-            if (!MatchesIngredientGridless(recipe, clonedItems, primaryTool, offhandTool, ingredient, unusedItems))
+            if (!MatchesIngredientGridless(recipe, clonedItems, inputSlots.PrimaryTool, inputSlots.OffhandTool, ingredient, unusedItems))
             {
                 return false;
             }
@@ -218,3 +218,5 @@ public class GridRecipeWrapper
         }
     }
 }
+
+public record RecipeInputSlots(ItemSlot[] Items, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);
