@@ -32,9 +32,9 @@ public static class CoreApiExtensions
         return api.ModLoader.GetModSystem<RknCraftingModSystem>().Config;
     }
 
-    public static void RCSetConfig(this ICoreAPI api, RknCraftingConfig config)
+    public static RknCraftingModSystem RCSystem(this ICoreAPI api)
     {
-        api.ModLoader.GetModSystem<RknCraftingModSystem>().Config = config;
+        return api.ModLoader.GetModSystem<RknCraftingModSystem>();
     }
 
     public static ILogger RCLogger(this ICoreAPI api)

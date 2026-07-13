@@ -93,7 +93,8 @@ public class RknCraftingNetwork
     private void OnConfigMessage(ConfigMessage message)
     {
         api.RCLogger().Debug("Received config from server: {0}", message.Config);
-        api.RCSetConfig(message.Config);
+        api.RCSystem().Config = message.Config;
+        api.RCSystem().InitCatalog();
     }
 
     public void ClientStartedCrafting(CraftingParams craftingParams, BlockPos pos)

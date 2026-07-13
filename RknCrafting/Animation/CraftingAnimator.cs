@@ -57,7 +57,7 @@ public class CraftingAnimator
     {
         if (primaryTool == null)
         {
-            if (api.RCRecipeCatalog().GetRecipeById(recipe).Output?.ResolvedItemStack?.Item?.Tool != null)
+            if (api.RCRecipeCatalog().GetRecipeById(recipe).RecipeWithTools.Output?.ResolvedItemStack?.Item?.Tool != null)
             {
                 return EnumCraftingAnimation.HandsTool;
             }

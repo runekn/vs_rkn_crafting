@@ -31,6 +31,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private int selectedRecipe = -1;
     private List<int>? validRecipes;
     private BlockFacing? lastFacing;
+    private EnumTool? lastTool;
     private bool dirtyRecipes;
 
     private CraftingParams? craftingParams;
@@ -59,12 +60,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public override void Initialize(ICoreAPI api)
     {
         base.Initialize(api);
-        if (validRecipes != null && validRecipes.Count > 0)
-        {
-            // Don't persist recipes after server restart
-            UpdateValidRecipes();
-        }
-        craftingParams = null;
         craftingSurfaceTimeModifier = api.World.BlockAccessor.GetBlock(Pos.DownCopy(1)).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingTimeModifier;
         config = api.RCConfig();
     }
@@ -105,7 +100,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 {
                     sb.Append("   ");
                 }
-                sb.AppendLine("Recipe: " + Api.RCRecipeCatalog().GetRecipeById(recipeId).Output.ResolvedItemStack.GetName());
+                sb.AppendLine("Recipe: " + Api.RCRecipeCatalog().GetRecipeById(recipeId).RecipeWithoutTools.Output.ResolvedItemStack.GetName());
             }
         }
     }
@@ -245,7 +240,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         };
         craftingParams.NextCraftingTime = GetCraftingTime();
         Api.RCNetwork().ClientStartedCrafting(craftingParams, Pos);
-        Api.RCLogger().Debug("Crafting {0} by {1}!", Api.RCRecipeCatalog().GetRecipeById(craftingParams.Recipe).Name, craftingParams.Player.PlayerName);
+        Api.RCLogger().Debug("Crafting {0} by {1}!", Api.RCRecipeCatalog().GetRecipeById(craftingParams.Recipe).RecipeWithoutTools.Name, craftingParams.Player.PlayerName);
         return true;
     }
 
@@ -352,7 +347,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
         }
         slot.MarkDirty();
-        dirtyRecipes = true;
+        //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
         MarkDirty(true, byPlayer);
         MarkMeshesDirty();
         return true;
@@ -414,16 +409,21 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         if (!config.EnableGridless) {
             BlockFacing blockFacing = GetBlockOrientation(Pos, byPlayer);
-            if (lastFacing == null || blockFacing != lastFacing)
+            if (blockFacing != lastFacing)
             {
                 lastFacing = blockFacing;
                 dirtyRecipes = true;
             }
         }
+        if (byPlayer.InventoryManager.ActiveTool != lastTool)
+        {
+            lastTool = byPlayer.InventoryManager.ActiveTool;
+            dirtyRecipes = true;
+        }
 
         if (dirtyRecipes)
         {
-            UpdateValidRecipes();
+            UpdateValidRecipes(byPlayer);
             dirtyRecipes = false;
         }
     }
@@ -449,18 +449,18 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private float GetRecipeOutputCraftingModifier()
     {
-        JsonObject? recipeProperties = Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).Attributes;
+        JsonObject? recipeProperties = Api.RCRecipeCatalog().GetRecipeById(selectedRecipe).RecipeWithoutTools.Attributes;
         return recipeProperties != null ? recipeProperties["craftingTimeModifier"].AsFloat(1f) : 1f;
     }
 
-    private void UpdateValidRecipes()
+    private void UpdateValidRecipes(IPlayer byPlayer)
     {
         if (Api.Side == EnumAppSide.Server)
         {
             return;
         }
-        (ItemSlot[]? items, ItemSlot? _, ItemSlot? _) = GetCraftingItems(null);
-        List<int> recipes = Api.RCRecipeCatalog().GetValidRecipesWithoutTools(items, config.EnableGridless, (Api as ICoreClientAPI).World.Player);
+        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
+        List<int> recipes = Api.RCRecipeCatalog().GetValidRecipes(items, primaryTool, offhandTool, config.EnableGridless, (Api as ICoreClientAPI).World.Player);
         validRecipes = recipes;
         selectedRecipe = -1;
         if (recipes.Count > 0)
@@ -572,23 +572,21 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        GridRecipe gridRecipe = Api.RCRecipeCatalog().GetRecipeById(craftingParams.Recipe);
-        gridRecipe = gridRecipe.Clone();
-        gridRecipe.Shapeless = true;
-        ItemStack result = gridRecipe.Output.ResolvedItemStack.Clone();
+        GridRecipeWrapper gridRecipe = Api.RCRecipeCatalog().GetRecipeById(craftingParams.Recipe);
+        ItemStack result = gridRecipe.RecipeWithoutTools.Output.ResolvedItemStack.Clone();
         if (!result.ResolveBlockOrItem(world))
         {
             return;
         }
-        result.Collectible.OnCreatedByCrafting(items, new DummySlot(result), gridRecipe); // Before ConsumeRecipe because some behaviors expect ingredients to still exist
-        int amount = ConsumeRecipe(gridRecipe, items, primaryTool, offhandTool, world, result);
+        result.Collectible.OnCreatedByCrafting(items, new DummySlot(result), gridRecipe.RecipeWithTools); // Before ConsumeRecipe because some behaviors expect ingredients to still exist
+        int amount = ConsumeRecipe(gridRecipe.RecipeWithTools, items, primaryTool, offhandTool, world, result);
         if (amount == 0)
         {
             return;
         }
         result.StackSize *= amount;
         Api.World.SpawnItemEntity(result, Pos);
-        Api.RCLogger().Debug("Crafted {0} by {1}!", gridRecipe.Name, craftingParams.Player.PlayerName);
+        Api.RCLogger().Debug("Crafted {0} by {1}!", gridRecipe.RecipeWithoutTools.Name, craftingParams.Player.PlayerName);
     }
 
     private void ResetState()

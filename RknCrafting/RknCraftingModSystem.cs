@@ -44,7 +44,7 @@ public class RknCraftingModSystem : ModSystem
 
     public override void StartClientSide(ICoreClientAPI api)
     {
-        api.Event.LevelFinalize += InitCatalog;
+        //api.Event.LevelFinalize += InitCatalog;
         api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("rkncrafting:hotkey-crafting"), GlKeys.AltLeft);
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
         api.Event.BlockChanged += UpdateCraftingSurface; // Why is this neccessary? Vanilla shelf seems to work just fine without.
@@ -52,8 +52,8 @@ public class RknCraftingModSystem : ModSystem
 
     public override void StartServerSide(ICoreServerAPI api)
     {
-        InitCatalog();
         TryLoadConfig();
+        InitCatalog();
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
         api.Event.PlayerJoin += SendConfig;
 
@@ -161,7 +161,7 @@ public class RknCraftingModSystem : ModSystem
         }
     }
 
-    private void InitCatalog()
+    public void InitCatalog()
     {
         RecipeCatalog = new RecipeCatalog(api);
     }

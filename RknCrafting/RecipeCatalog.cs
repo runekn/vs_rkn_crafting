@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace RKN.Crafting;
@@ -10,24 +8,41 @@ namespace RKN.Crafting;
 public class RecipeCatalog
 {
     private ICoreAPI api;
+    private List<GridRecipeWrapper> recipes;
 
     public RecipeCatalog(ICoreAPI api)
     {
         this.api = api;
-        // Add ids to recipes. The game doesn't seem to use this field itself, so I steal it so I can use fast grid recipes and still get index in main list.
+        bool gridlesss = api.RCConfig().EnableGridless;
+        recipes = new(api.World.GridRecipes.Count);
         for (int i = 0; i < api.World.GridRecipes.Count; i++)
         {
             GridRecipe recipe = api.World.GridRecipes[i];
+            if (recipe.ResolvedIngredients == null)
+            {
+                continue;
+            }
+            // GridRecipe has RecipeId which the game doesn't seem to use itself. I'll steal it to connect FastSearchRecipeByIngredient to index.
+            // I tried creating my own FastSearchRecipesByIngredient. But the vanilla map uses ingredients from before variants are resolved. So mine didn't work.
             recipe.RecipeId = i;
+            GridRecipeWrapper wrapper = new(recipe, gridlesss, i);
+            recipes.Add(wrapper);
+            foreach (CraftingRecipeIngredient? ingredient in wrapper.RecipeWithoutTools.ResolvedIngredients)
+            {
+                if (ingredient == null)
+                {
+                    continue;
+                }
+            }
         }
     }
 
-    public GridRecipe GetRecipeById(int id)
+    public GridRecipeWrapper GetRecipeById(int id)
     {
-        return api.World.GridRecipes[id];
+        return recipes[id];
     }
 
-    public List<int> GetValidRecipesWithoutTools(ItemSlot[] items, bool gridless, IPlayer byPlayer)
+    public List<int> GetValidRecipes(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, bool gridless, IPlayer byPlayer)
     {
         List<int> result = [];
         ItemStack? sample = items.First()?.Itemstack;
@@ -40,11 +55,16 @@ public class RecipeCatalog
         {
             if (IngredientSatisfied(pair.Key, sample, null))
             {
-                foreach (var recipe in pair.Value)
+                foreach (IRecipeBase recipe in pair.Value)
                 {
-                    if (recipe is GridRecipe gridRecipe && MatchesRecipe(items, null, null, gridRecipe, gridless, true, byPlayer))
+                    if (recipe is not GridRecipe gridRecipe)
                     {
-                        result.Add(recipe.RecipeId);
+                        continue;
+                    }
+                    GridRecipeWrapper wrapper = recipes[gridRecipe.RecipeId];
+                    if (MatchesRecipe(items, primaryTool, offhandTool, wrapper, gridless, byPlayer))
+                    { 
+                        result.Add(wrapper.Id);
                     }
                 }
             }
@@ -56,42 +76,49 @@ public class RecipeCatalog
 
     public bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId, bool gridless, IPlayer byPlayer)
     {
-        GridRecipe gridRecipe = api.World.GridRecipes[recipeId];
-        if (!api.Event.TriggerMatchesRecipe(byPlayer, gridRecipe, items.ToArray()))
-        {
-            (api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.classrestricted", "Class restricted recipe");
-            return false;
-        }
-        return MatchesRecipe(items, primaryTool, offhandTool, gridRecipe, gridless, false, byPlayer);
+        GridRecipeWrapper wrapper = recipes[recipeId];
+        return MatchesRecipe(items, primaryTool, offhandTool, wrapper, gridless, byPlayer);
     }
 
-    private bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool gridless, bool ignoreTools, IPlayer byPlayer)
+    private bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipeWrapper wrapper, bool gridless, IPlayer byPlayer)
     {
-        if (!recipe.Enabled || recipe.ResolvedIngredients == null)
+        if (!wrapper.RecipeWithoutTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
         {
             return false;
         }
         if (gridless)
         {
-            return MatchesRecipeGridless(items, primaryTool, offhandTool, recipe, ignoreTools);
-        }
-        items = items.Clone() as ItemSlot[];
-        recipe = recipe.Clone();
-        List<CraftingRecipeIngredient> toolIngredients = [];
-        for (int i = 0; i < recipe.ResolvedIngredients.Length; i++)
-        {
-            CraftingRecipeIngredient? ingredient = recipe.ResolvedIngredients[i];
-            if (!(ingredient?.Consume ?? false))
+            // Use custom implementation, because vanilla shapeless matching does not handle scenarios:
+                // - Multiple recipe slots of same ingredient fulfilled by one large input stack.
+                // - Probably more...
+            if (!MatchesRecipeGridless(items, primaryTool, offhandTool, wrapper.RecipeWithoutTools, byPlayer))
             {
-                recipe.ResolvedIngredients[i] = null;
-                toolIngredients.Add(ingredient);
+                return false;
+            }
+        } else
+        {
+            if (!wrapper.RecipeWithoutTools.Matches(byPlayer, api.World, items, 3))
+            {
+                return false;
             }
         }
-        return recipe.Matches(byPlayer, api.World, items, 3);
+        foreach (CraftingRecipeIngredient ingredient in wrapper.ToolIngredients)
+        {
+            if (!IngredientSatisfied(ingredient, primaryTool?.Itemstack, wrapper.RecipeWithoutTools) && 
+                !IngredientSatisfied(ingredient, offhandTool?.Itemstack, wrapper.RecipeWithoutTools))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
-    private bool MatchesRecipeGridless(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
+    private bool MatchesRecipeGridless(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, IPlayer byPlayer)
     {
+        if (!api.Event.TriggerMatchesRecipe(byPlayer, recipe, items))
+        {
+            return false;
+        }
         List<ItemStack> clonedItems = items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
         if (clonedItems.Count == 0)
         {
@@ -106,7 +133,7 @@ public class RecipeCatalog
             {
                 continue;
             }
-            if (!MatchesIngredient(recipe, clonedItems, primaryTool, offhandTool, ingredient, ignoreTools, unusedItems))
+            if (!MatchesIngredientGridless(recipe, clonedItems, primaryTool, offhandTool, ingredient, unusedItems))
             {
                 return false;
             }
@@ -136,41 +163,58 @@ public class RecipeCatalog
         }
     }
 
-    private bool MatchesIngredient(GridRecipe recipe, IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, bool ignoreTools, ISet<ItemStack> unusedItems)
+    private bool MatchesIngredientGridless(GridRecipe recipe, IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, ISet<ItemStack> unusedItems)
     {
-        if (!ingredient.Consume)
+        bool satisfied = false; // Instead of just return true on the first item that satisfies ingredient, we need to loop through all so that all satisfying stacks can be removed from unusedItems.
+        foreach (ItemStack stack in items)
         {
-            if (ignoreTools)
+            if (IngredientSatisfied(ingredient, stack, recipe))
             {
-                return true;
-            }
-            if (IngredientSatisfied(ingredient, primaryTool?.Itemstack, recipe))
-            {
-                return true;
-            }
-            else if (IngredientSatisfied(ingredient, offhandTool?.Itemstack, recipe))
-            {
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            foreach (ItemStack stack in items)
-            {
-                if (IngredientSatisfied(ingredient, stack, recipe))
+                unusedItems.Remove(stack);
+                if (!satisfied)
                 {
-                    unusedItems.Remove(stack);
+                    satisfied = true;
                     stack.StackSize -= ingredient.Quantity;
-                    return true;
                 }
             }
-            return false;
         }
+        if (satisfied)
+        {
+            return true;
+        }
+        return false;
     }
 
     private bool IngredientSatisfied(IRecipeIngredientBase ingredient, ItemStack? stack, GridRecipe? recipe)
     {
         return stack != null && stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true) && (recipe == null || stack.Collectible.MatchesForCrafting(stack, recipe, ingredient as IRecipeIngredient));
+    }
+}
+
+public class GridRecipeWrapper
+{
+    public GridRecipe RecipeWithoutTools;
+    public GridRecipe RecipeWithTools;
+    public int Id;
+    public List<CraftingRecipeIngredient> ToolIngredients = [];
+
+    public GridRecipeWrapper(GridRecipe recipe, bool gridless, int id)
+    {
+        this.RecipeWithTools = recipe;
+        this.RecipeWithoutTools = recipe.Clone();
+        Id = id;
+        if (gridless)
+        {
+            RecipeWithoutTools.Shapeless = true;
+        }
+        for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients.Length; i++)
+        {
+            CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
+            if (ingredient != null && !ingredient.Consume)
+            {
+                RecipeWithoutTools.ResolvedIngredients[i] = null;
+                ToolIngredients.Add(ingredient);
+            }
+        }
     }
 }
