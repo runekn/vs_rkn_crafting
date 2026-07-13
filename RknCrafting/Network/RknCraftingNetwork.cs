@@ -106,13 +106,22 @@ public class RknCraftingNetwork
             NextCraftingTime = craftingParams.NextCraftingTime,
             Bulk = craftingParams.Bulk,
             Recipe = craftingParams.Recipe,
-            RecipeCraftingTimeModifier = craftingParams.RecipeCraftingTimeModifier
+            RecipeCraftingTimeModifier = craftingParams.RecipeCraftingTimeModifier,
+            Facing = craftingParams.Facing?.Flag ?? -1
         });
     }
 
     private void OnClientStartedCraftingMessage(IPlayer byPlayer, ClientStartedCraftingMessage message)
     {
         api.RCLogger().Debug("Received start crafting message from {0}!", byPlayer.PlayerName);
-        api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).ClientStartedCrafting(byPlayer, message.Animation, message.RecipeCraftingTimeModifier, message.Recipe, message.Bulk, message.NextCraftingTime);
+        api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).ClientStartedCrafting(
+            byPlayer, 
+            message.Animation, 
+            message.RecipeCraftingTimeModifier, 
+            message.Recipe, 
+            message.Bulk, 
+            message.NextCraftingTime,
+            message.Facing == -1 ? null : BlockFacing.FromFlag(message.Facing)
+        );
     }
 }

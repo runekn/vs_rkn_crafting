@@ -1,5 +1,6 @@
 using RKN.Crafting.Animation;
 using RknCrafting;
+using RknCrafting.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,6 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace RKN.Crafting.Entities;
@@ -72,6 +72,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     public override void GetBlockInfo(IPlayer forPlayer, StringBuilder sb)
     {
+        // FYI: GetBlockInfo Is called every 500 milliseconds it seems.
         //base.GetBlockInfo(forPlayer, sb); // Just food perish stuff
         foreach (ItemSlot itemSlot in inventory)
         {
@@ -119,74 +120,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     protected override float[][] genTransformationMatrices()
     {
-        float[][] tfMatrices = new float[slotCount][];
-
-        for (int index = 0; index < slotCount; index++)
-        {
-            ItemSlot itemSlot = inventory[index];
-            ModelTransform? customTransform = null;
-            if (itemSlot.Empty || itemSlot.Itemstack.StackSize <= 0)
-            {
-                continue;
-            }
-
-            FastVec3f scale = Vec3f.One;
-
-            customTransform = itemSlot.Itemstack.Collectible.Attributes[AttributeTransformCode].AsObject<ModelTransform>();
-            if (customTransform == null)
-            {
-                scale = scale.Mul(0.30f);
-                MeshData meshData = getMesh(itemSlot);
-                if (meshData != null)
-                {
-                    float itemSize = GetMeshXZSize(meshData);
-                    scale = scale.Set(scale.X / itemSize, scale.Y / itemSize, scale.Z / itemSize);
-                }
-            }
-
-            // Get grid slot translations, and a tiny bit of scale variance.
-            (float gridSlotX, float gridSlotY, float scaleModifier) = index switch
-            {
-                0 => (0.5f, 0.5f, 1),
-                1 => (0.2f, 0.2f, 0.95f),
-                2 => (0.8f, 0.8f, 1.02f),
-                3 => (0.8f, 0.2f, 1.02f),
-                4 => (0.2f, 0.8f, 1.02f),
-                5 => (0.5f, 0.2f, 1.02f),
-                6 => (0.2f, 0.5f, 1.01f),
-                7 => (0.9f, 0.5f, 0.97f),
-                8 => (0.5f, 0.9f, 0.98f),
-            };
-
-            scale = scale.Mul(scaleModifier);
-
-            Matrixf matrixf = new Matrixf()
-                .Scale(scale.X, scale.Y, scale.Z)                       // First scale
-                .Translate(-0.5f, 0, -0.5f)                             // Then center it
-                .Translate(gridSlotX / scale.X, 0, gridSlotY / scale.Y) // Move to correct slot
-                .RotateYDeg(Block.Shape.rotateY);                       // Rotate according to block
-
-            tfMatrices[index] = matrixf.Values;
-        }
-
-        return tfMatrices;
-    }
-
-    private float GetMeshXZSize(MeshData mesh)
-    {
-        Vec3f min = new(float.MaxValue, 0, float.MaxValue);
-        Vec3f max = new(float.MinValue, 0, float.MinValue);
-        for (int i = 0; i < mesh.VerticesCount; i++)
-        {
-            int index = i * 3;
-            float x = mesh.xyz[index];
-            float z = mesh.xyz[index + 2];
-            min.X = Math.Min(min.X, x);
-            min.Z = Math.Min(min.Z, z);
-            max.X = Math.Max(max.X, x);
-            max.Z = Math.Max(max.Z, z);
-        }
-        return Math.Max(max.X - min.X, max.Z - min.Z);
+        return CraftingItemRenderer.GenTransformationMatrices(inventory, AttributeTransformCode, config.EnableGridless, Block, getMesh);
     }
 
     public bool IsCrafting(IPlayer byPlayer)
@@ -194,7 +128,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.Player == byPlayer;
     }
 
-    public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime)
+    public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing)
     {
         craftingParams = new CraftingParams()
         {
@@ -203,7 +137,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Animation = animation,
             Bulk = bulk,
             RecipeCraftingTimeModifier = recipeModifier,
-            NextCraftingTime = nextCraftingTime
+            NextCraftingTime = nextCraftingTime,
+            Facing = blockFacing
         };
     }
 
@@ -223,7 +158,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             }
             return false;
         }
-        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
+        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer, lastFacing);
         if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, selectedRecipe, config.EnableGridless, byPlayer))
         {
             ClientError("missingreciperequirement");
@@ -233,6 +168,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         craftingParams = new CraftingParams()
         {
             Player = byPlayer,
+            Facing = lastFacing,
             Recipe = selectedRecipe,
             Animation = Api.RCAnimator().StartCrafting(byPlayer, selectedRecipe, primaryTool, offhandTool),
             Bulk = bulk,
@@ -268,7 +204,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             CreateOutput(world);
 
             // Continue crafting if possible
-            (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingParams.Player);
+            (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingParams.Player, craftingParams.Facing);
             if (items == null || items.Length == 0)
             {
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
@@ -318,10 +254,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool TryPutIngredient(ItemSlot slot, IPlayer? byPlayer = null, int selectionBoxIndex = 0)
     {
         timeoutTimer = 0;
-        if (slot.Itemstack?.Item?.Tool != null)
+        if (slot.Itemstack?.Item?.Tool != null || craftingParams != null)
         {
             return false;
         }
+        Api.RCLogger().Debug("Inserting into slot {0}", selectionBoxIndex);
         ItemSlot? invSlot = GetInventorySlot(slot, selectionBoxIndex);
         if (invSlot == null)
         {
@@ -399,6 +336,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 return;
             }
         }
+        MarkDirty();
     }
 
     public void CheckIfUpdateRecipes(IPlayer byPlayer)
@@ -421,7 +359,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             dirtyRecipes = true;
         }
 
-        if (dirtyRecipes)
+        if (dirtyRecipes && craftingParams == null)
         {
             UpdateValidRecipes(byPlayer);
             dirtyRecipes = false;
@@ -459,7 +397,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer);
+        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(byPlayer, lastFacing);
+        if (items == null) {
+            validRecipes = [];
+            selectedRecipe = -1;
+            return;
+        }
         List<int> recipes = Api.RCRecipeCatalog().GetValidRecipes(items, primaryTool, offhandTool, config.EnableGridless, (Api as ICoreClientAPI).World.Player);
         validRecipes = recipes;
         selectedRecipe = -1;
@@ -517,7 +460,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
     }
 
-    private (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) GetCraftingItems(IPlayer? byPlayer)
+    private (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) GetCraftingItems(IPlayer? byPlayer, BlockFacing? facing)
     {
         if (inventory.All(s => s == null || s.StackSize == 0))
         {
@@ -531,7 +474,49 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             primaryTool = inventoryManager.ActiveTool != null ? inventoryManager.ActiveHotbarSlot : null;
             offhandTool = inventoryManager.OffhandTool != null ? inventoryManager.OffhandHotbarSlot : null;
         }
-        return (inventory.ToArray(), primaryTool, offhandTool);
+        return (RearrangeGridByFacing(inventory.ToArray(), facing), primaryTool, offhandTool);
+    }
+
+    /**
+        SOUTH (default)     Resulting indexes
+        0 1 2		        012345678
+        3 4 5
+        6 7 8
+
+        NORTH
+        8 7 6		        876543210
+        5 4 3
+        2 1 0
+
+        WEST
+        6 3 0		        630741852
+        7 4 1
+        8 5 2
+
+        EAST
+        2 5 8		        258147036
+        1 4 7
+        0 3 6
+     */
+
+    private ItemSlot[]? RearrangeGridByFacing(ItemSlot[]? a, BlockFacing? facing)
+    {
+        if (a == null || facing == null || config.EnableGridless || facing == BlockFacing.SOUTH)
+        {
+            return a;
+        }
+        if (facing == BlockFacing.NORTH)
+        {
+            return [a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]];
+        }
+        if (facing == BlockFacing.EAST)
+        {
+            return [a[6], a[3], a[0], a[7], a[4], a[1], a[8], a[5], a[2]];
+        }
+        else // WEST
+        {
+            return [a[2], a[5], a[8], a[1], a[4], a[7], a[0], a[3], a[6]];
+        }
     }
 
     private static BlockFacing GetBlockOrientation(BlockPos blockPos, IPlayer? byPlayer)
@@ -542,7 +527,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
 
         EntityPos playerPos = byPlayer.Entity.Pos;
-        Vec3f facingVector = new Vec3f((float)playerPos.X - blockPos.X, 0, (float)playerPos.Z - blockPos.Z).Normalize();
+        Vec3f facingVector = new Vec3f((float)playerPos.X - (blockPos.X + 0.5f), 0, (float)playerPos.Z - (blockPos.Z + 0.5f)).Normalize();
         if (facingVector.Z > Math.Abs(facingVector.X))
         {
             return BlockFacing.SOUTH;
@@ -567,7 +552,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingParams.Player);
+        (ItemSlot[]? items, ItemSlot? primaryTool, ItemSlot? offhandTool) = GetCraftingItems(craftingParams.Player, craftingParams.Facing);
         if (items == null || !Api.RCRecipeCatalog().MatchesRecipe(items, primaryTool, offhandTool, craftingParams.Recipe, config.EnableGridless, craftingParams.Player))
         {
             return;
@@ -610,6 +595,7 @@ public class CraftingParams
     public required EnumCraftingAnimation Animation;
     public required int Recipe;
     public float NextCraftingTime;
+    public BlockFacing? Facing;
     public int Amount;
 }
 

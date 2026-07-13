@@ -45,7 +45,7 @@ public class RecipeCatalog
     public List<int> GetValidRecipes(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, bool gridless, IPlayer byPlayer)
     {
         List<int> result = [];
-        ItemStack? sample = items.First()?.Itemstack;
+        ItemStack? sample = items.First(i => i != null && !i.Empty)?.Itemstack;
         if (sample == null)
         {
             return result;

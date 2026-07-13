@@ -31,11 +31,14 @@ public class BlockCraftingSurface : Block
             api.World.BlockAccessor.BreakBlock(abovePos, null);
             return false;
         }
-        if (!blockEntity.TryPutIngredient(slot, byPlayer))
+        if (api.RCConfig().EnableGridless)
         {
-            api.RCLogger().Error("Could not put initial items into newly spawned crafting block!");
-            api.World.BlockAccessor.BreakBlock(abovePos, null);
-            return false;
+            if (!blockEntity.TryPutIngredient(slot, byPlayer))
+            {
+                api.RCLogger().Error("Could not put initial items into newly spawned crafting block!");
+                api.World.BlockAccessor.BreakBlock(abovePos, null);
+                return false;
+            }
         }
         return true;
     }
@@ -46,16 +49,17 @@ public class BlockCraftingSurface : Block
         {
             return base.GetSelectionBoxes(blockAccessor, pos);
         }
+        float thickness = 0.075f;
         return [
-            new Cuboidf(0, 0, 0, 1/3f, 0.2f, 1/3f),
-            new Cuboidf(1/3f, 0, 0, 2/3f, 0.25f, 1/3f),
-            new Cuboidf(2/3f, 0, 0, 1f, 0.3f, 1/3f),
-            new Cuboidf(0, 0, 1/3, 1/3f, 0.2f, 2/3f),
-            new Cuboidf(1/3f, 0, 1/3f, 2/3f, 0.25f, 2/3f),
-            new Cuboidf(2/3f, 0, 1/3f, 1f, 0.3f, 2/3f),
-            new Cuboidf(0, 0, 2/3f, 1/3f, 0.2f, 1f),
-            new Cuboidf(1/3f, 0, 2/3f, 2/3f, 0.25f, 1f),
-            new Cuboidf(2/3f, 0, 2/3f, 1f, 0.3f, 1f),
+            new Cuboidf(0,      0,  0,      1/3f,   thickness,   1/3f),
+            new Cuboidf(1/3f,   0,  0,      2/3f,   thickness,   1/3f),
+            new Cuboidf(2/3f,   0,  0,      1f,     thickness,   1/3f),
+            new Cuboidf(0,      0,  1/3f,   1/3f,   thickness,   2/3f),
+            new Cuboidf(1/3f,   0,  1/3f,   2/3f,   thickness,   2/3f),
+            new Cuboidf(2/3f,   0,  1/3f,   1f,     thickness,   2/3f),
+            new Cuboidf(0,      0,  2/3f,   1/3f,   thickness,   1f),
+            new Cuboidf(1/3f,   0,  2/3f,   2/3f,   thickness,   1f),
+            new Cuboidf(2/3f,   0,  2/3f,   1f,     thickness,   1f),
         ];
     }
 

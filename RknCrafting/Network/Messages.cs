@@ -60,4 +60,6 @@ public class ClientStartedCraftingMessage
     public float NextCraftingTime;
     [ProtoMember(6)]
     public int Recipe;
+    [ProtoMember(7)]
+    public int Facing;
 }
