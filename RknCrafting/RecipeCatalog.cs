@@ -27,7 +27,7 @@ public class RecipeCatalog
         return api.World.GridRecipes[id];
     }
 
-    public List<int> GetValidRecipesWithoutTools(List<ItemSlot> items)
+    public List<int> GetValidRecipesWithoutTools(ItemSlot[] items, bool gridless, IPlayer byPlayer)
     {
         List<int> result = [];
         ItemStack? sample = items.First()?.Itemstack;
@@ -42,7 +42,7 @@ public class RecipeCatalog
             {
                 foreach (var recipe in pair.Value)
                 {
-                    if (recipe is GridRecipe gridRecipe && MatchesRecipe(items, null, null, gridRecipe, true))
+                    if (recipe is GridRecipe gridRecipe && MatchesRecipe(items, null, null, gridRecipe, gridless, true, byPlayer))
                     {
                         result.Add(recipe.RecipeId);
                     }
@@ -54,7 +54,7 @@ public class RecipeCatalog
         return result;
     }
 
-    public bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId, IPlayer byPlayer = null)
+    public bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, int recipeId, bool gridless, IPlayer byPlayer)
     {
         GridRecipe gridRecipe = api.World.GridRecipes[recipeId];
         if (!api.Event.TriggerMatchesRecipe(byPlayer, gridRecipe, items.ToArray()))
@@ -62,15 +62,36 @@ public class RecipeCatalog
             (api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.classrestricted", "Class restricted recipe");
             return false;
         }
-        return MatchesRecipe(items, primaryTool, offhandTool, gridRecipe, false);
+        return MatchesRecipe(items, primaryTool, offhandTool, gridRecipe, gridless, false, byPlayer);
     }
 
-    private bool MatchesRecipe(List<ItemSlot> items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
+    private bool MatchesRecipe(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool gridless, bool ignoreTools, IPlayer byPlayer)
     {
         if (!recipe.Enabled || recipe.ResolvedIngredients == null)
         {
             return false;
         }
+        if (gridless)
+        {
+            return MatchesRecipeGridless(items, primaryTool, offhandTool, recipe, ignoreTools);
+        }
+        items = items.Clone() as ItemSlot[];
+        recipe = recipe.Clone();
+        List<CraftingRecipeIngredient> toolIngredients = [];
+        for (int i = 0; i < recipe.ResolvedIngredients.Length; i++)
+        {
+            CraftingRecipeIngredient? ingredient = recipe.ResolvedIngredients[i];
+            if (!(ingredient?.Consume ?? false))
+            {
+                recipe.ResolvedIngredients[i] = null;
+                toolIngredients.Add(ingredient);
+            }
+        }
+        return recipe.Matches(byPlayer, api.World, items, 3);
+    }
+
+    private bool MatchesRecipeGridless(ItemSlot[] items, ItemSlot? primaryTool, ItemSlot? offhandTool, GridRecipe recipe, bool ignoreTools)
+    {
         List<ItemStack> clonedItems = items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
         if (clonedItems.Count == 0)
         {

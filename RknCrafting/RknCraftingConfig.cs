@@ -20,6 +20,8 @@ public class RknCraftingConfig
     public float BulkBaseCraftingTimeSeconds = 2.0f;
     [ProtoMember(7)]
     public bool DisableUICraftingGrid = true;
+    [ProtoMember(8)]
+    public bool EnableGridless = false;
 
     public override string ToString()
     {

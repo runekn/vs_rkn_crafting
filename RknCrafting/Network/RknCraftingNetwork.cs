@@ -2,6 +2,7 @@
 using RKN.Crafting.Entities;
 using RknCrafting;
 using System;
+using System.Numerics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -34,8 +35,9 @@ public class RknCraftingNetwork
         ClientChannel.RegisterMessageType<CraftingStoppedMessage>();
         ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ClientChannel.RegisterMessageType<ConfigMessage>();
-        ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
+        ClientChannel.RegisterMessageType<ClientStartedCraftingMessage>();
         ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
+        ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
     }
 
     public RknCraftingNetwork(ICoreServerAPI api, string modId)
@@ -48,18 +50,9 @@ public class RknCraftingNetwork
         ServerChannel.RegisterMessageType<CraftingStoppedMessage>();
         ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ServerChannel.RegisterMessageType<ConfigMessage>();
+        ServerChannel.RegisterMessageType<ClientStartedCraftingMessage>();
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
-        ServerChannel.SetMessageHandler<SelectNextRecipeMessage>(OnSelectNextRecipeMessage);
-    }
-
-    public void SelectNextRecipe(BlockPos pos)
-    {
-        ClientChannel.SendPacket(new SelectNextRecipeMessage() { Position = pos });
-    }
-
-    protected void OnSelectNextRecipeMessage(IServerPlayer fromPlayer, SelectNextRecipeMessage message)
-    {
-        api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).SelectNextRecipe();
+        ServerChannel.SetMessageHandler<ClientStartedCraftingMessage>(OnClientStartedCraftingMessage);
     }
 
     public void SpawnCraftingSurface(BlockPos pos, bool asPlayer = true)
@@ -72,16 +65,23 @@ public class RknCraftingNetwork
         BlockCraftingSurface.TryPlace(api, fromPlayer, message.Position, fromPlayer.InventoryManager.ActiveHotbarSlot);
     }
 
-    public void StopCrafting(IPlayer craftingPlayer, EnumCraftingAnimation enumCraftingAnimation)
+    public void StopCrafting(IPlayer player, EnumCraftingAnimation enumCraftingAnimation, BlockPos pos)
     {
-        ServerChannel.SendPacket(new CraftingStoppedMessage() { animation = enumCraftingAnimation }, craftingPlayer as IServerPlayer);
+        ServerChannel.SendPacket(new CraftingStoppedMessage() { Position = pos, animation = enumCraftingAnimation }, player as IServerPlayer);
     }
 
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
         api.RCLogger().Debug("Received stop crafting message!");
-        IPlayer player = ClientApi.World.Player;
-        api.RCAnimator().StopCrafting(player, message.animation);
+        BlockEntityCraftingSurface entity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position);
+        if (entity != null)
+        {
+            entity.ClientStopCrafting(message.animation);
+        }
+        else
+        {
+            api.RCAnimator().StopCrafting((api as ICoreClientAPI).World.Player, message.animation);
+        }
     }
 
     public void TransferConfig(RknCraftingConfig config, IServerPlayer player)
@@ -94,5 +94,24 @@ public class RknCraftingNetwork
     {
         api.RCLogger().Debug("Received config from server: {0}", message.Config);
         api.RCSetConfig(message.Config);
+    }
+
+    public void ClientStartedCrafting(CraftingParams craftingParams, BlockPos pos)
+    {
+        ClientChannel.SendPacket(new ClientStartedCraftingMessage()
+        {
+            Position = pos,
+            Animation = craftingParams.Animation,
+            NextCraftingTime = craftingParams.NextCraftingTime,
+            Bulk = craftingParams.Bulk,
+            Recipe = craftingParams.Recipe,
+            RecipeCraftingTimeModifier = craftingParams.RecipeCraftingTimeModifier
+        });
+    }
+
+    private void OnClientStartedCraftingMessage(IPlayer byPlayer, ClientStartedCraftingMessage message)
+    {
+        api.RCLogger().Debug("Received start crafting message from {0}!", byPlayer.PlayerName);
+        api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).ClientStartedCrafting(byPlayer, message.Animation, message.RecipeCraftingTimeModifier, message.Recipe, message.Bulk, message.NextCraftingTime);
     }
 }

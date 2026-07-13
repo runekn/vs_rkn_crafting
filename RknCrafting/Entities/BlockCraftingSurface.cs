@@ -1,5 +1,7 @@
+using System;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 
 namespace RKN.Crafting.Entities;
@@ -38,6 +40,25 @@ public class BlockCraftingSurface : Block
         return true;
     }
 
+    public override Cuboidf[] GetSelectionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
+    {
+        if (api.RCConfig().EnableGridless)
+        {
+            return base.GetSelectionBoxes(blockAccessor, pos);
+        }
+        return [
+            new Cuboidf(0, 0, 0, 1/3f, 0.2f, 1/3f),
+            new Cuboidf(1/3f, 0, 0, 2/3f, 0.25f, 1/3f),
+            new Cuboidf(2/3f, 0, 0, 1f, 0.3f, 1/3f),
+            new Cuboidf(0, 0, 1/3, 1/3f, 0.2f, 2/3f),
+            new Cuboidf(1/3f, 0, 1/3f, 2/3f, 0.25f, 2/3f),
+            new Cuboidf(2/3f, 0, 1/3f, 1f, 0.3f, 2/3f),
+            new Cuboidf(0, 0, 2/3f, 1/3f, 0.2f, 1f),
+            new Cuboidf(1/3f, 0, 2/3f, 2/3f, 0.25f, 1f),
+            new Cuboidf(2/3f, 0, 2/3f, 1f, 0.3f, 1f),
+        ];
+    }
+
     public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
         BlockEntityCraftingSurface? be = GetBE(world, blockSel.Position);
@@ -47,17 +68,16 @@ public class BlockCraftingSurface : Block
         }
         if (api.Side == EnumAppSide.Client && (api as ICoreClientAPI).Input.IsHoldingCraftingButton())
         {
-            api.RCNetwork().SelectNextRecipe(blockSel.Position);
+            be.SelectNextRecipe();
             return false;
         }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
         if (activeHotbarSlot.Empty || activeHotbarSlot.Itemstack?.Item?.Tool != null)
         {
-            be.StartCrafting(world, byPlayer, this);
+            return be.StartCrafting(world, byPlayer);
         } else {
-            be.TryPutIngredient(activeHotbarSlot, byPlayer);
+            return be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
         }
-        return true;
     }
 
     public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -84,12 +104,13 @@ public class BlockCraftingSurface : Block
         }
         if (be.IsCrafting(byPlayer))
         {
-            be.CancelCrafting(world, byPlayer, blockSel);
+            be.CancelCrafting(world, byPlayer);
         }
     }
 
     public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
     {
+        // Break if lower neighbor is broken
         BlockPos lowerNeightbor = pos.DownCopy();
         if (lowerNeightbor.Equals(neibpos) && world.BlockAccessor.GetBlock(lowerNeightbor).Id == 0)
         {
@@ -98,9 +119,14 @@ public class BlockCraftingSurface : Block
         base.OnNeighbourBlockChange(world, pos, neibpos);
     }
 
-    public override Cuboidf GetParticleBreakBox(IBlockAccessor blockAccess, BlockPos pos, BlockFacing facing)
+    public override void OnBeingLookedAt(IPlayer byPlayer, BlockSelection blockSel, bool firstTick)
     {
-        return base.GetParticleBreakBox(blockAccess, pos, facing);
+        base.OnBeingLookedAt(byPlayer, blockSel, firstTick);
+        BlockEntityCraftingSurface? be = GetBE(api.World, blockSel.Position);
+        if (be != null)
+        {
+            be.CheckIfUpdateRecipes(byPlayer);
+        }
     }
 
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)

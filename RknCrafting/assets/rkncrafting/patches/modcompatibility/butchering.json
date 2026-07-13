@@ -110,6 +110,9 @@
         "code": "butchertable-advanced-north",
         "quantity": 1
       }
-    }
+    },
+    "dependsOn": [
+      { "modid": "butchering" }
+    ]
   }
 ]
