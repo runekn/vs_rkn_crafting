@@ -68,6 +68,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         base.Initialize(api);
         craftingSurfaceTimeModifier = api.World.BlockAccessor.GetBlock(Pos.DownCopy(1)).GetBehavior<BlockBehaviorSpawnCraftingSurface>().CraftingTimeModifier;
         config = api.RCConfig();
+        craftingParams = null; // Override FromTreeAttributes because we don't want dummy craftingParams on server
     }
 
     public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
@@ -127,13 +128,24 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         base.FromTreeAttributes(tree, worldForResolving);
         timeoutTimer = tree.GetFloat("timeoutTimer");
+        if (tree.GetBool("isCrafting"))
+        {
+            craftingParams = new CraftingParams()
+            {
+                OtherPlayer = true
+            };
+        }
+        else if (craftingParams?.OtherPlayer == true)
+        {
+            craftingParams = null;
+        }
     }
 
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
         base.ToTreeAttributes(tree);
         tree.SetFloat("timeoutTimer", timeoutTimer);
-        // TODO: Share crafting player so other players are rejected locally
+        tree.SetBool("isCrafting", craftingParams != null);
     }
 
     protected override float[][] genTransformationMatrices()
@@ -642,11 +654,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
 public class CraftingParams
 {
-    public required IPlayer Player;
-    public required bool Bulk;
-    public required float RecipeCraftingTimeModifier;
-    public required EnumCraftingAnimation Animation;
-    public required ScanResult Recipe;
+    public IPlayer Player;
+    public bool Bulk;
+    public bool OtherPlayer;
+    public float RecipeCraftingTimeModifier;
+    public EnumCraftingAnimation Animation;
+    public ScanResult Recipe;
     public float NextCraftingTime;
     public BlockFacing? Facing;
     public int Amount;
