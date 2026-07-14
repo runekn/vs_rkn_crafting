@@ -130,7 +130,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         timeoutTimer = tree.GetFloat("timeoutTimer");
         if (tree.GetBool("isCrafting"))
         {
-            craftingParams = new CraftingParams()
+            craftingParams ??= new CraftingParams()
             {
                 OtherPlayer = true
             };
@@ -250,6 +250,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 Api.RCNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
                 Api.RCAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
                 ResetState();
+                return false;
             }
             MarkDirty(true);
         }
