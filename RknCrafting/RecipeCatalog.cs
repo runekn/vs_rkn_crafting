@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using DummySlot = RKN.Crafting.Entities.DummySlot;
 
 namespace RKN.Crafting;
 
@@ -45,9 +46,9 @@ public class RecipeCatalog
         return recipes[id];
     }
 
-    public List<int> GetValidRecipes(RecipeInputSlots inputSlots, bool gridless, IPlayer byPlayer)
+    public List<ScanResult> GetValidRecipes(RecipeInputSlots inputSlots, bool gridless, IPlayer byPlayer)
     {
-        List<int> result = [];
+        List<ScanResult> result = [];
         ItemStack? sample = inputSlots.Items.First(i => i != null && !i.Empty)?.Itemstack;
         if (sample == null)
         {
@@ -66,8 +67,10 @@ public class RecipeCatalog
                     }
                     GridRecipeWrapper wrapper = recipes[gridRecipe.RecipeId];
                     if (MatchesRecipe(inputSlots, wrapper, gridless, byPlayer))
-                    { 
-                        result.Add(wrapper.Id);
+                    {
+                        ItemSlot slot = new DummySlot(null);
+                        wrapper.RecipeWithoutTools.GenerateOutputStack(inputSlots.Items, slot);
+                        result.Add(new ScanResult(wrapper, slot.Itemstack));
                     }
                 }
             }
@@ -77,13 +80,15 @@ public class RecipeCatalog
         return result;
     }
 
-    public bool MatchesRecipe(RecipeInputSlots inputSlots, int recipeId, bool gridless, IPlayer byPlayer)
+    public ScanResult GetScanResult(int i, RecipeInputSlots inputSlots)
     {
-        GridRecipeWrapper wrapper = recipes[recipeId];
-        return MatchesRecipe(inputSlots, wrapper, gridless, byPlayer);
+        GridRecipeWrapper wrapper = GetRecipeById(i);
+        ItemSlot slot = new DummySlot(null);
+        wrapper.RecipeWithoutTools.GenerateOutputStack(inputSlots.Items, slot);
+        return new ScanResult(wrapper, slot.Itemstack);
     }
 
-    private bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, IPlayer byPlayer)
+    public bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, IPlayer byPlayer)
     {
         if (!wrapper.RecipeWithoutTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
         {
@@ -221,5 +226,7 @@ public class GridRecipeWrapper
         }
     }
 }
+
+public record ScanResult(GridRecipeWrapper Wrapper, ItemStack Output);
 
 public record RecipeInputSlots(ItemSlot[] Items, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);

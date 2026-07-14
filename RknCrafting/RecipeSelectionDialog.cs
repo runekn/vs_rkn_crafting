@@ -21,9 +21,9 @@ internal class RecipeSelectionDialog : GuiDialog
         this.pos = pos;
     }
     
-    public bool TryOpen(int[] recipes, Action<int> selected)
+    public bool TryOpen(ScanResult[] recipes, Action<int> selected)
     {
-        recipeInventory = new RecipeSelectionInventory(capi, recipes, s => selected(recipes[s]));
+        recipeInventory = new RecipeSelectionInventory(capi, recipes, selected);
         return TryOpen();
     }
 
@@ -93,15 +93,14 @@ public class RecipeSelectionInventory : InventoryBase
     private ItemSlot[] slots;
     private Action<int> selected;
 
-    public RecipeSelectionInventory(ICoreAPI api, int[] recipeIds, Action<int> selected) : base("recipeSelection", "0", api)
+    public RecipeSelectionInventory(ICoreAPI api, ScanResult[] recipes, Action<int> selected) : base("recipeSelection", "0", api)
     {
-        slots = GenEmptySlots(recipeIds.Length);
+        slots = GenEmptySlots(recipes.Length);
         this.selected = selected;
-        for (var index = 0; index < recipeIds.Length; index++)
+        for (var index = 0; index < recipes.Length; index++)
         {
-            var recipeId = recipeIds[index];
-            GridRecipeWrapper wrapper = api.RCRecipeCatalog().GetRecipeById(recipeId);
-            ItemStack itemStack = wrapper.RecipeWithTools.Output.ResolvedItemStack.Clone();
+            var wrapper = recipes[index];
+            ItemStack itemStack = wrapper.Output;
             slots[index].Itemstack = itemStack;
         }
     }
