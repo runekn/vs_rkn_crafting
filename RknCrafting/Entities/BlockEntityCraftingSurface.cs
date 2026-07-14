@@ -32,7 +32,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private List<int>? validRecipes;
     private BlockFacing? lastFacing;
     private EnumTool? lastTool;
-    private bool dirtyRecipes;
+    private bool dirtyRecipes = true;
+    private RecipeSelectionDialog? recipeSelectionDialog;
 
     private CraftingParams? craftingParams;
 
@@ -51,6 +52,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             api.RCLogger().Debug("Got OnInventoryUpdated for non-existing block: [{0},{1},{2}]", pos.X, pos.Y, pos.Z);
             return;
+        }
+
+        if (entity.recipeSelectionDialog != null && entity.recipeSelectionDialog.IsOpened())
+        {
+            entity.recipeSelectionDialog.TryClose();
         }
         entity.dirtyRecipes = true;
         entity.MarkMeshesDirty();
@@ -89,19 +95,13 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             sb.AppendLine();
         }
         sb.AppendLine();
-        if (validRecipes != null)
+        if (validRecipes is { Count: > 0 })
         {
-            foreach (int recipeId in validRecipes)
+            GridRecipeWrapper recipe = Api.RCRecipeCatalog().GetRecipeById(selectedRecipe);
+            sb.Append("Selected: ").AppendLine(recipe.RecipeWithoutTools.Output?.ResolvedItemStack?.GetName());
+            if (validRecipes.Count > 1)
             {
-                if (recipeId == selectedRecipe)
-                {
-                    sb.Append("-) ");
-                }
-                else
-                {
-                    sb.Append("   ");
-                }
-                sb.AppendLine("Recipe: " + Api.RCRecipeCatalog().GetRecipeById(recipeId).RecipeWithoutTools.Output.ResolvedItemStack.GetName());
+                sb.Append(validRecipes.Count - 1).Append(" more valid recipes");
             }
         }
     }
@@ -155,7 +155,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             if (craftingParams != null && !IsCrafting(byPlayer))
             {
                 ClientError("surfacealreadycrafting");
-                return false;
             }
             return false;
         }
@@ -323,21 +322,19 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return null;
     }
 
-    public void SelectNextRecipe()
+    public void OpenRecipeSelection()
     {
-        if (validRecipes == null || craftingParams != null)
+        if (recipeSelectionDialog == null)
         {
-            return;
+            recipeSelectionDialog = new RecipeSelectionDialog(Api as ICoreClientAPI, Pos); 
         }
-        for (int i = 0; i < validRecipes.Count; i++)
-        {
-            if (validRecipes[i] == selectedRecipe)
+        recipeSelectionDialog
+            .TryOpen(validRecipes.ToArray(), i =>
             {
-                selectedRecipe = i == validRecipes.Count-1 ? validRecipes[0] : validRecipes[i+1];
-                return;
-            }
-        }
-        MarkDirty();
+                selectedRecipe = i;
+                Api.RCLogger().Debug("selected: {0} {1}", i, Api.RCRecipeCatalog().GetRecipeById(i).RecipeWithTools.Name);
+                recipeSelectionDialog.TryClose();
+            });
     }
 
     public void CheckIfUpdateRecipes(IPlayer byPlayer)
