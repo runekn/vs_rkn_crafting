@@ -2,6 +2,7 @@
 	"block-craftingsurface": "Crafting Surface",
 	"hotkey-crafting": "RKN Crafting modifier",
 	"error-surfacefull": "Crafting surface is full",
+	"error-surfaceempty": "Slot is empty",
 	"error-surfacealreadycrafting": "Someone is already crafting here!",
 	"error-missingreciperequirement": "Missing requirement for crafting"
 }

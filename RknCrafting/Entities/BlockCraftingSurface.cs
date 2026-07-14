@@ -74,10 +74,24 @@ public class BlockCraftingSurface : Block
             return false;
         }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
-        if (activeHotbarSlot.Empty || activeHotbarSlot.Itemstack?.Item?.Tool != null)
+        if (activeHotbarSlot.Empty)
+        {
+            if (byPlayer.Entity.Controls.ShiftKey)
+            {
+                return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
+            }
+            return be.StartCrafting(world, byPlayer);
+        }
+        else if (activeHotbarSlot.Itemstack?.Item?.Tool != null)
         {
             return be.StartCrafting(world, byPlayer);
-        } else {
+        }
+        else if (byPlayer.Entity.Controls.ShiftKey)
+        {
+            return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
+        }
+        else
+        {
             return be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
         }
     }

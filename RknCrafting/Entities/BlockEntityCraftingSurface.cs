@@ -290,7 +290,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return false;
         }
         Api.RCLogger().Debug("Inserting into slot {0}", selectionBoxIndex);
-        ItemSlot? invSlot = GetInventorySlot(slot, selectionBoxIndex);
+        ItemSlot? invSlot = GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex);
         if (invSlot == null)
         {
             ClientError("surfacefull");
@@ -321,13 +321,54 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return true;
     }
 
-    private ItemSlot? GetInventorySlot(ItemSlot slot, int selectionBoxIndex)
+    public bool TryTakeIngredient(ItemSlot slot, IPlayer? byPlayer = null, int selectionBoxIndex = 0)
+    {
+        timeoutTimer = 0;
+        if (craftingParams != null)
+        {
+            return false;
+        }
+        Api.RCLogger().Debug("Taking into slot {0}", selectionBoxIndex);
+        ItemSlot? invSlot = GetInventorySlot(invSlot => slot.CanTakeFrom(invSlot), selectionBoxIndex, true);
+        if (invSlot == null)
+        {
+            ClientError("surfaceempty");
+            return false;
+        }
+        int quantity = 1;
+        if (byPlayer != null && byPlayer.Entity.Controls.CtrlKey)
+        {
+            quantity = invSlot.StackSize;
+        }
+        if (invSlot.TryPutInto(Api.World, slot, quantity) < 1)
+        {
+            ClientError("surfaceempty");
+            return false;
+        }
+        if (byPlayer != null)
+        {
+            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
+        }
+        slot.MarkDirty();
+        if (inventory.Empty)
+        {
+            Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
+            return true;
+        }
+        //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
+        MarkDirty(true, byPlayer);
+        MarkMeshesDirty();
+        return true;
+    }
+
+    private ItemSlot? GetInventorySlot(Predicate<ItemSlot> test, int selectionBoxIndex, bool reverse = false)
     {
         if (config.EnableGridless)
         {
-            foreach (ItemSlot invSlot in inventory)
+            IEnumerable<ItemSlot> enumerable = reverse ? inventory.Reverse() : inventory;
+            foreach (ItemSlot invSlot in enumerable)
             {
-                if (invSlot.CanTakeFrom(slot))
+                if (test(invSlot))
                 {
                     return invSlot;
                 }
@@ -336,7 +377,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         else
         {
             ItemSlot invSlot = inventory[selectionBoxIndex];
-            if (invSlot.CanTakeFrom(slot))
+            if (test(invSlot))
             {
                 return invSlot;
             }

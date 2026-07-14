@@ -2,10 +2,14 @@
 
 Generic crafting system that completely replaces the UI grid with a more immersive mechanic.
 
-## Description
+## Instructions
+
+#### Add ingredients
 
 Right click with any non-tool item or block on a solid surface, while holding the crafting button (ALT, rebindable), to create a crafting surface.
 Right click with additional items or blocks to add more ingredients.
+
+#### Recipe matching
 
 If the ingredients and tools matches a recipe, it will appear in the top info bar while looking at the crafting surface.
 If there are more than one available recipe, then you can switch between them by holding crafting button and right clicking.
@@ -26,14 +30,17 @@ WEST | S | S | S | EAST
 
 In this case, the crafting surface will only allow you to craft crude ladder if you look at it from north or south.
 
+#### Crafting
+
 Hold right click to start crafting. Once crafting has completed the recipe output will spawn and the ingredients will be consumed.
 If a recipe requires tools, then these must be held in your hands while trying to craft. If a recipe requires two tools then the second one must be held in offhand slot.
 
 If there are enough remaining ingredients to continue crafting, then continuing to hold rick click will continue crafting at a slightly faster pace.
 
-The crafting surface can de destroyed to reclaim ingredients.
+#### Other
 
-In order to not functions as a hyper-efficient ground storage, any crafting surface will auto delete itself after 2 minutes of inactivity (configurable).
+* The crafting surface can de destroyed to reclaim ingredients.
+* In order to not functions as a hyper-efficient ground storage, any crafting surface will auto delete itself after 2 minutes of inactivity (configurable).
 
 ![Crafting a simple flint knife.](ReadmeAssets/demo1.gif)
 ![Selecting and crafting multi-tool recipe on much more efficient surface.](ReadmeAssets/demo2.gif)
@@ -106,7 +113,7 @@ Any mod that disables grid recipes will also disable for this mod.
 
 ## Known issues
 
-* Other players may not be prevented from starting crafting of same crafting surface. (should be prevented from finishing crafting though)
+None :D
 
 ## Major release changelog
 
