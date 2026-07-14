@@ -27,12 +27,15 @@ public class RecipeCatalog
             recipe.RecipeId = i;
             GridRecipeWrapper wrapper = new(recipe, gridlesss, i);
             recipes.Add(wrapper);
-            foreach (CraftingRecipeIngredient? ingredient in wrapper.RecipeWithoutTools.ResolvedIngredients)
+        }
+
+        // Fix client-side crate open recipe. Because in the recipes the client receives the fast search ingredient has attribute lidState="opened", which it doesn't on server. 
+        foreach (var pair in api.World.FastSearchRecipesByIngredient)
+        {
+            AssetLocation? code = pair.Key.Code;
+            if (code != null && code.Domain.Equals("game") && code.Path.Equals("crate"))
             {
-                if (ingredient == null)
-                {
-                    continue;
-                }
+                pair.Key.ResolvedItemStack.Attributes.RemoveAttribute("lidState");
             }
         }
     }
