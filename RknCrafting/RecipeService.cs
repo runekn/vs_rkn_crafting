@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using RknCrafting;
 using RknCrafting.Entities;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -11,8 +10,8 @@ namespace RKN.Crafting;
 
 public class RecipeService
 {
-    public static readonly int RecipeIdNone = -1;
-    public static readonly int RecipeIdUnfinished = -2;
+    public const int RecipeIdNone = -1;
+    public const int RecipeIdUnfinished = -2;
     private static readonly AssetLocation UnfinishedCraftAsset = new("rkncrafting", "unfinishedcraft");
 
     private ICoreAPI api;
@@ -22,7 +21,7 @@ public class RecipeService
     {
         this.api = api;
         bool gridlesss = api.RcServerConfig().EnableGridless;
-        recipes = new(api.World.GridRecipes.Count);
+        recipes = new List<GridRecipeWrapper>(api.World.GridRecipes.Count);
         for (int i = 0; i < api.World.GridRecipes.Count; i++)
         {
             GridRecipe recipe = api.World.GridRecipes[i];
@@ -38,12 +37,12 @@ public class RecipeService
         }
 
         // Fix client-side crate open recipe. Because in the recipes the client receives the fast search ingredient has attribute lidState="opened", which it doesn't on server. 
-        foreach (var pair in api.World.FastSearchRecipesByIngredient)
+        foreach (KeyValuePair<IRecipeIngredientBase, List<IRecipeBase>> pair in api.World.FastSearchRecipesByIngredient)
         {
             AssetLocation? code = pair.Key.Code;
             if (code != null && code.Domain.Equals("game") && code.Path.Equals("crate"))
             {
-                pair.Key.ResolvedItemStack.Attributes.RemoveAttribute("lidState");
+                pair.Key.ResolvedItemStack!.Attributes.RemoveAttribute("lidState");
             }
         }
     }
@@ -80,7 +79,7 @@ public class RecipeService
                         continue;
                     }
                     GridRecipeWrapper wrapper = recipes[gridRecipe.RecipeId];
-                    List<int> usedTools = [];
+                    AssetLocation?[] usedTools = new AssetLocation[wrapper.ToolIngredients.Count];
                     if (MatchesRecipe(inputSlots, wrapper, gridless, usedTools))
                     {
                         result.Add(CreateResult(wrapper, null, inputSlots, usedTools, true));
@@ -101,27 +100,26 @@ public class RecipeService
         }
 
         sample = sample.Clone();
-        ItemStack output = sample.Attributes.GetItemstack("output");
-        List<int> usedTools = sample.Attributes.GetString("usedTools").Split(":").Select(int.Parse).ToList();
-        int recipeId = sample.Attributes.GetAsInt("recipe");
-        GridRecipeWrapper wrapper = GetRecipeById(recipeId);
-        bool matchedAny = false;
-        for (int i = 0; i < wrapper.ToolIngredients.Count; i++)
+        int recipeId = ItemUnfinishedCraft.GetOutputRecipe(sample);
+        if (recipeId == RecipeIdNone)
         {
-            if (usedTools.Contains(i))
-            {
-                continue;
-            }
-            CraftingRecipeIngredient ingredient = wrapper.ToolIngredients[i];
-            if (!IngredientSatisfied(ingredient, inputSlots.PrimaryTool?.Itemstack, null) &&
-                !IngredientSatisfied(ingredient, inputSlots.OffhandTool?.Itemstack, null))
-            {
-                continue;
-            }
-            matchedAny = true;
-            usedTools.Add(i);
+            api.RcLogger().Error("Tried to get crafting result for invalid unfinished craft: missing recipe id");
+            return [];
         }
-
+        GridRecipeWrapper wrapper = GetRecipeById(recipeId);
+        ItemStack? output = ItemUnfinishedCraft.GetOutputStack(sample);
+        if (output == null)
+        {
+            api.RcLogger().Error("Tried to get crafting result for invalid unfinished craft: missing output");
+            return [];
+        }
+        AssetLocation?[]? usedTools = ItemUnfinishedCraft.GetUsedTools(sample, wrapper);
+        if (usedTools == null)
+        {
+            api.RcLogger().Error("Tried to get crafting result for invalid unfinished craft: missing used tools");
+            return [];
+        }
+        bool matchedAny = ToolsMatchesRecipe(wrapper.ToolIngredients, usedTools, inputSlots, true);
         if (!matchedAny)
         {
             return [];
@@ -133,21 +131,25 @@ public class RecipeService
     {
         if (i == RecipeIdUnfinished)
         {
-            ItemStack sample = inputSlots.Items.First(s =>  !s.Empty)?.Itemstack;
+            ItemStack? sample = inputSlots.Items.First(s =>  !s.Empty).Itemstack;
+            if (sample == null)
+            {
+                return null;
+            }
             List<ICraftingResult> r = GetValidForUnfinishedCraft(sample, inputSlots);
             return r.Count > 0 ? r[0] : null;
         }
         GridRecipeWrapper wrapper = GetRecipeById(i);
-        List<int> usedToolIngredients = [];
-        if (!MatchesRecipe(inputSlots, wrapper, api.RcServerConfig().EnableGridless, usedToolIngredients))
+        AssetLocation?[] usedTools = new AssetLocation[wrapper.ToolIngredients.Count];
+        if (!MatchesRecipe(inputSlots, wrapper, api.RcServerConfig().EnableGridless, usedTools))
         {
             return null;
         }
 
-        return CreateResult(wrapper, null, inputSlots, usedToolIngredients, true);
+        return CreateResult(wrapper, null, inputSlots, usedTools, true);
     }
 
-    private bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, List<int>? usedTools)
+    private bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, AssetLocation?[]? usedTools)
     {
         if (!wrapper.RecipeWithoutTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
         {
@@ -164,7 +166,7 @@ public class RecipeService
             }
         } else
         {
-            if (!wrapper.RecipeWithoutTools.Matches(inputSlots.player, api.World, inputSlots.Items, 3))
+            if (!wrapper.RecipeWithoutTools.Matches(inputSlots.Player, api.World, inputSlots.Items, 3))
             {
                 return false;
             }
@@ -173,7 +175,7 @@ public class RecipeService
         return ToolsMatchesRecipe(wrapper.ToolIngredients, usedTools, inputSlots, true);
     }
 
-    private bool ToolsMatchesRecipe(List<CraftingRecipeIngredient> toolIngredients, List<int>? usedTools, RecipeInputSlots inputSlots, bool updateUsedTools)
+    private bool ToolsMatchesRecipe(List<CraftingRecipeIngredient> toolIngredients, AssetLocation?[]? usedTools, RecipeInputSlots inputSlots, bool updateUsedTools)
     {
         if (toolIngredients.Count == 0)
         {
@@ -182,20 +184,26 @@ public class RecipeService
         bool matchedAny = false;
         for (int index = 0; index < toolIngredients.Count; index++)
         {
-            if (usedTools?.Contains(index) ?? false)
+            if (usedTools?[index] != null)
             {
                 continue;
             }
             CraftingRecipeIngredient ingredient = toolIngredients[index];
-            if (!IngredientSatisfied(ingredient, inputSlots.PrimaryTool?.Itemstack, null) &&
-                !IngredientSatisfied(ingredient, inputSlots.OffhandTool?.Itemstack, null))
+            if (IngredientSatisfied(ingredient, inputSlots.PrimaryTool?.Itemstack, null))
             {
-                continue;
+                matchedAny = true;
+                if (updateUsedTools && usedTools != null)
+                {
+                    usedTools[index] = inputSlots.PrimaryTool!.Itemstack!.Collectible.Code;
+                }
             }
-            matchedAny = true;
-            if (updateUsedTools && usedTools != null)
+            else if (IngredientSatisfied(ingredient, inputSlots.OffhandTool?.Itemstack, null))
             {
-                usedTools.Add(index);
+                matchedAny = true;
+                if (updateUsedTools && usedTools != null)
+                {
+                    usedTools[index] = inputSlots.OffhandTool!.Itemstack!.Collectible.Code;
+                }
             }
         }
 
@@ -204,11 +212,11 @@ public class RecipeService
 
     private bool MatchesRecipeGridless(RecipeInputSlots inputSlots, GridRecipe recipe)
     {
-        if (!api.Event.TriggerMatchesRecipe(inputSlots.player, recipe, inputSlots.Items))
+        if (!api.Event.TriggerMatchesRecipe(inputSlots.Player, recipe, inputSlots.Items))
         {
             return false;
         }
-        List<ItemStack> clonedItems = inputSlots.Items.Select(i => i?.Itemstack?.Clone()).Where(i => i != null).ToList();
+        List<ItemStack> clonedItems = inputSlots.Items.Select(i => i.Itemstack!.Clone()).Where(i => i != null).ToList();
         if (clonedItems.Count == 0)
         {
             return false;
@@ -216,13 +224,13 @@ public class RecipeService
         MergeStacks(clonedItems);
         clonedItems = clonedItems.Where(s => s.StackSize > 0).ToList(); // TODO: I don't like creating list again
         ISet<ItemStack> unusedItems = clonedItems.ToHashSet();
-        foreach (CraftingRecipeIngredient? ingredient in recipe.ResolvedIngredients)
+        foreach (CraftingRecipeIngredient? ingredient in recipe.ResolvedIngredients!)
         {
             if (ingredient == null)
             {
                 continue;
             }
-            if (!MatchesIngredientGridless(recipe, clonedItems, inputSlots.PrimaryTool, inputSlots.OffhandTool, ingredient, unusedItems))
+            if (!MatchesIngredientGridless(recipe, clonedItems, ingredient, unusedItems))
             {
                 return false;
             }
@@ -252,7 +260,7 @@ public class RecipeService
         }
     }
 
-    private bool MatchesIngredientGridless(GridRecipe recipe, IEnumerable<ItemStack> items, ItemSlot? primaryTool, ItemSlot? offhandTool, CraftingRecipeIngredient ingredient, ISet<ItemStack> unusedItems)
+    private bool MatchesIngredientGridless(GridRecipe recipe, IEnumerable<ItemStack> items, CraftingRecipeIngredient ingredient, ISet<ItemStack> unusedItems)
     {
         bool satisfied = false; // Instead of just return true on the first item that satisfies ingredient, we need to loop through all so that all satisfying stacks can be removed from unusedItems.
         foreach (ItemStack stack in items)
@@ -267,11 +275,7 @@ public class RecipeService
                 }
             }
         }
-        if (satisfied)
-        {
-            return true;
-        }
-        return false;
+        return satisfied;
     }
 
     private bool IngredientSatisfied(IRecipeIngredientBase ingredient, ItemStack? stack, GridRecipe? recipe)
@@ -279,7 +283,7 @@ public class RecipeService
         return stack != null && stack.StackSize > 0 && ingredient.SatisfiesAsIngredient(stack, true) && (recipe == null || stack.Collectible.MatchesForCrafting(stack, recipe, ingredient as IRecipeIngredient));
     }
 
-    private ICraftingResult CreateResult(GridRecipeWrapper wrapper, ItemStack? output, RecipeInputSlots inputSlots, List<int>? outputUsedTools, bool first)
+    private ICraftingResult CreateResult(GridRecipeWrapper wrapper, ItemStack? output, RecipeInputSlots inputSlots, AssetLocation?[]? outputUsedTools, bool first)
     {
         if (output == null)
         {
@@ -287,40 +291,32 @@ public class RecipeService
             wrapper.RecipeWithoutTools.GenerateOutputStack(inputSlots.Items, slot);
             output = slot.Itemstack;
         }
-        ItemStack actualOutput = output;
+        ItemStack actualOutput = output!;
         
-        if (outputUsedTools != null || outputUsedTools.Count < wrapper.ToolIngredients.Count)
+        if (outputUsedTools != null && outputUsedTools.Any(a => a == null))
         {
-            actualOutput = new(api.World.GetItem(UnfinishedCraftAsset));
-            actualOutput.Attributes.SetItemstack("output", output);
-            actualOutput.Attributes.SetInt("recipe", wrapper.Id);
-            actualOutput.Attributes.SetString("usedTools", string.Join(":", outputUsedTools));
+            actualOutput = new ItemStack(api.World.GetItem(UnfinishedCraftAsset));
+            ItemUnfinishedCraft.PopulateAttributes(actualOutput, output!, wrapper, outputUsedTools);
         }
 
         if (first)
         {
-            return new GridRecipeCraftingResult(wrapper, output, actualOutput, this);    
+            return new GridRecipeCraftingResult(wrapper, output!, actualOutput!, this);    
         }
-        List<int> usedTools = inputSlots.Items.First(s => !s.Empty)
-            .Itemstack
-            .Attributes
-            .GetString("usedTools")
-            .Split(":")
-            .Select(int.Parse)
-            .ToList();
-        return new UnfinishedCraftingResult(wrapper, usedTools, actualOutput, output, this);     
+        AssetLocation?[] usedTools = ItemUnfinishedCraft.GetUsedTools(inputSlots.Items.First(s => !s.Empty).Itemstack!, wrapper)!;
+        return new UnfinishedCraftingResult(wrapper, usedTools, actualOutput!, output!, this);     
     }
     
     private int ConsumeRecipe(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemStack result, bool bulk)
     {
         if (api.RcServerConfig().EnableGridless)
         {
-            return ConsumeRecipeGridless(wrapper.RecipeWithoutTools.ResolvedIngredients, wrapper, inputSlots, result, bulk);
+            return ConsumeRecipeGridless(wrapper.RecipeWithoutTools.ResolvedIngredients!, wrapper, inputSlots, result, bulk);
         }
         int amount = 0;
         while (
             MatchesRecipe(inputSlots, wrapper, false, null) && 
-            wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.player, inputSlots.Items, 3) &&
+            wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.Player, inputSlots.Items, 3) &&
             ConsumeRecipeTools(wrapper, inputSlots))
         {
             amount++;
@@ -342,14 +338,14 @@ public class RecipeService
         bool anyMatch = false;
         foreach (CraftingRecipeIngredient ingredient in wrapper.ToolIngredients)
         {
-            if (inputSlots.PrimaryTool != null && ingredient.SatisfiesAsIngredient(inputSlots.PrimaryTool.Itemstack))
+            if (inputSlots.PrimaryTool != null && ingredient.SatisfiesAsIngredient(inputSlots.PrimaryTool.Itemstack!))
             {
-                inputSlots.PrimaryTool.Itemstack.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.PrimaryTool, wrapper.RecipeWithTools, ingredient, inputSlots.player, ingredient.Quantity);
+                inputSlots.PrimaryTool.Itemstack!.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.PrimaryTool, wrapper.RecipeWithTools, ingredient, inputSlots.Player, ingredient.Quantity);
                 anyMatch = true;
             }
-            else if (inputSlots.OffhandTool != null && ingredient.SatisfiesAsIngredient(inputSlots.OffhandTool.Itemstack))
+            else if (inputSlots.OffhandTool != null && ingredient.SatisfiesAsIngredient(inputSlots.OffhandTool.Itemstack!))
             {
-                inputSlots.OffhandTool.Itemstack.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.OffhandTool, wrapper.RecipeWithTools, ingredient, inputSlots.player, ingredient.Quantity);
+                inputSlots.OffhandTool.Itemstack!.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.OffhandTool, wrapper.RecipeWithTools, ingredient, inputSlots.Player, ingredient.Quantity);
                 anyMatch = true;
             }
         }
@@ -385,7 +381,7 @@ public class RecipeService
                         continue;
                     }
                     int size = slot.Itemstack.StackSize;
-                    slot.Itemstack.Collectible.OnConsumedByCrafting(itemsArr, slot, recipe, ingredient, inputSlots.player, quantity);
+                    slot.Itemstack.Collectible.OnConsumedByCrafting(itemsArr, slot, recipe, ingredient, inputSlots.Player, quantity);
                     quantity -= size;
                     if (quantity <= 0)
                     {
@@ -408,13 +404,13 @@ public class RecipeService
         private readonly RecipeService service;
         private readonly ItemStack output;
         private readonly ItemStack finalOutput;
-        private readonly List<int> usedToolsIndexes;
+        private readonly AssetLocation?[] usedTools;
         private readonly GridRecipeWrapper wrapper;
 
-        public UnfinishedCraftingResult(GridRecipeWrapper wrapper, List<int> usedToolsIndexes, ItemStack output, ItemStack finalOutput, RecipeService service)
+        public UnfinishedCraftingResult(GridRecipeWrapper wrapper, AssetLocation?[] usedTools, ItemStack output, ItemStack finalOutput, RecipeService service)
         {
             this.wrapper = wrapper;
-            this.usedToolsIndexes = usedToolsIndexes;
+            this.usedTools = usedTools;
             this.output = output;
             this.finalOutput = finalOutput;
             finalOutput.ResolveBlockOrItem(service.api.World); // Attribute deserializer doesn't do this apparently
@@ -439,7 +435,7 @@ public class RecipeService
             {
                 return false;
             }
-            return service.ToolsMatchesRecipe(wrapper.ToolIngredients, usedToolsIndexes, inputSlots, false);
+            return service.ToolsMatchesRecipe(wrapper.ToolIngredients, usedTools, inputSlots, false);
         }
 
         public ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
@@ -447,7 +443,7 @@ public class RecipeService
             ItemSlot slot = inputSlots.Items.First(s => !s.Empty);
             int amount = 0;
             while (
-                service.ToolsMatchesRecipe(wrapper.ToolIngredients, usedToolsIndexes, inputSlots, false) && 
+                service.ToolsMatchesRecipe(wrapper.ToolIngredients, usedTools, inputSlots, false) && 
                 service.ConsumeRecipeTools(wrapper, inputSlots))
             {
                 slot.TakeOut(1);
@@ -457,7 +453,7 @@ public class RecipeService
                     break;
                 }
             }
-            ItemStack outputStack = finalOutput.Clone();
+            ItemStack outputStack = output.Clone();
             outputStack.StackSize = amount;
             return outputStack;
         }
@@ -528,7 +524,7 @@ public class GridRecipeWrapper
         {
             RecipeWithoutTools.Shapeless = true;
         }
-        for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients.Length; i++)
+        for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
         {
             CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
             if (ingredient != null && !ingredient.Consume)
@@ -550,4 +546,4 @@ public interface ICraftingResult
     ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk);
 }
 
-public record RecipeInputSlots(ItemSlot[] Items, IPlayer player, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);
+public record RecipeInputSlots(ItemSlot[] Items, IPlayer Player, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);

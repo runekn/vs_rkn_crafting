@@ -35,10 +35,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private bool dirtyRecipes = true;
     private RecipeSelectionDialog? recipeSelectionDialog;
 
-    private CraftingParams? craftingParams;
-
     // Server-client Runtime fields
     private float timeoutTimer;
+    private CraftingParams? craftingParams;
 
     public BlockEntityCraftingSurface()
     {
@@ -102,7 +101,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         sb.Append("Selected: ").AppendLine(scanResult.SelectionItemStack.GetName());
-        if (validRecipes.Count > 1)
+        if (validRecipes is { Count: > 1 })
         {
             sb.Append(validRecipes.Count - 1).Append(" more valid recipes");
         }
@@ -201,7 +200,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return false;
         }
-        RecipeInputSlots inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
+        RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
         if (inputSlots == null || !result.Matches(inputSlots))
         {
             ClientError("missingreciperequirement");
@@ -403,15 +402,16 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     public void OpenRecipeSelection()
     {
-        if (recipeSelectionDialog == null)
+        if (validRecipes == null)
         {
-            recipeSelectionDialog = new RecipeSelectionDialog(capi, Pos); 
+            return;
         }
+        recipeSelectionDialog ??= new RecipeSelectionDialog(capi, Pos);
         recipeSelectionDialog
             .TryOpen(validRecipes.ToArray(), i =>
             {
                 selectedRecipe = i;
-                Api.RcLogger().Debug("selected: {0} {1}", i, GetSelectedRecipe().Name);
+                Api.RcLogger().Debug("selected: {0} {1}", i, GetSelectedRecipe()!.Name);
                 recipeSelectionDialog.TryClose();
             });
     }
@@ -455,7 +455,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private float GetCraftingTime()
     {
-        float @base = craftingParams.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
+        float @base = craftingParams!.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.Amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float)Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.Amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
         Api.RcLogger().Debug("Next crafting time: {0}", r);
@@ -468,7 +468,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        RecipeInputSlots inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
+        RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
         if (inputSlots == null) {
             validRecipes = [];
             selectedRecipe = RecipeService.RecipeIdNone;
@@ -492,7 +492,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        RecipeInputSlots inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
+        RecipeInputSlots? inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
         if (inputSlots?.Items == null || !craftingParams.Recipe.Matches(inputSlots))
         {
             return;
@@ -598,10 +598,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private ICraftingResult? GetSelectedRecipe()
     {
-        if (selectedRecipe == RecipeService.RecipeIdNone || validRecipes?.Count == 0)
+        if (validRecipes == null || selectedRecipe == RecipeService.RecipeIdNone || validRecipes.Count == 0)
             return null;
 
-        return validRecipes.Where(r => r.Id == selectedRecipe).FirstOrDefault();
+        return validRecipes.FirstOrDefault(r => r.Id == selectedRecipe);
     }
 
     private void ClientError(string error)
