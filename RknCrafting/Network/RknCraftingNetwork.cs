@@ -36,6 +36,8 @@ public class RknCraftingNetwork
         ClientChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ClientChannel.RegisterMessageType<ConfigMessage>();
         ClientChannel.RegisterMessageType<ClientStartedCraftingMessage>();
+        ClientChannel.RegisterMessageType<PutToolIngredientMessage>();
+        
         ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
     }
@@ -51,8 +53,11 @@ public class RknCraftingNetwork
         ServerChannel.RegisterMessageType<SelectNextRecipeMessage>();
         ServerChannel.RegisterMessageType<ConfigMessage>();
         ServerChannel.RegisterMessageType<ClientStartedCraftingMessage>();
+        ServerChannel.RegisterMessageType<PutToolIngredientMessage>();
+        
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
         ServerChannel.SetMessageHandler<ClientStartedCraftingMessage>(OnClientStartedCraftingMessage);
+        ServerChannel.SetMessageHandler<PutToolIngredientMessage>(OnPutToolIngredient);
     }
 
     public void SpawnCraftingSurface(BlockPos pos, bool asPlayer = true)
@@ -73,7 +78,7 @@ public class RknCraftingNetwork
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
         api.RcLogger().Debug("Received stop crafting message!");
-        BlockEntityCraftingSurface entity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position);
+        BlockEntityCraftingSurface? entity = BlockCraftingSurface.GetBE(api.World, message.Position);
         if (entity != null)
         {
             entity.ClientStopCrafting(message.animation);
@@ -115,14 +120,25 @@ public class RknCraftingNetwork
     private void OnClientStartedCraftingMessage(IPlayer byPlayer, ClientStartedCraftingMessage message)
     {
         api.RcLogger().Debug("Received start crafting message from {0}!", byPlayer.PlayerName);
-        api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(message.Position).ClientStartedCrafting(
+        BlockCraftingSurface.GetBE(api.World, message.Position)!.ClientStartedCrafting(
             byPlayer, 
-            message.Animation, 
-            message.RecipeCraftingTimeModifier, 
-            message.Recipe, 
-            message.Bulk, 
+            message.Animation,
+            message.RecipeCraftingTimeModifier,
+            message.Recipe,
+            message.Bulk,
             message.NextCraftingTime,
             message.Facing == -1 ? null : BlockFacing.FromFlag(message.Facing)
         );
+    }
+
+    public void PutToolIngredient(BlockSelection blockSel)
+    {
+        ClientChannel.SendPacket(new PutToolIngredientMessage() { BlockSelection = blockSel });
+    }
+
+    private void OnPutToolIngredient(IServerPlayer fromPlayer, PutToolIngredientMessage message)
+    {
+        BlockEntityCraftingSurface? be = BlockCraftingSurface.GetBE(api.World, message.BlockSelection.Position);
+        be?.TryPutIngredient(fromPlayer.InventoryManager.ActiveHotbarSlot, fromPlayer, message.BlockSelection.SelectionBoxIndex);
     }
 }

@@ -6,6 +6,7 @@ using RKN.Crafting.Patches;
 using RknCrafting;
 using System;
 using System.Reflection;
+using System.Xml.Schema;
 using RknCrafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -20,7 +21,9 @@ public class RknCraftingModSystem : ModSystem
 {
 #pragma warning disable CS8618
     private ICoreAPI api;
+    private ICoreClientAPI capi => api as ICoreClientAPI;
     private Harmony harmony;
+    private ActionConsumable<KeyCombination> oldToolModeHandler;
 
     public RknCraftingNetwork Network { get; internal set; }
     public RecipeService RecipeService { get; internal set; }
@@ -52,10 +55,41 @@ public class RknCraftingModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("rkncrafting:hotkey-crafting"), GlKeys.AltLeft);
+        
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
+        
         api.Event.BlockChanged += UpdateCraftingSurface; // Why is this neccessary? Vanilla shelf seems to work just fine without.
+        
         api.Input.InWorldAction += CheckPauseInteractions;
         api.Event.MouseUp += CheckResumeInteractions;
+
+        api.Event.IsPlayerReady += AddRecipeSelectionHandler; // Add as late as possible since the vanilla handler is added at OnBlockTexturesLoaded
+    }
+
+    private bool AddRecipeSelectionHandler(ref EnumHandling handling)
+    {
+        if (api.Side != EnumAppSide.Client)
+        {
+            return true;
+        }
+        
+        HotKey toolModeSelectHotkey = capi.Input.HotKeys["toolmodeselect"];
+        oldToolModeHandler = toolModeSelectHotkey.Handler;
+        toolModeSelectHotkey.Handler = CheckOpenRecipeSelection;
+        return true;
+    }
+
+    private bool CheckOpenRecipeSelection(KeyCombination keys)
+    {
+        BlockSelection sel = capi.World.Player.Entity.BlockSelection;
+        if (sel?.Block is BlockCraftingSurface)
+        {
+            BlockEntityCraftingSurface? entity = BlockCraftingSurface.GetBE(capi.World, sel.Position);
+            entity?.OpenRecipeSelection();
+            return true;
+        }
+
+        return oldToolModeHandler(keys);
     }
 
     public override void StartServerSide(ICoreServerAPI api)
@@ -113,7 +147,7 @@ public class RknCraftingModSystem : ModSystem
     {
         if (oldBlock is BlockCraftingSurface)
         {
-            BlockEntityCraftingSurface.OnInventoryUpdated(api as ICoreClientAPI, pos);
+            BlockEntityCraftingSurface.OnInventoryUpdated(capi, pos);
         }
     }
 

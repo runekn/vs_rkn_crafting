@@ -216,7 +216,7 @@ public class RecipeService
         {
             return false;
         }
-        List<ItemStack> clonedItems = inputSlots.Items.Select(i => i.Itemstack!.Clone()).Where(i => i != null).ToList();
+        List<ItemStack> clonedItems = inputSlots.Items.Select(i => i.Itemstack?.Clone()).Where(i => i != null).ToList();
         if (clonedItems.Count == 0)
         {
             return false;

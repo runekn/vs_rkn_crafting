@@ -78,6 +78,10 @@ public class ItemUnfinishedCraft : Item
             int index = int.Parse(pair.Key);
             AssetLocation asset = new((pair.Value as StringAttribute).value);
             index = recipe == null ? i++ : index;
+            if (index >= r.Length)
+            {
+                return null; // This may happen due to recipe id no longer pointing to the correct recipe.
+            }
             r[index] = asset;
         }
 

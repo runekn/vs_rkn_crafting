@@ -300,7 +300,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool TryPutIngredient(ItemSlot slot, IPlayer? byPlayer = null, int selectionBoxIndex = 0)
     {
         timeoutTimer = 0;
-        if (slot.Itemstack?.Item?.Tool != null || craftingParams != null)
+        if (craftingParams != null)
         {
             return false;
         }
@@ -441,6 +441,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             UpdateValidRecipes(byPlayer);
             dirtyRecipes = false;
         }
+    }
+
+    public bool HasRecipeSelection()
+    {
+        return GetSelectedRecipe() != null;
     }
 
     protected override void OnTick(float dt)

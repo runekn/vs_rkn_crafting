@@ -5,5 +5,8 @@
 	"error-surfacefull": "Crafting surface is full",
 	"error-surfaceempty": "Slot is empty",
 	"error-surfacealreadycrafting": "Someone is already crafting here!",
-	"error-missingreciperequirement": "Missing requirement for crafting"
+	"error-missingreciperequirement": "Missing requirement for crafting",
+	"help-craft": "Craft",
+	"help-addingredient": "Add ingredient",
+	"help-addtoolingredient": "Add tool ingredient (only if consumed)"
 }

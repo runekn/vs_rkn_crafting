@@ -8,6 +8,8 @@ public class BlockCraftingSurface : Block
 {
     private static readonly AssetLocation Asset = new("rkncrafting", "craftingsurface");
 
+    private WorldInteraction[] interactions;
+
     public static bool TryPlace(ICoreAPI api, IPlayer? byPlayer, BlockPos blockPos, ItemSlot slot)
     {
         if (api.World.GetBlock(Asset) is not BlockCraftingSurface block)
@@ -31,14 +33,47 @@ public class BlockCraftingSurface : Block
         }
         if (api.RcServerConfig().EnableGridless)
         {
-            if (!blockEntity.TryPutIngredient(slot, byPlayer))
+            if (slot.Itemstack?.Item?.Tool == null && !blockEntity.TryPutIngredient(slot, byPlayer))
             {
-                api.RcLogger().Error("Could not put initial items into newly spawned crafting block!");
-                api.World.BlockAccessor.BreakBlock(abovePos, null);
+                api.RcLogger().Warning("Could not put initial items into newly spawned crafting block!");
                 return false;
             }
         }
         return true;
+    }
+
+    public override void OnLoaded(ICoreAPI api)
+    {
+        InteractionHelpYOffset = 0.6f;
+        interactions =
+        [
+            new WorldInteraction
+            {
+                ActionLangCode = "rkncrafting:help-craft",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = IsCraftable
+            },
+            new WorldInteraction
+            {
+                ActionLangCode = "rkncrafting:help-addingredient",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = CanAddIngredient
+            },
+            new WorldInteraction
+            {
+                ActionLangCode = "rkncrafting:help-addtoolingredient",
+                HotKeyCode = "rkncrafting.start",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = CanAddToolIngredient
+            },
+            new WorldInteraction
+            {
+                ActionLangCode = "Select recipe",
+                HotKeyCode = "toolmodeselect",
+                MouseButton = EnumMouseButton.None,
+                ShouldApply = CanSelectRecipe
+            }
+        ];
     }
 
     public override Cuboidf[] GetSelectionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
@@ -68,11 +103,6 @@ public class BlockCraftingSurface : Block
         {
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
-        if (api.Side == EnumAppSide.Client && (api as ICoreClientAPI).Input.IsHoldingCraftingButton())
-        {
-            be.OpenRecipeSelection();
-            return false;
-        }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
         if (activeHotbarSlot.Empty)
         {
@@ -82,18 +112,23 @@ public class BlockCraftingSurface : Block
             }
             return be.StartCrafting(world, byPlayer);
         }
-        else if (activeHotbarSlot.Itemstack?.Item?.Tool != null)
+        if (activeHotbarSlot.Itemstack?.Item?.Tool != null)
         {
+            if ((api as ICoreClientAPI)?.Input.IsHoldingCraftingButton() ?? false)
+            {
+                if (be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex))
+                {
+                    api.RcNetwork().PutToolIngredient(blockSel);
+                }
+                return false;
+            }
             return be.StartCrafting(world, byPlayer);
         }
-        else if (byPlayer.Entity.Controls.ShiftKey)
+        if (byPlayer.Entity.Controls.ShiftKey)
         {
             return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
         }
-        else
-        {
-            return be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
-        }
+        return be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
     }
 
     public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -160,7 +195,7 @@ public class BlockCraftingSurface : Block
         }
     }
 
-    public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
+    public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer? byPlayer, float dropQuantityMultiplier = 1)
     {
         // Copy paste of base method, but without behavior delegation and spawning particles
         if (EntityClass != null)
@@ -197,12 +232,42 @@ public class BlockCraftingSurface : Block
         world.BlockAccessor.SetBlock(0, pos);
     }
 
-    private static BlockEntityCraftingSurface? GetBE(IWorldAccessor world, BlockPos blockPos)
+    public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
     {
-        if (blockPos == null)
+        return interactions;
+    }
+
+    private bool IsCraftable(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
+    {
+        ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
+        if (!activeSlot.Empty && activeSlot.Itemstack.Item?.Tool == null)
         {
-            return null;
+            return false;
         }
+        BlockEntityCraftingSurface? be = GetBE(api.World, blockSelection.Position);
+        return be != null && be.HasRecipeSelection();
+    }
+
+    private bool CanSelectRecipe(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
+    {
+        BlockEntityCraftingSurface? be = GetBE(api.World, blockSelection.Position);
+        return be != null && be.HasRecipeSelection();
+    }
+
+    private bool CanAddToolIngredient(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
+    {
+        ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
+        return !activeSlot.Empty && activeSlot.Itemstack?.Item?.Tool != null; 
+    }
+
+    private bool CanAddIngredient(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
+    {
+        ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
+        return !activeSlot.Empty && activeSlot.Itemstack?.Item?.Tool == null; 
+    }
+
+    public static BlockEntityCraftingSurface? GetBE(IWorldAccessor world, BlockPos blockPos)
+    {
         return world.BlockAccessor.GetBlockEntity(blockPos) as BlockEntityCraftingSurface;
     }
 }

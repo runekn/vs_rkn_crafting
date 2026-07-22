@@ -23,7 +23,7 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
             return true;
         }
         ICoreClientAPI? clientApi = world.Api as ICoreClientAPI;
-        if (clientApi == null || !clientApi.Input.IsHoldingCraftingButton() || byPlayer.InventoryManager.ActiveHotbarSlot?.Itemstack?.Item?.Tool != null)
+        if (clientApi == null || !clientApi.Input.IsHoldingCraftingButton())
         {
             return true;
         }

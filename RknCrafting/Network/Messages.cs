@@ -63,3 +63,10 @@ public class ClientStartedCraftingMessage
     [ProtoMember(7)]
     public int Facing;
 }
+
+[ProtoContract]
+public class PutToolIngredientMessage
+{
+    [ProtoMember(1)]
+    public required BlockSelection BlockSelection;
+}
