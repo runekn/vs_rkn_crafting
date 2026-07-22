@@ -122,6 +122,6 @@ Any mod that disables grid recipes will also disable for this mod.
 
 ## Major release changelog
 
-* 0.3.0: Support multi-stage crafting for recipes with tool requirements that can not be held in one go. Move recipe selection hotkey to F (Tool mode selection). Support adding tool as ingredient, for mod recipes that consumes tools as simple ingredients. 
+* 0.3.0: Support multi-stage crafting for recipes with tool requirements that can not be held in one go. Move recipe selection hotkey to F (Tool mode selection). Support adding tool as ingredient, for mod recipes that consumes tools as simple ingredients. Add handbook guide.
 * 0.2.0: Added grid to crafting surface. Added new recipe selection UI. Recipes are now scanned on client instead of server. Tools are no longer ignored during recipe scan. Ability to take back ingredients.
 * 0.1.0: Initial pre-release
