@@ -72,12 +72,13 @@ public class RknCraftingNetwork
 
     public void StopCrafting(IPlayer player, EnumCraftingAnimation enumCraftingAnimation, BlockPos pos)
     {
+        api.RcLogger().Debug("Sending stop crafting animation to {0}! Animation: {1}", player.PlayerName, enumCraftingAnimation);
         ServerChannel.SendPacket(new CraftingStoppedMessage() { Position = pos, animation = enumCraftingAnimation }, player as IServerPlayer);
     }
 
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
-        api.RcLogger().Debug("Received stop crafting message!");
+        api.RcLogger().Debug("Received stop crafting message with animation: {0}!", message.animation);
         BlockEntityCraftingSurface? entity = BlockCraftingSurface.GetBE(api.World, message.Position);
         if (entity != null)
         {

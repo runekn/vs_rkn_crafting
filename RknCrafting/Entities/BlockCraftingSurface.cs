@@ -110,7 +110,7 @@ public class BlockCraftingSurface : Block
             {
                 return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
             }
-            return be.StartCrafting(world, byPlayer);
+            return be.StartCrafting(byPlayer);
         }
         if (activeHotbarSlot.Itemstack?.Item?.Tool != null)
         {
@@ -122,7 +122,7 @@ public class BlockCraftingSurface : Block
                 }
                 return false;
             }
-            return be.StartCrafting(world, byPlayer);
+            return be.StartCrafting(byPlayer);
         }
         if (byPlayer.Entity.Controls.ShiftKey)
         {

@@ -4,7 +4,6 @@
   shape: { base: "item/unfinishedcraft" },
   maxstacksize: 64,
   heldTpIdleAnimation: "holdbothhandslarge", heldRightReadyAnimation: "heldblockready", heldTpUseAnimation: "twohandplaceblock",
-  creativeinventory: { "general": ["*"], "items": ["*"] }, // TODO: Remove from creative!
   guiTransform: {
     translation: { x: 2, y: -3, z: 0 },
     rotation: { x: 150, y: -137, z: 0 },

@@ -179,7 +179,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         };
     }
 
-    public bool StartCrafting(IWorldAccessor world, IPlayer byPlayer)
+    public bool StartCrafting(IPlayer byPlayer)
     {
         timeoutTimer = 0;
         if (Api.Side == EnumAppSide.Server)
@@ -218,7 +218,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         };
         craftingParams.NextCraftingTime = GetCraftingTime();
         Api.RcNetwork().ClientStartedCrafting(craftingParams, Pos);
-        Api.RcLogger().Debug("Crafting {0} by {1}!", craftingParams.Recipe.Name, craftingParams.Player.PlayerName);
+        Api.RcLogger().Debug("Started crafting {0} by {1}!", craftingParams.Recipe.Name, craftingParams.Player.PlayerName);
         return true;
     }
 
@@ -249,6 +249,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             RecipeInputSlots inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
             if (inputSlots == null)
             {
+                Api.RcLogger().Debug("Stopping crafting by {0} and destroying block due to lack of any materials", byPlayer.PlayerName);
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
                 Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
@@ -257,6 +258,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             }
             if (!craftingParams.Recipe.Matches(inputSlots))
             {
+                Api.RcLogger().Debug("Stopping crafting by {0} due to lack of correct materials", byPlayer.PlayerName);
                 EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
                 Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
                 Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
@@ -287,7 +289,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         timeoutTimer = 0;
         IPlayer player = capi.World.Player;
         capi.RcPauseInteractions();
-        Api.RcLogger().Debug("Stop crafting by {0}!", player.PlayerName);
         Api.RcAnimator().StopCrafting(player, anim);
         ResetState();
     }
@@ -304,13 +305,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return false;
         }
-        Api.RcLogger().Debug("Inserting into slot {0}", selectionBoxIndex);
+
         ItemSlot? invSlot = GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex);
         if (invSlot == null)
         {
             ClientError("surfacefull");
             return false;
         }
+
+        Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", slot.Itemstack?.Collectible.Code, selectionBoxIndex, byPlayer?.PlayerName);
         int quantity = 1;
         if (byPlayer != null && byPlayer.Entity.Controls.CtrlKey)
         {
@@ -411,7 +414,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             .TryOpen(validRecipes.ToArray(), i =>
             {
                 selectedRecipe = i;
-                Api.RcLogger().Debug("selected: {0} {1}", i, GetSelectedRecipe()!.Name);
+                Api.RcLogger().Debug("Selected recipe: {0} {1}", i, GetSelectedRecipe()!.Name);
                 recipeSelectionDialog.TryClose();
             });
     }
@@ -463,7 +466,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         float @base = craftingParams!.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.Amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float)Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.Amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
-        Api.RcLogger().Debug("Next crafting time: {0}", r);
+        Api.RcLogger().Debug("Next time to craft: {0}", r);
         return r;
     }
 
@@ -509,7 +512,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         Api.World.SpawnItemEntity(output, Pos);
-        Api.RcLogger().Debug("Crafted {0} by {1}!", craftingParams.Recipe.Name, craftingParams.Player.PlayerName);
+        Api.RcLogger().Debug("Crafted {0}x {1} by {2}!", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
     }
 
     private RecipeInputSlots? GetCraftingInputSlots(IPlayer byPlayer, BlockFacing? facing)

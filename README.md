@@ -105,8 +105,6 @@ Any mod that disables grid recipes will also disable for this mod.
 ## Wishlist
 
 * More and better animations based on tools and recipe
-* Animations for crafted item or block taking shape while crafting
-	* Estimated difficulty: VERY HARD (though can be done one recipe at a time)
 * Particles while crafting
 	* Estimated difficulty: MEDIUM
 * Particles per item type
@@ -117,9 +115,6 @@ Any mod that disables grid recipes will also disable for this mod.
 	* Estimated difficulty: MEDIUM-HARD (though can be done one recipe at a time)
 * Support adding ingredient while in mouse mode
 	* Estimated difficulty: MEDIUM
-* Support >2 tool recipes through partial craft items.
-	* When crafting recipe that requires >2 tools, it will output a partial craft item instead of the recipe output. This then needs to be put into a new crafting surface where it can then be worked on with the remaining tools.
-	* Estimated difficulty: HARD
 
 ## Known issues
 
