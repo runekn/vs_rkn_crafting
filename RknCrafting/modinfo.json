@@ -6,9 +6,13 @@
     "authors": [
         "Runekn"
     ],
-    "description": "Generic gridless crafting system that completely replaces all UI grid recipes.",
+    "description": "Generic crafting system that completely replaces the UI grid with a more immersive mechanic.",
     "version": "0.3.0",
     "dependencies": {
-        "game": "1.22.4"
-    }
+        "game": "1.22.4",
+        "jsonpatcheslib": "1.5.3"
+    },
+    "side": "Universal",
+    "requiredOnClient": true,
+    "requiredOnServer": true
 }

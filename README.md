@@ -102,6 +102,17 @@ Any mod that disables grid recipes will also disable for this mod.
 
 [Immersive Inventory Slots](https://mods.vintagestory.at/show/mod/59074) and this mod will override each other's UI changes if playing with DisableUICraftingGrid=true. To hide the grid again you must use HideCraftingGrid in that mod's config.
 
+### Compatibility tips for other modders
+
+Use `craftingIngredientTransform` attribute to change how collectibles are rendered on crafting surfaces.
+This is also available in the `.tfedit` UI.
+By default the mod will auto-scale ingredients to fit the slot, but sometimes this does not work right.
+
+Blocks must have the `rkncrafting.spawncraftingsurface` behavior in order to be able to spawn crafting surface on top.
+The behavior can have the property `craftingTimeModifier` to change how fast crafting is on it.
+
+Recipes can have the attribute `craftingTimeModifier` to edit how fast it is to craft.
+
 ## Wishlist
 
 * More and better animations based on tools and recipe
