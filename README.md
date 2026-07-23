@@ -119,7 +119,6 @@ Recipes can have the attribute `craftingTimeModifier` to edit how fast it is to 
 
 * More and better animations based on tools and recipe
 * Support adding ingredient while in mouse mode
-	* Estimated difficulty: MEDIUM
 
 ## Known issues
 

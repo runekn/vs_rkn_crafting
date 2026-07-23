@@ -523,15 +523,71 @@ public class GridRecipeWrapper
         {
             RecipeWithoutTools.Shapeless = true;
         }
+
+        ExtractToolIngredients();
+        CorrectRecipeDimensions();
+    }
+
+    private void ExtractToolIngredients()
+    {
         for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
         {
             CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
-            if (ingredient is { Consume: false, Code: { Path: "*", Domain: "*" } })
+            if (ingredient is { Consume: false, MatchingType: EnumRecipeMatchType.TagsOnly })
             {
                 RecipeWithoutTools.ResolvedIngredients[i] = null;
                 ToolIngredients.Add(ingredient);
             }
         }
+    }
+
+    private void CorrectRecipeDimensions()
+    {
+        if (ToolIngredients.Count == 0)
+        {
+            return;
+        }
+
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
+        for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
+        {
+            bool empty = RecipeWithoutTools.ResolvedIngredients[i] == null;
+            if (empty) continue;
+            int x = i % RecipeWithoutTools.Width;
+            int y = i / RecipeWithoutTools.Width;
+            minX = Math.Min(minX, x);
+            maxX = Math.Max(maxX, x);
+            minY = Math.Min(minY, y);
+            maxY = Math.Max(maxY, y);
+        }
+        int newWidth = 1 + maxX - minX;
+        int newHeight = 1 + maxY - minY; // TODO: Some recipes, like rammed earth, deliberately uses larger height
+        if (newWidth == RecipeWithoutTools.Width && newHeight == RecipeWithoutTools.Height)
+        {
+            return;
+        }
+        
+        CraftingRecipeIngredient?[] newIngredients = new CraftingRecipeIngredient?[newWidth * newHeight];
+        for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients.Length; i++)
+        {
+            CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
+            if (ingredient is null)
+            {
+                continue;
+            }
+            int x = i % RecipeWithoutTools.Width;
+            int y = i / RecipeWithoutTools.Width;
+            int newX = x - minX;
+            int newY = y - minY;
+            newIngredients[newX + newY * newWidth] = ingredient;
+        }
+
+        RecipeWithoutTools.ResolvedIngredients = newIngredients;
+        RecipeWithoutTools.Height = newHeight;
+        RecipeWithoutTools.Width = newWidth;
     }
 }
 
