@@ -55,9 +55,23 @@ public class BlockCraftingSurface : Block
             },
             new WorldInteraction
             {
+                ActionLangCode = "rkncrafting:help-craftbulk",
+                HotKeyCode = "shift",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = (wi, blockSel, entitySel) => api.RcServerConfig().EnableBulkCrafting && IsCraftable(wi, blockSel, entitySel)
+            },
+            new WorldInteraction
+            {
                 ActionLangCode = "rkncrafting:help-addingredient",
                 MouseButton = EnumMouseButton.Right,
                 ShouldApply = CanAddIngredient
+            },
+            new WorldInteraction
+            {
+                ActionLangCode = "rkncrafting:help-takeingredient",
+                HotKeyCode = "ctrl",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = CanTakeIngredient
             },
             new WorldInteraction
             {
@@ -106,7 +120,7 @@ public class BlockCraftingSurface : Block
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
         if (activeHotbarSlot.Empty)
         {
-            if (byPlayer.Entity.Controls.ShiftKey)
+            if (byPlayer.Entity.Controls.CtrlKey)
             {
                 return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
             }
@@ -124,7 +138,7 @@ public class BlockCraftingSurface : Block
             }
             return be.StartCrafting(byPlayer);
         }
-        if (byPlayer.Entity.Controls.ShiftKey)
+        if (byPlayer.Entity.Controls.CtrlKey)
         {
             return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
         }
@@ -264,6 +278,12 @@ public class BlockCraftingSurface : Block
     {
         ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
         return !activeSlot.Empty && activeSlot.Itemstack?.Item?.Tool == null; 
+    }
+
+    private bool CanTakeIngredient(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
+    {
+        BlockEntityCraftingSurface? be = GetBE(api.World, blockSelection.Position);
+        return be != null && !be.IsEmpty();
     }
 
     public static BlockEntityCraftingSurface? GetBE(IWorldAccessor world, BlockPos blockPos)

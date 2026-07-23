@@ -206,7 +206,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             ClientError("missingreciperequirement");
             return false;
         }
-        bool bulk = byPlayer.Entity.Controls.CtrlKey && Api.RcServerConfig().EnableBulkCrafting;
+        bool bulk = byPlayer.Entity.Controls.ShiftKey && Api.RcServerConfig().EnableBulkCrafting;
         craftingParams = new CraftingParams()
         {
             Player = byPlayer,
@@ -229,7 +229,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return true;
         }
-        if (craftingParams.Bulk && !byPlayer.Entity.Controls.CtrlKey)
+        if (craftingParams.Bulk && !byPlayer.Entity.Controls.ShiftKey)
         {
             // Player let go of bulk modifier key
             EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
@@ -315,7 +315,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
         Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", slot.Itemstack?.Collectible.Code, selectionBoxIndex, byPlayer?.PlayerName);
         int quantity = 1;
-        if (byPlayer != null && byPlayer.Entity.Controls.CtrlKey)
+        if (byPlayer != null && byPlayer.Entity.Controls.ShiftKey)
         {
             quantity = slot.StackSize;
         }
@@ -354,7 +354,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return false;
         }
         int quantity = 1;
-        if (byPlayer != null && byPlayer.Entity.Controls.CtrlKey)
+        if (byPlayer != null && byPlayer.Entity.Controls.ShiftKey)
         {
             quantity = invSlot.StackSize;
         }
@@ -615,6 +615,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private void ClientError(string error)
     {
         capi?.TriggerIngameError(this, "rkncrafting." + error, Lang.Get("rkncrafting:error-" + error));
+    }
+
+    public bool IsEmpty()
+    {
+        return inventory.Empty;
     }
 }
 

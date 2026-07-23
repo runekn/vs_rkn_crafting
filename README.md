@@ -118,7 +118,7 @@ Any mod that disables grid recipes will also disable for this mod.
 
 ## Known issues
 
-* Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different.
+* Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different. Unsure if this is possible to fix without proper recipe ids.
 
 ## Major release changelog
 
