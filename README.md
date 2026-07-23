@@ -17,7 +17,7 @@ Right click with additional items or blocks to add more ingredients.
 #### Recipe matching
 
 If the ingredients and tools matches a recipe, it will appear in the top info bar while looking at the crafting surface.
-If there are more than one available recipe, then you can switch between them by holding crafting button and right clicking.
+If there are more than one available recipe, then you can switch between them by clicking F.
 
 Recipe matching is based on perspective. Lets say we want to craft Crude Ladder. So you add the sticks (S) as such:
 
