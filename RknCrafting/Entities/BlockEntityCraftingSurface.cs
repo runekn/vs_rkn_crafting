@@ -167,6 +167,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Api.RcLogger().Error("Could not match recipe on server side!");
             return;
         }
+
         craftingParams = new CraftingParams()
         {
             Player = byPlayer,
@@ -177,6 +178,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             NextCraftingTime = nextCraftingTime,
             Facing = blockFacing
         };
+        Api.RcAnimator().StartCrafting(byPlayer, animation);
     }
 
     public bool StartCrafting(IPlayer byPlayer)
@@ -511,6 +513,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
+        Api.World.SpawnCubeParticles(Pos.ToVec3d().Add(0.5f, 0, 0.5f), output, 1f, 6, 1f, null, new Vec3f(0.07f, 0.75f, 0.07f));
         Api.World.SpawnItemEntity(output, Pos);
         Api.RcLogger().Debug("Crafted {0}x {1} by {2}!", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
     }

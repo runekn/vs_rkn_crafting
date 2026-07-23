@@ -17,21 +17,16 @@ public class CraftingAnimator
 
     private static string ToAnimationCode(EnumCraftingAnimation state) => state switch
     {
-        // breaktool
-        // axehit
-        // knifescrape
-        // knifecut
-        // chiselhit
         EnumCraftingAnimation.HandsGeneric => "rkncrafting.handsmixing",
         EnumCraftingAnimation.HandsTool => "rkncrafting.handsmixing", // TODO
         EnumCraftingAnimation.Hammer => "rkncrafting.hammer",
-        EnumCraftingAnimation.Axe => "axechop",
+        EnumCraftingAnimation.Axe => "rkncrafting.axe",
         EnumCraftingAnimation.AxeHammer => "rkncrafting.axehammer",
-        EnumCraftingAnimation.Saw => "saw",
-        EnumCraftingAnimation.Shears => "shears",
-        EnumCraftingAnimation.ChiselHammer => "hammerandchisel",
+        EnumCraftingAnimation.Saw => "rkncrafting.saw",
+        EnumCraftingAnimation.Shears => "rkncrafting.shears",
+        EnumCraftingAnimation.ChiselHammer => "rkncrafting.chiselhammer",
         EnumCraftingAnimation.Chisel => "rkncrafting.chisel",
-        EnumCraftingAnimation.Knife => "knifecut",
+        EnumCraftingAnimation.Knife => "rkncrafting.knife",
         EnumCraftingAnimation.Club => "rkncrafting.hammer",
         _ => throw new ArgumentOutOfRangeException(nameof(state), $"Not expected animation value: {state}"),
     };
@@ -39,12 +34,17 @@ public class CraftingAnimator
     public EnumCraftingAnimation StartCrafting(IPlayer byPlayer, int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
     {
         EnumCraftingAnimation animation = GetCraftingAnimation(recipe, primaryTool, offhandTool);
+        StartCrafting(byPlayer, animation);
+        return animation;
+    }
+
+    public void StartCrafting(IPlayer byPlayer, EnumCraftingAnimation animation)
+    {
         string anim = ToAnimationCode(animation);
         if (!byPlayer.Entity.AnimManager.StartAnimation(anim))
         {
             api.RcLogger().Warning("Could not start animation: " + anim);
         }
-        return animation;
     }
 
     public void StopCrafting(IPlayer byPlayer, EnumCraftingAnimation animation)

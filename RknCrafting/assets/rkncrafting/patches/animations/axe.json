@@ -1,14 +1,14 @@
-[
+﻿[
   {
     "file": "game:entities/humanoid/player",
     "op": "Add",
     "path": "/client/animations/-",
     "value": {
-      "code": "rkncrafting.hammer",
-      "animation": "smithing",
-      "animationSpeed": 1.0,
-      "holdEyePosAfterEasein": 0,
+      "code": "rkncrafting.axe",
+      "animation": "axechop",
       "blendMode": "Add",
+      "animationSpeed": 1.65,
+      "holdEyePosAfterEasein": 0.3,
       "elementWeight": {
         "UpperArmR": 20,
         "LowerArmR": 20,
@@ -23,9 +23,9 @@
       },
       "animationSounds": [
         {
-          "frame":  17,
-          "location":  "game:effect/crusher-impact*",
-          "range":  16,
+          "frame":  23,
+          "location":  "game:block/chop*",
+          "range":  10,
           "pitch":  {
             "avg":  1,
             "var":  0.1,

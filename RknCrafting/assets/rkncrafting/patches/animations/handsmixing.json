@@ -20,7 +20,31 @@
         "LowerArmR": "AddAverage",
         "UpperArmL": "AddAverage",
         "LowerArmL": "AddAverage"
-      }
+      },
+      "animationSounds": [
+        {
+          "frame":  1,
+          "location":  "game:block/dirt*",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        },
+        {
+          "frame":  8,
+          "location":  "game:block/dirt*",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        }
+      ]
     }
 
   },

@@ -17,7 +17,42 @@
       "elementBlendMode": {
         "UpperArmR": "AddAverage",
         "LowerArmR": "AddAverage"
-      }
+      },
+      "animationSounds": [
+        {
+          "frame":  5,
+          "location":  "game:effect/stonecrush",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        },
+        {
+          "frame":  18,
+          "location":  "game:effect/stonecrush",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        },
+        {
+          "frame":  32,
+          "location":  "game:effect/stonecrush",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        }
+      ]
     }
 
   },

@@ -1,0 +1,76 @@
+﻿[
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "Add",
+    "path": "/client/animations/-",
+    "value": {
+      "code": "rkncrafting.knife",
+      "animation": "knifecut",
+      "blendMode": "Add",
+      "easeInSpeed": 7,
+      "animationSpeed": 1.5,
+      "weight": 0,
+      "elementWeight": {
+        "UpperArmR": 40,
+        "LowerArmR": 40,
+        "UpperArmL": 40,
+        "LowerArmL": 40,
+        "ItemAnchor": 40
+      },
+      "elementBlendMode": {
+        "UpperArmR": "AddAverage",
+        "LowerArmR": "AddAverage"
+      },
+      "animationSounds": [
+        {
+          "frame":  0,
+          "location":  "game:tool/groundcrafting/hidecut*",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        }
+      ]
+    }
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "Add",
+    "path": "/client/animations/-",
+    "value": {
+      "code": "rkncrafting.knife-fp",
+      "animation": "knifecut-fp",
+      "blendMode": "Add",
+      "easeInSpeed": 7,
+      "animationSpeed": 1.5,
+      "weight": 0,
+      "elementWeight": {
+        "UpperArmR": 40,
+        "LowerArmR": 40,
+        "UpperArmL": 40,
+        "LowerArmL": 40,
+        "ItemAnchor": 40
+      },
+      "elementBlendMode": {
+        "UpperArmR": "AddAverage",
+        "LowerArmR": "AddAverage"
+      },
+      "animationSounds": [
+        {
+          "frame":  0,
+          "location":  "game:tool/groundcrafting/hidecut*",
+          "range":  10,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        }
+      ]
+    }
+  }
+]

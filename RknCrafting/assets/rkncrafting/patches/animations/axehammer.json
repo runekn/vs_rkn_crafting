@@ -21,7 +21,20 @@
         "LowerArmR": "AddAverage",
         "UpperArmL": "AddAverage",
         "LowerArmL": "AddAverage"
-      }
+      },
+      "animationSounds": [
+        {
+          "frame":  8,
+          "location":  "game:block/chop*",
+          "range":  16,
+          "pitch":  {
+            "avg":  1,
+            "var":  0.1,
+            "dist":  "uniform"
+          },
+          "chance":  1
+        }
+      ]
     }
 
   },
