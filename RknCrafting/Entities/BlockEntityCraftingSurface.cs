@@ -466,7 +466,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         float @base = craftingParams!.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.Amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float)Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.Amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
-        Api.RcLogger().Debug("Next time to craft: {0}", r);
+        Api.RcLogger().Debug("Next time to craft: {0} * {1} * {2} * {3} = {4}", @base, craftingSurfaceTimeModifier, craftingParams.RecipeCraftingTimeModifier, consecutiveModifer, r);
         return r;
     }
 

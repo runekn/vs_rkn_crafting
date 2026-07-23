@@ -20,5 +20,533 @@
         "craftingTimeModifier": 3
       }
     }
+  },
+  {
+    "file": "@@game:recipes\/grid\/jonas\/(nightvisiondevice|returnbaserecipes|returndeath)",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "@@game:recipes\/grid\/jonas\/(riftward|resonator)",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 5
+      }
+    }
+  },
+  {
+    "file": "@game:recipes/grid/armor/*",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 4
+      }
+    }
+  },
+  {
+    "file": "@game:recipes/grid/clothes/*",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/armorstand",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/backpack",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/barrel",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/basket",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/baskettrap",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/bed",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 4
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/bellows",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/bookshelf",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/butterflynet",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/cabinet",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/chair",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2.5
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/chest",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/chest-labeled",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/crate",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3.5
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/crate-labeled",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3.5
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/door-metal",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 4
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/doors",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/fishinggear",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/0-1/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/fruitpress",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/glider",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 4
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/grindstone",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/helvehammer",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/henbox",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/hopper",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/hunterbackpack",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/instrument",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/linensack",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/mechpowerblocks",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/mechpowerblocks-pulverizer",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/miningbag",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/oillamp",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/pan",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/prospectingpick",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/quern",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 4
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/raft",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/shelf",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2.5
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/table",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/toolrack",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2.5
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/trap-crate",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/torchholder",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/trough-large",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/trough-small",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 2
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/trunk",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
+  },
+  {
+    "file": "game:recipes/grid/woodbucket",
+    "side": "server",
+    "op": "addmerge",
+    "path": "/-/",
+    "value": {
+      "attributes": {
+        "craftingTimeModifier": 3
+      }
+    }
   }
 ]

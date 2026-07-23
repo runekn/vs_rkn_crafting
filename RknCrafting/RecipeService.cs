@@ -484,8 +484,8 @@ public class RecipeService
         {
             get
             {
-                JsonObject attributes = output.Collectible.Attributes;
-                return attributes["craftingTimeModifier"].AsFloat(1f);
+                JsonObject? attributes = wrapper.RecipeWithTools.Attributes;
+                return attributes == null ? 1f : attributes["craftingTimeModifier"].AsFloat(1f);
             }
         }
 
