@@ -44,6 +44,7 @@ public class BlockCraftingSurface : Block
 
     public override void OnLoaded(ICoreAPI api)
     {
+        PlacedPriorityInteract = true;
         InteractionHelpYOffset = 0.6f;
         interactions =
         [

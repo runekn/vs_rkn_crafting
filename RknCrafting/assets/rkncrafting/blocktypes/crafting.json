@@ -8,6 +8,7 @@
 	},
 	"resistance": 0.2,
 	"lightAbsorption": 0,
+	"placedPriorityInteract":  true,
 	"sidesolid": {
 		"all": false
 	},	
