@@ -11,15 +11,12 @@ namespace RKN.Crafting.Patches;
 // We only apply this patch if DisableUICraftingGrid is enabled
 // Therefore do not use annotations that PatchAll will pick up
 
-//[HarmonyPatch(typeof(GuiDialogInventory))]
 public class GuiDialogInventoryPatch
 {
     static MethodInfo onNewScrollbarValueMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "OnNewScrollbarvalue");
     static MethodInfo sendInvPacketMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "SendInvPacket");
     static MethodInfo closeIconPressedMethod = AccessTools.DeclaredMethod(typeof(GuiDialogInventory), "CloseIconPressed");
 
-    //[HarmonyPrefix]
-    //[HarmonyPatch("ComposeSurvivalInvDialog")]
     static bool ComposeSurvivalInvDialogPrefix(GuiDialogInventory __instance, ref ICoreClientAPI ___capi, ref IInventory ___backpackInv, ref int ___prevRows, ref GuiComposer ___survivalInvDialog)
     {
         Action<float> OnNewScrollbarvalue = (Action<float>) Delegate.CreateDelegate(typeof(Action<float>), __instance, onNewScrollbarValueMethod);
@@ -66,8 +63,6 @@ public class GuiDialogInventoryPatch
         return false;
     }
 
-    //[HarmonyPrefix]
-    //[HarmonyPatch("OnGuiClosed")]
     static bool OnGuiClosedPrefix(GuiDialogInventory __instance, ref ICoreClientAPI ___capi, ref IInventory ___creativeInv, ref IInventory ___craftingInv, ref IInventory ___backpackInv, ref GuiComposer ___survivalInvDialog, ref GuiComposer ___creativeInvDialog)
     {
         if (___capi.World.Player.WorldData.CurrentGameMode == EnumGameMode.Creative)
@@ -106,6 +101,16 @@ public class GuiDialogInventoryPatch
             ___survivalInvDialog.GetSlotGridExcl("slotgrid").OnGuiClosed(___capi);
         }
 
+        return false;
+    }
+
+    static bool TryOpenPrefix(ref bool __result, ref ICoreClientAPI ___capi)
+    {
+        if (___capi.World.Player.WorldData.CurrentGameMode != EnumGameMode.Survival)
+        {
+            return true;
+        }
+        __result = false;
         return false;
     }
 }

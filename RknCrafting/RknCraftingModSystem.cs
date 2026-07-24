@@ -166,18 +166,23 @@ public class RknCraftingModSystem : ModSystem
         harmony = new Harmony(Mod.Info.ModID);
         harmony.PatchAll();
 
-        if (!LocalConfig.DisableUICraftingGrid)
+        if (LocalConfig.DisableUICraftingGrid)
         {
-            return;
-        }
-        
-        MethodInfo? original = typeof(GuiDialogInventory).DeclaredMethod("ComposeSurvivalInvDialog");
-        MethodInfo? prefix = typeof(GuiDialogInventoryPatch).DeclaredMethod("ComposeSurvivalInvDialogPrefix");
-        MethodInfo? original2 = typeof(GuiDialogInventory).DeclaredMethod("OnGuiClosed");
-        MethodInfo? prefix2 = typeof(GuiDialogInventoryPatch).DeclaredMethod("OnGuiClosedPrefix");
+            MethodInfo? original = typeof(GuiDialogInventory).DeclaredMethod("ComposeSurvivalInvDialog");
+            MethodInfo? prefix = typeof(GuiDialogInventoryPatch).DeclaredMethod("ComposeSurvivalInvDialogPrefix");
+            MethodInfo? original2 = typeof(GuiDialogInventory).DeclaredMethod("OnGuiClosed");
+            MethodInfo? prefix2 = typeof(GuiDialogInventoryPatch).DeclaredMethod("OnGuiClosedPrefix");
 
-        harmony.Patch(original, prefix: prefix);
-        harmony.Patch(original2, prefix: prefix2);
+            harmony.Patch(original, prefix: prefix);
+            harmony.Patch(original2, prefix: prefix2);
+        }
+
+        if (LocalConfig.DisableInventoryGuiDialog)
+        {
+            MethodInfo? original = typeof(GuiDialogInventory).DeclaredMethod("TryOpen");
+            MethodInfo? prefix = typeof(GuiDialogInventoryPatch).DeclaredMethod("TryOpenPrefix");
+            harmony.Patch(original, prefix: prefix);
+        }
     }
 
     private void TryLoadConfig()
