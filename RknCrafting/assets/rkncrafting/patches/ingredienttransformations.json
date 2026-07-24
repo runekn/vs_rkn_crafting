@@ -48,23 +48,43 @@
     "op": "addmerge",
     "path": "/attributes",
     "value": {
-      "craftingIngredientTransform": {
-        "translation": {
-          "x": -0.15,
-          "y": 0.02,
-          "z": 0
+      "craftingIngredientTransformByType": {
+        "@*-(copper|tinbronze|bismuthbronze|blackbronze|gold|silver|iron|meteoriciron|steel)": {
+          "translation": {
+            "x": -0.15,
+            "y": 0.02,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 37,
+            "z": 180
+          },
+          "origin": {
+            "x": 0.6,
+            "y": 0.05,
+            "z": 0.5
+          },
+          "scale": 0.8
         },
-        "rotation": {
-          "x": 0,
-          "y": 37,
-          "z": 180
-        },
-        "origin": {
-          "x": 0.6,
-          "y": 0.05,
-          "z": 0.5
-        },
-        "scale": 0.8
+        "*": {
+          "translation": {
+            "x": -0.54,
+            "y": 0,
+            "z": -0.07
+          },
+          "rotation": {
+            "x": 0,
+            "y": 36,
+            "z": 180
+          },
+          "origin": {
+            "x": 1.1,
+            "y": 0.05,
+            "z": 0.5
+          },
+          "scale": 0.8
+        }
       }
     }
   },
