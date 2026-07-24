@@ -6,16 +6,19 @@
 	"attributes": {
 		"canChisel": false
 	},
-	"resistance": 0.2,
+	"resistance": 0.1,
 	"lightAbsorption": 0,
 	"placedPriorityInteract":  true,
 	"sidesolid": {
 		"all": false
-	},	
+	},
 	"sideopaque": {
 		"all": false
 	},
-	"materialDensity": 400,
+	"sounds": {
+		"break": "game:thud",
+		"hit": "game:thud"
+	},
 	"drops": [],
 	"collisionbox": null,
 	"selectionbox": {
