@@ -22,14 +22,14 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
         {
             return true;
         }
-        if (!block.SideIsSolid(blockSel.Position, BlockFacing.indexUP))
-        {
-            (world.Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.unsuitablesurface", Lang.Get("rkncrafting:error-unsuitablesurface"));
-            return true;
-        }
         ICoreClientAPI? clientApi = world.Api as ICoreClientAPI;
         if (clientApi == null || !clientApi.Input.IsHoldingCraftingButton())
         {
+            return true;
+        }
+        if (!block.SideIsSolid(blockSel.Position, BlockFacing.indexUP))
+        {
+            (world.Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.unsuitablesurface", Lang.Get("rkncrafting:error-unsuitablesurface"));
             return true;
         }
         bool r = BlockCraftingSurface.TryPlace(world.Api, byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot, GetCraftingModifier(world, blockSel));

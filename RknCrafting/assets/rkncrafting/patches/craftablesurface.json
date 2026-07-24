@@ -33,7 +33,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.95
+					"craftingTimeModifier": 1
 				}
 			}
 		]
@@ -46,7 +46,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.8
+					"craftingTimeModifier": 0.9
 				}
 			}
 		]
@@ -59,7 +59,85 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.9
+					"craftingTimeModifier": 1
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/clay/brick",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 1
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/clay/brickslab",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 1
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/clay/brickslabcourse",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 1
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/clay/tile-*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 0.8
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/glass/full-*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 0.8
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/glass/slab-*",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 0.8
 				}
 			}
 		]
@@ -72,7 +150,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.7
+					"craftingTimeModifier": 0.8
 				}
 			}
 		]
@@ -85,7 +163,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.95
+					"craftingTimeModifier": 1
 				}
 			}
 		]
@@ -98,7 +176,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.5
+					"craftingTimeModifier": 0.6
 				}
 			}
 		]
@@ -111,7 +189,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.7
+					"craftingTimeModifier": 0.8
 				}
 			}
 		]
@@ -134,7 +212,33 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.6
+					"craftingTimeModifier": 0.7
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/wood/woodtyped/plankslab",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 0.7
+				}
+			}
+		]
+	},
+	{
+		"file": "game:blocktypes/wood/woodtyped/plankstairs",
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [
+			{
+				"name": "rkncrafting.spawncraftingsurface",
+				"properties": {
+					"craftingTimeModifier": 0.7
 				}
 			}
 		]
@@ -147,7 +251,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 1
+					"craftingTimeModifier": 1.1
 				}
 			}
 		]
@@ -160,7 +264,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.9
+					"craftingTimeModifier": 1
 				}
 			}
 		]
@@ -173,7 +277,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.8
+					"craftingTimeModifier": 0.9
 				}
 			}
 		]
@@ -186,7 +290,7 @@
 			{
 				"name": "rkncrafting.spawncraftingsurface",
 				"properties": {
-					"craftingTimeModifier": 0.8
+					"craftingTimeModifier": 0.9
 				}
 			}
 		]
