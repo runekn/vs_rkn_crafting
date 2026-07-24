@@ -25,7 +25,8 @@
         {
           "frame":  1,
           "location":  "game:block/dirt*",
-          "range":  10,
+          "volume": { "avg": 0.5, "var": 0.1 },
+          "range":  5,
           "pitch":  {
             "avg":  1,
             "var":  0.1,
@@ -36,7 +37,8 @@
         {
           "frame":  8,
           "location":  "game:block/dirt*",
-          "range":  10,
+          "volume": { "avg": 0.5, "var": 0.1 },
+          "range":  5,
           "pitch":  {
             "avg":  1,
             "var":  0.1,
