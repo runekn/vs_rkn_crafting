@@ -1,0 +1,137 @@
+<p><span style="font-size: 14pt;">Generic crafting system that completely replaces the UI grid with a more immersive mechanic.</span></p>
+<p><span style="font-size: 12pt;">This mod does not introduce any new <em>recipe-specific</em> crafting mechanics.<br />The intention of this mod is instead to create a <em>generic</em> crafting system that can work for any and all grid recipes, out of the box.</span></p>
+<h2><strong>Instructions</strong></h2>
+<hr />
+<h4><strong>Add ingredients</strong></h4>
+<p>Right click with any non-tool item or block on a solid surface, while holding the crafting button (ALT, rebindable), to create a crafting surface.<br />Right click with additional items or blocks to add more ingredients.</p>
+<h4><strong>Recipe matching</strong></h4>
+<p>If the ingredients and tools matches a recipe, it will appear in the top info bar while looking at the crafting surface.<br />If there are more than one available recipe, then you can switch between them by clicking F.</p>
+<p>Recipe matching is based on perspective. Lets say we want to craft Crude Ladder. So you add the sticks (S) as such:</p>
+<pre><br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;NORTH<br />&nbsp; &nbsp; &nbsp;|---|---|---|<br />&nbsp; &nbsp; &nbsp;| S | &nbsp; | S |<br />&nbsp; &nbsp; &nbsp;|---|---|---|<br />WEST | S | S | S | EAST<br />&nbsp; &nbsp; &nbsp;|---|---|---|<br />&nbsp; &nbsp; &nbsp;| S | &nbsp; | S |<br />&nbsp; &nbsp; &nbsp;|---|---|---|<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;SOUTH<br /><br /></pre>
+<p>In this case, the crafting surface will only allow you to craft crude ladder if you look at it from north or south.</p>
+<h4><strong>Crafting</strong></h4>
+<p>Hold right click to start crafting. Once crafting has completed the recipe output will spawn and the ingredients will be consumed.<br />If a recipe requires tools, then these must be held in your hands while trying to craft. If a recipe requires two tools then the second one must be held in offhand slot.</p>
+<p>If there are enough remaining ingredients to continue crafting, then continuing to hold rick click will continue crafting at a slightly faster pace.</p>
+<h4><strong>Multi-stage crafting</strong></h4>
+<p>In case a recipe requires more tools than can be held at one time, you can start crafting with any of the required tools. Instead of producing the recipe output, it will instead produce an Unfinished Craft item. This item can be placed on a new crafting surface where you can then proceed to use one or more of the remaining tool requirements in the recipe. Only once all required tool has been used will it produce the final recipe output.</p>
+<p>Clicking the handbook hotkey on an Unfinished Craft itemslot will open the handbook page for the recipe output. Combining this with list of used tools in the itemslot hover description, allows you to see what tools remains to be used.</p>
+<h4><strong>Other</strong></h4>
+<ul>
+    <li>The crafting surface can de destroyed to reclaim ingredients.</li>
+    <li>In order to not functions as a hyper-efficient ground storage, any crafting surface will auto delete itself after 2 minutes of inactivity (configurable).</li>
+</ul>
+<h4><strong>Crafting speed</strong></h4>
+<p>The time it takes to craft is measured as <code>baseCraftingTimeSeconds * craftingSurfaceTimeModifier * recipeCraftingTimeModifier * Max(ConsecutiveCraftingTimeModifierMin, ConsecutiveCraftingTimeModifier^(amount))</code>.</p>
+<p>Where <code>baseCraftingTimeSeconds</code> is configurable, <code>craftingSurfaceTimeModifier</code> depends on what block is under the crafting surface, <code>recipeCraftingTimeModifier</code> depends on the recipe, and <code>consecutiveModifer</code> decreases after each consecutive crafting (with minimnum cap).</p>
+<p>As an example for <code>craftingSurfaceTimeModifier</code>: tables provides the fastest crafting speed, while cobble stone is a bit slower, and soil is the slowest.</p>
+<p>For <code>recipeCraftingTimeModifier</code> the only recipes currently that modifies this are tool and weapon recipes.</p>
+<h4><strong>Adjusted recipes</strong></h4>
+<ul>
+    <li>Plank blocks, slabs, and stairs now requires hammer. Just because I wanted more recipes to have tool requirements now that it plays animations. Though I disabled durability cost at least.</li>
+</ul>
+<h2><strong>Config</strong></h2>
+<hr />
+<p>&nbsp;</p>
+<p>File: <code>%AppData%/Roaming/VintagestoryData/ModConfig/rkncrafting.json</code></p>
+<table style="border-collapse: collapse; width: 67.8532%; height: 328.7px;" border="1" cellspacing="100px" cellpadding="1">
+    <tbody>
+    <tr style="height: 39.4px;">
+        <td style="width: 26.4139%; height: 39.4px;"><strong>&nbsp;Key</strong></td>
+        <td style="width: 6.94744%; height: 39.4px;"><strong>&nbsp;Default</strong></td>
+        <td style="width: 53.3926%; height: 39.4px;"><strong>&nbsp;Description</strong></td>
+        <td style="width: 13.2474%; height: 39.4px;"><strong>&nbsp;Authorative side</strong></td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>BaseCraftingTimeSeconds</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>1.0</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">Base seconds to craft.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>AutoDeleteTimeSeconds</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>120&nbsp;</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">How many seconds of inactivity it takes for crafting surface to self-delete.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>ConsecutiveCraftingTimeModifier</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>0.95</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">Amount to decrease time to craft while continuing to hold right click.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>ConsecutiveCraftingTimeModifierMin</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>0.5</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">The minimum amount that crafting time can be decreased during consecutive crafting.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>EnableBulkCrafting</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>false&nbsp;</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">Allows for holding SHIFT while crafting to craft as many items as possible at once.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>BulkBaseCraftingTimeSeconds</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>2.0</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">Base seconds to craft if using bulk crafting.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>DisableUICraftingGrid</code></td>
+        <td style="width: 6.94744%; height: 21.7px; text-align: center;"><code>true&nbsp;</code></td>
+        <td style="width: 53.3926%; height: 21.7px; text-align: left;">Disables the inventory UI crafting grid.</td>
+        <td style="width: 13.2474%; height: 21.7px; text-align: center;">Client</td>
+    </tr>
+    <tr style="height: 39.4px;">
+        <td style="width: 26.4139%; height: 39.4px;"><code>DisableInventoryGuiDialog</code></td>
+        <td style="width: 6.94744%; text-align: center; height: 39.4px;"><code>false</code></td>
+        <td style="width: 53.3926%; text-align: left; height: 39.4px;">Disable inventory dialog (E) completely. This is only intended as compatibility with other mods that remove inventory grid.</td>
+        <td style="width: 13.2474%; text-align: center; height: 39.4px;">Client</td>
+    </tr>
+    <tr style="height: 39.4px;">
+        <td style="width: 26.4139%; height: 39.4px;"><code>EnableGridless</code></td>
+        <td style="width: 6.94744%; height: 39.4px; text-align: center;"><code>false</code></td>
+        <td style="width: 53.3926%; height: 39.4px; text-align: left;">Crafting surfaces no longer have grid. Recipe matching will not care about what slot ingredients are in.</td>
+        <td style="width: 13.2474%; height: 39.4px; text-align: center;">Server</td>
+    </tr>
+    <tr style="height: 58.6px;">
+        <td style="width: 26.4139%; height: 58.6px;"><code>PauseInteractPostCraftSeconds</code></td>
+        <td style="width: 6.94744%; height: 58.6px; text-align: center;"><code>2.0</code></td>
+        <td style="width: 53.3926%; height: 58.6px; text-align: left;">Block all right click interactions after crafting finished for this amount of seconds. This is to prevent unintentional actions right after crafting has ended when you are still holding right click. Releasing right click will also unblock interactions.</td>
+        <td style="width: 13.2474%; height: 58.6px; text-align: center;">Client</td>
+    </tr>
+    </tbody>
+</table>
+<h2><strong>Required dependencies</strong></h2>
+<hr />
+<p>&nbsp;</p>
+<ul>
+    <li>
+        <p><a href="https://mods.vintagestory.at/jsonpatcheslib">JSON Patches lib</a></p>
+    </li>
+</ul>
+<h2><strong>Compatibility</strong></h2>
+<hr />
+<p>&nbsp;</p>
+<p>Fully safe to add to existing save. It is recommended that all crafting surfaces are deleted before removing from existing save. Though given the auto-delete feature this should be trivial.</p>
+<p>Unfinished crafting items may break after game update or installing/updating mods that add grid recipes. It is recommended that these are only temporary.</p>
+<p>Any mod that disables grid recipes will also disable for this mod.</p>
+<p><a href="https://mods.vintagestory.at/show/mod/59074">Immersive Inventory Slots</a> and this mod will override each other's UI changes if playing with DisableUICraftingGrid=true. To hide the grid again you must use HideCraftingGrid in that mod's config.</p>
+<h4><strong>Compatibility tips for other modders</strong></h4>
+<p>Use <code>craftingIngredientTransform</code> attribute to change how collectibles are rendered on crafting surfaces. This is also available in the <code>.tfedit</code> UI. By default the mod will auto-scale ingredients to fit the slot, but sometimes this does not work right.</p>
+<p>Blocks must have the <code>rkncrafting.spawncraftingsurface</code> behavior in order to be able to spawn crafting surface on top. The behavior can have the property <code>craftingTimeModifier</code> to change how fast crafting is on it.</p>
+<p>Recipes can have the attribute <code>craftingTimeModifier</code> to edit how fast it is to craft.</p>
+<h2><strong>Wishlist</strong></h2>
+<hr />
+<p>&nbsp;</p>
+<ul>
+    <li>More and better animations based on tools and recipe</li>
+    <li>Support adding ingredient while in mouse mode</li>
+</ul>
+<h2><strong>Known issues</strong></h2>
+<hr />
+<p>&nbsp;</p>
+<ul>
+    <li>Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different. Unsure if this is possible to fix without proper recipe ids.</li>
+</ul>
