@@ -7,15 +7,18 @@ namespace RknCrafting.Entities;
 
 internal class CraftingItemRenderer
 {
-    private static readonly SurfacePosTransform R1_C1 = new(0.2f, 0.2f, 0.95f);
-    private static readonly SurfacePosTransform R2_C1 = new(0.2f, 0.5f, 1.01f);
-    private static readonly SurfacePosTransform R3_C1 = new(0.2f, 0.8f, 1.02f);
-    private static readonly SurfacePosTransform R1_C2 = new(0.5f, 0.2f, 1.02f);
-    private static readonly SurfacePosTransform R2_C2 = new(0.5f, 0.5f, 1);
-    private static readonly SurfacePosTransform R3_C2 = new(0.5f, 0.9f, 0.98f);
-    private static readonly SurfacePosTransform R1_C3 = new(0.8f, 0.2f, 1.02f);
-    private static readonly SurfacePosTransform R2_C3 = new(0.9f, 0.5f, 0.97f);
-    private static readonly SurfacePosTransform R3_C3 = new(0.8f, 0.8f, 1.02f);
+    private const float PosMin = 0.17f; 
+    private const float PosMax = 0.83f; 
+    private const float PosMid = 0.5f; 
+    private static readonly SurfacePosTransform R1_C1 = new(PosMin, PosMin, 0.95f, 0.9f, 0.01f, 0f);
+    private static readonly SurfacePosTransform R2_C1 = new(PosMin, PosMid, 1.01f, 0f, -0.02f, 0.01f);
+    private static readonly SurfacePosTransform R3_C1 = new(PosMin, PosMax, 1.02f, -1f, 0.01f, 0f);
+    private static readonly SurfacePosTransform R1_C2 = new(PosMid, PosMin, 1.02f, 0f, 0.0f, -0.01f);
+    private static readonly SurfacePosTransform R2_C2 = new(PosMid, PosMid, 1, 1.5f, 0.0f, 0.0f);
+    private static readonly SurfacePosTransform R3_C2 = new(PosMid, PosMax, 0.98f, 1f, 0.0f, 0.0f);
+    private static readonly SurfacePosTransform R1_C3 = new(PosMax, PosMin, 1.02f, -2f, 0.01f, 0.02f);
+    private static readonly SurfacePosTransform R2_C3 = new(PosMax, PosMid, 0.97f, -1.1f, 0.005f, 0.0f);
+    private static readonly SurfacePosTransform R3_C3 = new(PosMax, PosMax, 1.02f, 0.5f, -0.01f, 0.005f);
 
     public static float[][] GenTransformationMatrices(InventoryGeneric inventory, string transformCode, bool gridless, Block block, System.Func<ItemSlot, MeshData> getMesh)
     {
@@ -77,13 +80,15 @@ internal class CraftingItemRenderer
                 };
             }
 
-            scale = scale.Mul(posTransform.scale);
+            scale = scale.Mul(posTransform.scaleNoise);
+            float x = posTransform.X + posTransform.xNoise;
+            float y = posTransform.Y + posTransform.yNoise;
 
             Matrixf matrixf = new Matrixf()
-                .Scale(scale.X, scale.Y, scale.Z)                       // First scale
-                .Translate(-0.5f, 0, -0.5f)                             // Then center it
-                .Translate(posTransform.X / scale.X, 0, posTransform.Y / scale.Y) // Move to correct slot
-                .RotateYDeg(block.Shape.rotateY);                       // Rotate according to block
+                .Scale(scale.X, scale.Y, scale.Z) // First scale
+                .Translate(-0.5f, 0, -0.5f) // Then center it
+                .Translate(x / scale.X, 0, y / scale.Y) // Move to correct slot
+                .RotateYDeg(posTransform.rotNoise); // apply rotation noise
 
             tfMatrices[index] = matrixf.Values;
         }
@@ -109,4 +114,4 @@ internal class CraftingItemRenderer
     }
 }
 
-internal record SurfacePosTransform(float X, float Y, float scale);
+internal record SurfacePosTransform(float X, float Y, float scaleNoise, float rotNoise, float xNoise, float yNoise);
