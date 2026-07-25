@@ -37,6 +37,7 @@ public class RknCraftingNetwork
         ClientChannel.RegisterMessageType<ConfigMessage>();
         ClientChannel.RegisterMessageType<ClientStartedCraftingMessage>();
         ClientChannel.RegisterMessageType<PutToolIngredientMessage>();
+        ClientChannel.RegisterMessageType<BlockMouseInteractionMessage>();
         
         ClientChannel.SetMessageHandler<ConfigMessage>(OnConfigMessage);
         ClientChannel.SetMessageHandler<CraftingStoppedMessage>(OnCraftingStoppedMessage);
@@ -54,10 +55,12 @@ public class RknCraftingNetwork
         ServerChannel.RegisterMessageType<ConfigMessage>();
         ServerChannel.RegisterMessageType<ClientStartedCraftingMessage>();
         ServerChannel.RegisterMessageType<PutToolIngredientMessage>();
+        ServerChannel.RegisterMessageType<BlockMouseInteractionMessage>();
         
         ServerChannel.SetMessageHandler<CreateCraftingBlockMessage>(OnCreateCraftingBlockMessage);
         ServerChannel.SetMessageHandler<ClientStartedCraftingMessage>(OnClientStartedCraftingMessage);
         ServerChannel.SetMessageHandler<PutToolIngredientMessage>(OnPutToolIngredient);
+        ServerChannel.SetMessageHandler<BlockMouseInteractionMessage>(OnBlockMouseInteraction);
     }
 
     public void SpawnCraftingSurface(BlockPos pos, bool asPlayer = true)
@@ -139,7 +142,37 @@ public class RknCraftingNetwork
 
     private void OnPutToolIngredient(IServerPlayer fromPlayer, PutToolIngredientMessage message)
     {
+        BlockCraftingSurface? block = api.World.BlockAccessor.GetBlock(message.BlockSelection.Position) as BlockCraftingSurface;
         BlockEntityCraftingSurface? be = BlockCraftingSurface.GetBE(api.World, message.BlockSelection.Position);
-        be?.TryPutIngredient(fromPlayer.InventoryManager.ActiveHotbarSlot, fromPlayer, message.BlockSelection.SelectionBoxIndex);
+        if (be == null || block == null)
+        {
+            return;
+        }
+        ItemStackMoveOperation op = new(api.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
+        BlockCraftingSurface.TryPutIngredient(block, api.World, be, fromPlayer.InventoryManager.ActiveHotbarSlot, ref op, message.BlockSelection);
+    }
+
+    public void BlockMouseInteraction(ItemStackMoveOperation op, BlockSelection blockSelection)
+    {
+        ClientChannel.SendPacket(new BlockMouseInteractionMessage()
+        {
+            BlockSelection = blockSelection,
+            MouseButton = op.MouseButton,
+            ModifierKey = op.Modifiers
+        });
+    }
+
+    private void OnBlockMouseInteraction(IServerPlayer byPlayer, BlockMouseInteractionMessage message)
+    {
+        IBlockMouseSlotRecipient? recipient = api.World.BlockAccessor.GetBlock(message.BlockSelection.Position)?.GetInterface<IBlockMouseSlotRecipient>(api.World, message.BlockSelection.Position);
+        if (recipient == null)
+        {
+            return;
+        }
+        ItemStackMoveOperation op = new(api.World, message.MouseButton, message.ModifierKey, EnumMergePriority.AutoMerge, 1)
+        {
+            ActingPlayer = byPlayer
+        };
+        recipient.OnClick(byPlayer.InventoryManager.MouseItemSlot, ref op, message.BlockSelection);
     }
 }

@@ -34,7 +34,11 @@ public class BlockCraftingSurface : Block
         blockEntity.CraftingSurfaceTimeModifier = craftingTimeModifier;
         if (api.RcServerConfig().EnableGridless)
         {
-            if (slot.Itemstack?.Item?.Tool == null && !blockEntity.TryPutIngredient(slot, byPlayer))
+            ItemStackMoveOperation op = new(api.World, EnumMouseButton.Right, 0, EnumMergePriority.AutoMerge, 1)
+            {
+                ActingPlayer = byPlayer
+            };
+            if (slot.Itemstack?.Item?.Tool == null && !TryPutIngredient(block, api.World, blockEntity, slot, ref op, null))
             {
                 api.RcLogger().Warning("Could not put initial items into newly spawned crafting block!");
                 return false;
@@ -120,11 +124,12 @@ public class BlockCraftingSurface : Block
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
         ItemSlot activeHotbarSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStackMoveOperation op = BuildItemStackOperation(world, byPlayer, activeHotbarSlot);
         if (activeHotbarSlot.Empty)
         {
             if (byPlayer.Entity.Controls.CtrlKey)
             {
-                return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
+                return TryTakeIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
             }
             return be.StartCrafting(byPlayer);
         }
@@ -132,7 +137,7 @@ public class BlockCraftingSurface : Block
         {
             if ((api as ICoreClientAPI)?.Input.IsHoldingCraftingButton() ?? false)
             {
-                if (be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex))
+                if (TryPutIngredient(this, world, be, activeHotbarSlot, ref op, blockSel))
                 {
                     api.RcNetwork().PutToolIngredient(blockSel);
                 }
@@ -142,9 +147,42 @@ public class BlockCraftingSurface : Block
         }
         if (byPlayer.Entity.Controls.CtrlKey)
         {
-            return be.TryTakeIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
+            return TryTakeIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
         }
-        return be.TryPutIngredient(activeHotbarSlot, byPlayer, blockSel.SelectionBoxIndex);
+        return TryPutIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
+    }
+
+    public static bool TryTakeIngredient(BlockCraftingSurface block, IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
+    {
+        ItemSlot? slot = be.GetInventorySlotForTaking(activeHotbarSlot, blockSel?.SelectionBoxIndex ?? 0);
+        if (slot == null)
+        {
+            world.Api.RcTriggerIngameError(block, "surfaceempty");
+            return false;
+        }
+        return be.TryTakeIngredient(activeHotbarSlot, ref op, slot);
+    }
+
+    public static bool TryPutIngredient(BlockCraftingSurface block, IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
+    {
+        ItemSlot? slot1 = be.GetInventorySlotForPutting(activeHotbarSlot, blockSel?.SelectionBoxIndex ?? 0);
+        if (slot1 == null)
+        {
+            world.Api.RcTriggerIngameError(block, "surfacefull");
+            return false;
+        }
+        world.Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", slot1.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
+        return be.TryPutIngredient(activeHotbarSlot, ref op, slot1);
+    }
+
+    private ItemStackMoveOperation BuildItemStackOperation(IWorldAccessor world, IPlayer byPlayer, ItemSlot slot)
+    {
+        EnumModifierKey modifier = byPlayer.Entity.Controls.ShiftKey ? EnumModifierKey.SHIFT : 0;
+        int quantity = modifier == EnumModifierKey.SHIFT ? slot.StackSize : 1;
+        return new ItemStackMoveOperation(world, EnumMouseButton.Right, modifier, EnumMergePriority.AutoMerge, quantity)
+        {
+            ActingPlayer = byPlayer
+        };
     }
 
     public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

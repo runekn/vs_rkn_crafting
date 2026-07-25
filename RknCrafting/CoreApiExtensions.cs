@@ -4,6 +4,7 @@ using RknCrafting;
 using System;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace RKN.Crafting;
 
@@ -47,5 +48,10 @@ public static class CoreApiExtensions
     public static void RcPauseInteractions(this ICoreAPI api)
     {
         api.ModLoader.GetModSystem<RknCraftingModSystem>().BeginPauseInterations = Environment.TickCount;
+    }
+    
+    public static void RcTriggerIngameError(this ICoreAPI api, object sender, string error)
+    {
+        (api as ICoreClientAPI)?.TriggerIngameError(sender, "rkncrafting." + error, Lang.Get("rkncrafting:error-" + error));
     }
 }

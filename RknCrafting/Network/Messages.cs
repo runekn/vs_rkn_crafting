@@ -70,3 +70,15 @@ public class PutToolIngredientMessage
     [ProtoMember(1)]
     public required BlockSelection BlockSelection;
 }
+
+[ProtoContract]
+public class BlockMouseInteractionMessage
+{
+    [ProtoMember(1)]
+    public required BlockSelection BlockSelection;
+    [ProtoMember(2)]
+    public required EnumModifierKey ModifierKey;
+    [ProtoMember(3)]
+    public required EnumMouseButton MouseButton;
+    
+}

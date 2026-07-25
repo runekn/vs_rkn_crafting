@@ -79,20 +79,31 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         // FYI: GetBlockInfo Is called every 500 milliseconds it seems.
         //base.GetBlockInfo(forPlayer, sb); // Just food perish stuff
-        foreach (ItemSlot itemSlot in inventory)
+        bool gridless = Api.RcServerConfig().EnableGridless;
+        int selectedIndex = forPlayer.CurrentBlockSelection.SelectionBoxIndex;
+        for (int index = 0; index < inventory.Count; index++)
         {
+            ItemSlot itemSlot = inventory[index];
             if (itemSlot.Empty)
             {
                 continue;
             }
+
             sb.Append(itemSlot.Itemstack.GetName());
             if (itemSlot.Itemstack.StackSize > 1)
             {
                 sb.Append(" x");
                 sb.Append(itemSlot.Itemstack.StackSize);
             }
+
+            if (!gridless && selectedIndex == index)
+            {
+                sb.Append(" --");
+            }
+
             sb.AppendLine();
         }
+
         sb.AppendLine();
         var scanResult = GetSelectedRecipe();
         if (scanResult == null)
@@ -160,7 +171,13 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing)
     {
-        ICraftingResult? scanResult = Api.RcRecipeService().GetRecipe(recipe, GetCraftingInputSlots(byPlayer, blockFacing));
+        RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, blockFacing);
+        if (inputSlots == null)
+        {
+            Api.RcLogger().Error("Player {0} started crafting on client but there are no ingredients on server!", byPlayer.PlayerName);
+            return;
+        }
+        ICraftingResult? scanResult = Api.RcRecipeService().GetRecipe(recipe, inputSlots);
         if (scanResult == null)
         {
             Api.RcLogger().Error("Could not match recipe on server side!");
@@ -192,7 +209,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             if (!IsCrafting(byPlayer))
             {
-                ClientError("surfacealreadycrafting");
+                Api.RcTriggerIngameError(this, "surfacealreadycrafting");
             }
             return false;
         }
@@ -204,7 +221,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
         if (inputSlots == null || !result.Matches(inputSlots))
         {
-            ClientError("missingreciperequirement");
+            Api.RcTriggerIngameError(this, "missingreciperequirement");
             return false;
         }
         bool bulk = byPlayer.Entity.Controls.ShiftKey && Api.RcServerConfig().EnableBulkCrafting;
@@ -299,85 +316,71 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.Animation ?? EnumCraftingAnimation.HandsGeneric;
     }
 
-    public bool TryPutIngredient(ItemSlot slot, IPlayer? byPlayer = null, int selectionBoxIndex = 0)
+    public bool TryPutIngredient(ItemSlot slot, ref ItemStackMoveOperation op, ItemSlot invSlot)
     {
         timeoutTimer = 0;
         if (craftingParams != null)
         {
             return false;
         }
-
-        ItemSlot? invSlot = GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex);
-        if (invSlot == null)
-        {
-            ClientError("surfacefull");
-            return false;
-        }
-
-        Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", slot.Itemstack?.Collectible.Code, selectionBoxIndex, byPlayer?.PlayerName);
-        int quantity = 1;
-        if (byPlayer != null && byPlayer.Entity.Controls.ShiftKey)
-        {
-            quantity = slot.StackSize;
-        }
-        if (byPlayer != null && byPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
+        if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
         {
             // TODO: Don't pull from slot if gamemode is creative
         }
-        if (slot.TryPutInto(Api.World, invSlot, quantity) < 1)
+        if (slot.TryPutInto(invSlot, ref op) < 1)
         {
-            ClientError("surfacefull");
+            Api.RcTriggerIngameError(this, "surfacefull");
             return false;
         }
-        if (byPlayer != null)
+        if (op.ActingPlayer != null)
         {
-            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
+            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
         }
         slot.MarkDirty();
         //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
-        MarkDirty(true, byPlayer);
+        MarkDirty(true, op.ActingPlayer);
         MarkMeshesDirty();
         return true;
     }
 
-    public bool TryTakeIngredient(ItemSlot slot, IPlayer? byPlayer = null, int selectionBoxIndex = 0)
+    public bool TryTakeIngredient(ItemSlot slot, ref ItemStackMoveOperation op, ItemSlot invSlot)
     {
         timeoutTimer = 0;
         if (craftingParams != null)
         {
             return false;
         }
-        Api.RcLogger().Debug("Taking into slot {0}", selectionBoxIndex);
-        ItemSlot? invSlot = GetInventorySlot(invSlot => slot.CanTakeFrom(invSlot), selectionBoxIndex, true);
-        if (invSlot == null)
+        if (invSlot.TryPutInto(slot, ref op) < 1)
         {
-            ClientError("surfaceempty");
+            Api.RcTriggerIngameError(this, "surfaceempty");
             return false;
         }
-        int quantity = 1;
-        if (byPlayer != null && byPlayer.Entity.Controls.ShiftKey)
+        if (op.ActingPlayer != null)
         {
-            quantity = invSlot.StackSize;
-        }
-        if (invSlot.TryPutInto(Api.World, slot, quantity) < 1)
-        {
-            ClientError("surfaceempty");
-            return false;
-        }
-        if (byPlayer != null)
-        {
-            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, byPlayer.Entity, byPlayer);
+            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
         }
         slot.MarkDirty();
         if (inventory.Empty)
         {
-            Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
+            Api.World.BlockAccessor.BreakBlock(Pos, op.ActingPlayer);
             return true;
         }
         //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
-        MarkDirty(true, byPlayer);
+        MarkDirty(true, op.ActingPlayer);
         MarkMeshesDirty();
         return true;
+    }
+
+    public ItemSlot? GetInventorySlotForTaking(ItemSlot slot, int selectionBoxIndex = 0)
+    {
+        Api.RcLogger().Debug("Taking into slot {0}", selectionBoxIndex);
+        return GetInventorySlot(invSlot => slot.CanTakeFrom(invSlot), selectionBoxIndex, true);
+    }
+    
+    public ItemSlot? GetInventorySlotForPutting(ItemSlot slot, int selectionBoxIndex = 0)
+    {
+        Api.RcLogger().Debug("Taking out of slot {0}", selectionBoxIndex);
+        return GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex);
     }
 
     private ItemSlot? GetInventorySlot(Predicate<ItemSlot> test, int selectionBoxIndex, bool reverse = false)
@@ -612,11 +615,6 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return null;
 
         return validRecipes.FirstOrDefault(r => r.Id == selectedRecipe);
-    }
-
-    private void ClientError(string error)
-    {
-        capi?.TriggerIngameError(this, "rkncrafting." + error, Lang.Get("rkncrafting:error-" + error));
     }
 
     public bool IsEmpty()

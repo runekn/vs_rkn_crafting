@@ -2,6 +2,11 @@
 	"code": "craftingsurface",
     "class": "rkncrafting.craftingsurface",
 	"entityClass": "rkncrafting.craftingsurface",
+	"entityBehaviors": [
+		{
+			"name": "rkncrafting.craftingsurfacemouseslotrecipient"
+		}
+	],
 	"replaceable": 900,
 	"attributes": {
 		"canChisel": false

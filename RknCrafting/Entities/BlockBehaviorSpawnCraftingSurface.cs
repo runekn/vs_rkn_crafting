@@ -1,6 +1,5 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
@@ -29,7 +28,7 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
         }
         if (!block.SideIsSolid(blockSel.Position, BlockFacing.indexUP))
         {
-            (world.Api as ICoreClientAPI)?.TriggerIngameError(this, "rkncrafting.unsuitablesurface", Lang.Get("rkncrafting:error-unsuitablesurface"));
+            world.Api.RcTriggerIngameError(this, "unsuitablesurface");
             return true;
         }
         bool r = BlockCraftingSurface.TryPlace(world.Api, byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot, GetCraftingModifier(world, blockSel));

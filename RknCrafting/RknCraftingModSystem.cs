@@ -45,6 +45,7 @@ public class RknCraftingModSystem : ModSystem
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawnchiselcraftingsurface", typeof(BlockBehaviorChiselSpawnCraftingSurface));
         api.RegisterItemClass(Mod.Info.ModID + ".unfinishedcraft", typeof(ItemUnfinishedCraft));
         api.RegisterCollectibleBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(CollectibleBehaviorSpawnCraftingSurface));
+        api.RegisterBlockEntityBehaviorClass(Mod.Info.ModID + ".craftingsurfacemouseslotrecipient", typeof(BlockEntityBehaviorCraftingSurfaceMouseSlotRecipient));
 
         Animator = new CraftingAnimator(api);
         
@@ -74,6 +75,8 @@ public class RknCraftingModSystem : ModSystem
                 Title = Lang.Get("rkncrafting:transform-craftingIngredientTransform")
             });
         }
+
+        api.Gui.RegisterDialog(new HudMouseSlotInteract(api));
     }
 
     private bool AddRecipeSelectionHandler(ref EnumHandling handling)
@@ -118,7 +121,9 @@ public class RknCraftingModSystem : ModSystem
                 BlockPos position = byPlayer.CurrentBlockSelection.Position;
                 if (api.World.BlockAccessor.GetBlock(position) is BlockCraftingSurface)
                 {
-                    api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(position).TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot);
+                    ItemStackMoveOperation op = new(api.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
+                     // TODO: fix
+                    //api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(position).TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot, ref op);
                 }
                 else
                 {
