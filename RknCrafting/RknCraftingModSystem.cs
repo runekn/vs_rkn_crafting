@@ -30,7 +30,7 @@ public class RknCraftingModSystem : ModSystem
     public CraftingAnimator Animator { get; internal set; }
     public RknCraftingConfig ServerConfig { get; internal set; }
     public RknCraftingConfig LocalConfig { get; internal set; }
-    public long BeginPauseInterations { get; set; }
+    public long BeginPauseInteractions { get; set; }
 #pragma warning restore CS8618
 
     public override void Start(ICoreAPI api)
@@ -44,7 +44,6 @@ public class RknCraftingModSystem : ModSystem
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(BlockBehaviorSpawnCraftingSurface));
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawnchiselcraftingsurface", typeof(BlockBehaviorChiselSpawnCraftingSurface));
         api.RegisterItemClass(Mod.Info.ModID + ".unfinishedcraft", typeof(ItemUnfinishedCraft));
-        api.RegisterCollectibleBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(CollectibleBehaviorSpawnCraftingSurface));
         api.RegisterBlockEntityBehaviorClass(Mod.Info.ModID + ".craftingsurfacemouseslotrecipient", typeof(BlockEntityBehaviorCraftingSurfaceMouseSlotRecipient));
 
         Animator = new CraftingAnimator(api);
@@ -141,22 +140,20 @@ public class RknCraftingModSystem : ModSystem
         harmony.UnpatchAll(Mod.Info.ModID);
     }
 
-    /*public override void AssetsFinalize(ICoreAPI api)
+    public override void AssetsFinalize(ICoreAPI api)
     {
-        foreach (CollectibleObject collectible in api.World.Collectibles)
+        // Add behavior to all remaining blocks
+        foreach (Block block in api.World.Blocks)
         {
-            if (collectible.Code == null ||
-                collectible.Id == 0 ||
-                (collectible.ItemClass != EnumItemClass.Item && collectible.ItemClass != EnumItemClass.Block) || 
-                (collectible is Item item && item.Tool != null) || 
-                collectible.HasBehavior<CollectibleBehaviorSpawnCraftingSurface>())
+            if (block.Code == null ||
+                block.Id == 0 || 
+                block.HasBehavior<BlockBehaviorSpawnCraftingSurface>())
             {
                 continue;
             }
-            CollectibleBehaviorSpawnCraftingSurface instance = new CollectibleBehaviorSpawnCraftingSurface(collectible);
-            collectible.CollectibleBehaviors.Append(instance); // TODO: this isn't working...
+            block.BlockBehaviors = block.BlockBehaviors.Append(new BlockBehaviorSpawnCraftingSurface(block)).ToArray();
         }
-    }*/
+    }
 
     private void UpdateCraftingSurface(BlockPos pos, Block oldBlock)
     {
@@ -221,13 +218,13 @@ public class RknCraftingModSystem : ModSystem
     {
         if (e.Button == EnumMouseButton.Right)
         {
-            BeginPauseInterations = 0;
+            BeginPauseInteractions = 0;
         }
     }
 
     private void CheckPauseInteractions(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
-        if (action == EnumEntityAction.InWorldRightMouseDown && (Environment.TickCount - BeginPauseInterations) < (LocalConfig.PauseInteractPostCraftSeconds * 1000))
+        if (action == EnumEntityAction.InWorldRightMouseDown && (Environment.TickCount - BeginPauseInteractions) < (LocalConfig.PauseInteractPostCraftSeconds * 1000))
         {
             handled = EnumHandling.PreventDefault;
         }
