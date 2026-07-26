@@ -62,6 +62,11 @@ public class RknCraftingConfig
     public float PauseInteractPostCraftSeconds = 2.0f;
     [ProtoIgnore]
     public string PauseInteractPostCraftSeconds_Comment = "Block all right click interactions after crafting finished for this amount of seconds. This is to prevent unintentional actions right after crafting has ended when you are still holding right click. Releasing right click will also unblock interactions.";
+    
+    [ProtoMember(11)]
+    public bool RenderAllSlots = false;
+    [ProtoIgnore]
+    public string RenderAllSlots_Comment = "Render selection boxes for all slots at all times. Turning this config off is cleaner and makes it easier to see which slot you are aiming at. Turning it on can make it easier to get an overview of the whole grid on large surfaces. This config has no effect in gridless mode.";
 
     public override string ToString()
     {

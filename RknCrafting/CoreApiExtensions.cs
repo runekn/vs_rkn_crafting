@@ -30,6 +30,11 @@ public static class CoreApiExtensions
         return api.ModLoader.GetModSystem<RknCraftingModSystem>().ServerConfig;
     }
 
+    public static RknCraftingConfig RcLocalConfig(this ICoreAPI api)
+    {
+        return api.ModLoader.GetModSystem<RknCraftingModSystem>().LocalConfig;
+    }
+
     public static RknCraftingModSystem RcSystem(this ICoreAPI api)
     {
         return api.ModLoader.GetModSystem<RknCraftingModSystem>();

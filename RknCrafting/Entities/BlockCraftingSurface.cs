@@ -51,7 +51,7 @@ public class BlockCraftingSurface : Block
     public override void OnLoaded(ICoreAPI api)
     {
         PlacedPriorityInteract = true;
-        PartialSelection = true;
+        PartialSelection = !api.RcLocalConfig().RenderAllSlots;
         InteractionHelpYOffset = 0.6f;
         interactions =
         [
