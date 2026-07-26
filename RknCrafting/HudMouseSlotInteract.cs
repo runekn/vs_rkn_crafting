@@ -31,13 +31,18 @@ public class HudMouseSlotInteract : HudElement
         }
 
         BlockSelection? blockSelection = capi.World.Player.CurrentBlockSelection;
-        ItemSlot slot = capi.World.Player.InventoryManager.MouseItemSlot;
         if (blockSelection == null)
         {
             return;
         }
-        IBlockMouseSlotRecipient? blockMouseSlotRecipient = capi.World.BlockAccessor.GetBlock(blockSelection.Position)?.GetInterface<IBlockMouseSlotRecipient>(capi.World, blockSelection.Position);
+        IBlockInWorldInventory? blockMouseSlotRecipient = capi.World.BlockAccessor.GetBlock(blockSelection.Position)?.GetInterface<IBlockInWorldInventory>(capi.World, blockSelection.Position);
         if (blockMouseSlotRecipient == null)
+        {
+            return;
+        }
+        ItemSlot mouseSlot = capi.World.Player.InventoryManager.MouseItemSlot;
+        ItemSlot? slot = blockMouseSlotRecipient.GetItemSlot(blockSelection, mouseSlot, args, out int slotId);
+        if (slot == null)
         {
             return;
         }
@@ -50,10 +55,13 @@ public class HudMouseSlotInteract : HudElement
         {
             ActingPlayer = capi.World.Player
         };
-        args.Handled = blockMouseSlotRecipient.OnClick(slot, ref op, blockSelection);
-        if (args.Handled)
+        object packet = slot.Inventory.ActivateSlot(slotId, mouseSlot, ref op);
+        blockMouseSlotRecipient.OnModified(blockSelection, op.ActingPlayer);
+        if (packet is Packet_Client packetClient)
         {
-            capi.RcNetwork().BlockMouseInteraction(op, blockSelection);
+            // We're doing this through custom channel because the vanilla packet handler (ServerSystemInventory.HandleActivateInventorySlot) can't find arbitrary inventory by id in packet.
+            // In custom channel I can get inventory by block selection.
+            capi.RcNetwork().BlockMouseSlotInteraction(packetClient, blockSelection);
         }
     }
 

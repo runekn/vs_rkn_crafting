@@ -7,6 +7,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Common;
 
 namespace RKN.Crafting.Network;
 
@@ -149,30 +150,35 @@ public class RknCraftingNetwork
             return;
         }
         ItemStackMoveOperation op = new(api.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
-        BlockCraftingSurface.TryPutIngredient(block, api.World, be, fromPlayer.InventoryManager.ActiveHotbarSlot, ref op, message.BlockSelection);
+        block.TryPutIngredient(api.World, be, fromPlayer.InventoryManager.ActiveHotbarSlot, ref op, message.BlockSelection);
     }
 
-    public void BlockMouseInteraction(ItemStackMoveOperation op, BlockSelection blockSelection)
+    public void BlockMouseSlotInteraction(Packet_Client packet, BlockSelection blockSelection)
     {
         ClientChannel.SendPacket(new BlockMouseInteractionMessage()
         {
             BlockSelection = blockSelection,
-            MouseButton = op.MouseButton,
-            ModifierKey = op.Modifiers
+            Packet = Packet_ClientSerializer.SerializeToBytes(packet)
         });
     }
 
     private void OnBlockMouseInteraction(IServerPlayer byPlayer, BlockMouseInteractionMessage message)
     {
-        IBlockMouseSlotRecipient? recipient = api.World.BlockAccessor.GetBlock(message.BlockSelection.Position)?.GetInterface<IBlockMouseSlotRecipient>(api.World, message.BlockSelection.Position);
-        if (recipient == null)
+        IBlockInWorldInventory? worldInventory = api.World.BlockAccessor.GetBlock(message.BlockSelection.Position)?.GetInterface<IBlockInWorldInventory>(api.World, message.BlockSelection.Position);
+        if (worldInventory == null)
         {
+            api.RcLogger().Error("Tried handling BlockMouseInteraction but found no IBlockInWorldInventory: " + message.BlockSelection.Position);
             return;
         }
-        ItemStackMoveOperation op = new(api.World, message.MouseButton, message.ModifierKey, EnumMergePriority.AutoMerge, 1)
+        InventoryBase? inv = worldInventory.GetInventory(message.BlockSelection);
+        if (inv == null)
         {
-            ActingPlayer = byPlayer
-        };
-        recipient.OnClick(byPlayer.InventoryManager.MouseItemSlot, ref op, message.BlockSelection);
+            api.RcLogger().Error("Tried handling BlockMouseInteraction but got no inventory: " + message.BlockSelection.Position);
+            return;
+        }
+        Packet_Client packet = new();
+        Packet_ClientSerializer.DeserializeBuffer(message.Packet, message.Packet.Length, packet);
+        (inv.InvNetworkUtil as InventoryNetworkUtil)?.HandleClientPacket(byPlayer, packet.Id, packet);
+        worldInventory.OnModified(message.BlockSelection, byPlayer);
     }
 }

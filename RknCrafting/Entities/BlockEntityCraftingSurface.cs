@@ -8,7 +8,6 @@ using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
@@ -41,25 +40,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     public BlockEntityCraftingSurface()
     {
-        inventory = new InventoryDisplayed(this, slotCount, "craftingsurface-0", null);
-    }
-
-    public static void OnInventoryUpdated(ICoreClientAPI api, BlockPos pos)
-    {
-        BlockEntityCraftingSurface entity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(pos);
-        if (entity == null)
-        {
-            api.RcLogger().Debug("Got OnInventoryUpdated for non-existing block: [{0},{1},{2}]", pos.X, pos.Y, pos.Z);
-            return;
-        }
-
-        if (entity.recipeSelectionDialog != null && entity.recipeSelectionDialog.IsOpened())
-        {
-            entity.recipeSelectionDialog.TryClose();
-        }
-        entity.dirtyRecipes = true;
-        entity.MarkMeshesDirty();
-        entity.MarkDirty(true);
+        inventory = new CraftingInventory(slotCount, null, this);
     }
 
     public override void Initialize(ICoreAPI api)
@@ -150,6 +131,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             craftingParams = null;
         }
+        dirtyRecipes = true;
+        if (recipeSelectionDialog != null && recipeSelectionDialog.IsOpened())
+        {
+            recipeSelectionDialog.TryClose();
+        }
+        RedrawAfterReceivingTreeAttributes(worldForResolving);
     }
 
     public override void ToTreeAttributes(ITreeAttribute tree)
@@ -316,83 +303,28 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.Animation ?? EnumCraftingAnimation.HandsGeneric;
     }
 
-    public bool TryPutIngredient(ItemSlot slot, ref ItemStackMoveOperation op, ItemSlot invSlot)
+    public ItemSlot? GetInventorySlotForTaking(ItemSlot slot, out int slotId, int selectionBoxIndex = 0)
     {
-        timeoutTimer = 0;
-        if (craftingParams != null)
-        {
-            return false;
-        }
-        if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
-        {
-            // TODO: Don't pull from slot if gamemode is creative
-        }
-        if (slot.TryPutInto(invSlot, ref op) < 1)
-        {
-            Api.RcTriggerIngameError(this, "surfacefull");
-            return false;
-        }
-        if (op.ActingPlayer != null)
-        {
-            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
-        }
-        slot.MarkDirty();
-        //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
-        MarkDirty(true, op.ActingPlayer);
-        MarkMeshesDirty();
-        return true;
-    }
-
-    public bool TryTakeIngredient(ItemSlot slot, ref ItemStackMoveOperation op, ItemSlot invSlot)
-    {
-        timeoutTimer = 0;
-        if (craftingParams != null)
-        {
-            return false;
-        }
-        if (invSlot.TryPutInto(slot, ref op) < 1)
-        {
-            Api.RcTriggerIngameError(this, "surfaceempty");
-            return false;
-        }
-        if (op.ActingPlayer != null)
-        {
-            Api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
-        }
-        slot.MarkDirty();
-        if (inventory.Empty)
-        {
-            Api.World.BlockAccessor.BreakBlock(Pos, op.ActingPlayer);
-            return true;
-        }
-        //dirtyRecipes = true; // we also do this through OnInventoryUpdated. So don't do it here or we will scan recipes twice
-        MarkDirty(true, op.ActingPlayer);
-        MarkMeshesDirty();
-        return true;
-    }
-
-    public ItemSlot? GetInventorySlotForTaking(ItemSlot slot, int selectionBoxIndex = 0)
-    {
-        Api.RcLogger().Debug("Taking into slot {0}", selectionBoxIndex);
-        return GetInventorySlot(invSlot => slot.CanTakeFrom(invSlot), selectionBoxIndex, true);
+        return GetInventorySlot(invSlot => slot.CanTakeFrom(invSlot), selectionBoxIndex, out slotId, true);
     }
     
-    public ItemSlot? GetInventorySlotForPutting(ItemSlot slot, int selectionBoxIndex = 0)
+    public ItemSlot? GetInventorySlotForPutting(ItemSlot slot, out int slotId, int selectionBoxIndex = 0)
     {
-        Api.RcLogger().Debug("Taking out of slot {0}", selectionBoxIndex);
-        return GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex);
+        return GetInventorySlot(invSlot => invSlot.CanTakeFrom(slot), selectionBoxIndex, out slotId);
     }
 
-    private ItemSlot? GetInventorySlot(Predicate<ItemSlot> test, int selectionBoxIndex, bool reverse = false)
+    private ItemSlot? GetInventorySlot(Predicate<ItemSlot> test, int selectionBoxIndex, out int slotId, bool reverse = false)
     {
+        slotId = 0;
         if (config.EnableGridless)
         {
-            IEnumerable<ItemSlot> enumerable = reverse ? inventory.Reverse() : inventory;
-            foreach (ItemSlot invSlot in enumerable)
+            IEnumerable<(int, ItemSlot)> enumerable = reverse ? inventory.Index().Reverse() : inventory.Index();
+            foreach ((int, ItemSlot) invSlot in enumerable)
             {
-                if (test(invSlot))
+                if (test(invSlot.Item2))
                 {
-                    return invSlot;
+                    slotId = invSlot.Item1;
+                    return invSlot.Item2;
                 }
             }
         }
@@ -401,6 +333,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             ItemSlot invSlot = inventory[selectionBoxIndex];
             if (test(invSlot))
             {
+                slotId = selectionBoxIndex;
                 return invSlot;
             }
         }
@@ -620,6 +553,24 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool IsEmpty()
     {
         return inventory.Empty;
+    }
+
+    public void MarkIngredientsDirty(IPlayer? byPlayer)
+    {
+        if (IsEmpty())
+        {
+            Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
+        }
+        //dirtyRecipes = true; // For some reason byPlayer still gets new tree attributes. Commented out to prevent double scan.
+        MarkMeshesDirty();
+        MarkDirty(true, byPlayer);
+    }
+
+    private class CraftingInventory(int quantitySlots, ICoreAPI api, BlockEntityCraftingSurface be)
+        : InventoryGeneric(quantitySlots, "craftignsurface-0", api)
+    {
+        public override bool TakeLocked => be.craftingParams != null;
+        public override bool PutLocked => be.craftingParams != null;
     }
 }
 

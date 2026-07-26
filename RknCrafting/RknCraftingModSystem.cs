@@ -44,7 +44,7 @@ public class RknCraftingModSystem : ModSystem
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawncraftingsurface", typeof(BlockBehaviorSpawnCraftingSurface));
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawnchiselcraftingsurface", typeof(BlockBehaviorChiselSpawnCraftingSurface));
         api.RegisterItemClass(Mod.Info.ModID + ".unfinishedcraft", typeof(ItemUnfinishedCraft));
-        api.RegisterBlockEntityBehaviorClass(Mod.Info.ModID + ".craftingsurfacemouseslotrecipient", typeof(BlockEntityBehaviorCraftingSurfaceMouseSlotRecipient));
+        api.RegisterBlockEntityBehaviorClass(Mod.Info.ModID + ".craftingsurfacemouseslotrecipient", typeof(BlockEntityBehaviorCraftingSurfaceInWorldInventory));
 
         Animator = new CraftingAnimator(api);
         
@@ -58,8 +58,6 @@ public class RknCraftingModSystem : ModSystem
         api.Input.RegisterHotKey("rkncrafting.start", Lang.Get("rkncrafting:hotkey-crafting"), GlKeys.AltLeft);
         
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
-        
-        api.Event.BlockChanged += UpdateCraftingSurface; // Why is this neccessary? Vanilla shelf seems to work just fine without.
         
         api.Input.InWorldAction += CheckPauseInteractions;
         api.Event.MouseUp += CheckResumeInteractions;
@@ -117,16 +115,16 @@ public class RknCraftingModSystem : ModSystem
             .HandleWith((args) =>
             {
                 IPlayer byPlayer = args.Caller.Player;
-                BlockPos position = byPlayer.CurrentBlockSelection.Position;
-                if (api.World.BlockAccessor.GetBlock(position) is BlockCraftingSurface)
+                BlockSelection selection = byPlayer.CurrentBlockSelection;
+                if (api.World.BlockAccessor.GetBlock(selection.Position) is BlockCraftingSurface block)
                 {
+                    BlockEntityCraftingSurface be = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(selection.Position);
                     ItemStackMoveOperation op = new(api.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
-                     // TODO: fix
-                    //api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(position).TryPutIngredient(byPlayer.InventoryManager.ActiveHotbarSlot, ref op);
+                    block.TryPutIngredient(api.World, be, byPlayer.InventoryManager.ActiveHotbarSlot, ref op, selection);
                 }
                 else
                 {
-                    if (!BlockCraftingSurface.TryPlace(api, null, position, byPlayer.InventoryManager.ActiveHotbarSlot))
+                    if (!BlockCraftingSurface.TryPlace(api, null, selection.Position, byPlayer.InventoryManager.ActiveHotbarSlot))
                     {
                         return TextCommandResult.Error("Could not place crafting surface there");
                     }
@@ -152,14 +150,6 @@ public class RknCraftingModSystem : ModSystem
                 continue;
             }
             block.BlockBehaviors = block.BlockBehaviors.Append(new BlockBehaviorSpawnCraftingSurface(block)).ToArray();
-        }
-    }
-
-    private void UpdateCraftingSurface(BlockPos pos, Block oldBlock)
-    {
-        if (oldBlock is BlockCraftingSurface)
-        {
-            BlockEntityCraftingSurface.OnInventoryUpdated(capi, pos);
         }
     }
 

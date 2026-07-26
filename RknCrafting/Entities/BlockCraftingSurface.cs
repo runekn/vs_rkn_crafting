@@ -1,5 +1,6 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 namespace RKN.Crafting.Entities;
@@ -38,7 +39,7 @@ public class BlockCraftingSurface : Block
             {
                 ActingPlayer = byPlayer
             };
-            if (slot.Itemstack?.Item?.Tool == null && !TryPutIngredient(block, api.World, blockEntity, slot, ref op, null))
+            if (slot.Itemstack?.Item?.Tool == null && !block.TryPutIngredient(api.World, blockEntity, slot, ref op, null))
             {
                 api.RcLogger().Warning("Could not put initial items into newly spawned crafting block!");
                 return false;
@@ -50,6 +51,7 @@ public class BlockCraftingSurface : Block
     public override void OnLoaded(ICoreAPI api)
     {
         PlacedPriorityInteract = true;
+        PartialSelection = true;
         InteractionHelpYOffset = 0.6f;
         interactions =
         [
@@ -129,7 +131,7 @@ public class BlockCraftingSurface : Block
         {
             if (byPlayer.Entity.Controls.CtrlKey)
             {
-                return TryTakeIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
+                return TryTakeIngredient(world, be, activeHotbarSlot, ref op, blockSel);
             }
             return be.StartCrafting(byPlayer);
         }
@@ -137,7 +139,7 @@ public class BlockCraftingSurface : Block
         {
             if ((api as ICoreClientAPI)?.Input.IsHoldingCraftingButton() ?? false)
             {
-                if (TryPutIngredient(this, world, be, activeHotbarSlot, ref op, blockSel))
+                if (TryPutIngredient(world, be, activeHotbarSlot, ref op, blockSel))
                 {
                     api.RcNetwork().PutToolIngredient(blockSel);
                 }
@@ -147,32 +149,58 @@ public class BlockCraftingSurface : Block
         }
         if (byPlayer.Entity.Controls.CtrlKey)
         {
-            return TryTakeIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
+            return TryTakeIngredient(world, be, activeHotbarSlot, ref op, blockSel);
         }
-        return TryPutIngredient(this, world, be, activeHotbarSlot, ref op, blockSel);
+        return TryPutIngredient(world, be, activeHotbarSlot, ref op, blockSel);
     }
 
-    public static bool TryTakeIngredient(BlockCraftingSurface block, IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
+    private bool TryTakeIngredient(IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
     {
-        ItemSlot? slot = be.GetInventorySlotForTaking(activeHotbarSlot, blockSel?.SelectionBoxIndex ?? 0);
-        if (slot == null)
+        ItemSlot? invSlot = be.GetInventorySlotForTaking(activeHotbarSlot, out int _, blockSel?.SelectionBoxIndex ?? 0);
+        if (invSlot == null)
         {
-            world.Api.RcTriggerIngameError(block, "surfaceempty");
+            world.Api.RcTriggerIngameError(this, "surfaceempty");
             return false;
         }
-        return be.TryTakeIngredient(activeHotbarSlot, ref op, slot);
+        if (invSlot.TryPutInto(activeHotbarSlot, ref op) < 1)
+        {
+            api.RcTriggerIngameError(this, "surfaceempty");
+            return false;
+        }
+        be.MarkIngredientsDirty(op.ActingPlayer);
+        if (op.ActingPlayer != null)
+        {
+            api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
+        }
+
+        return true;
     }
 
-    public static bool TryPutIngredient(BlockCraftingSurface block, IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
+    public bool TryPutIngredient(IWorldAccessor world, BlockEntityCraftingSurface be, ItemSlot activeHotbarSlot, ref ItemStackMoveOperation op, BlockSelection? blockSel)
     {
-        ItemSlot? slot1 = be.GetInventorySlotForPutting(activeHotbarSlot, blockSel?.SelectionBoxIndex ?? 0);
-        if (slot1 == null)
+        ItemSlot? invSlot = be.GetInventorySlotForPutting(activeHotbarSlot, out int _, blockSel?.SelectionBoxIndex ?? 0);
+        if (invSlot == null)
         {
-            world.Api.RcTriggerIngameError(block, "surfacefull");
+            world.Api.RcTriggerIngameError(this, "surfacefull");
             return false;
         }
-        world.Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", slot1.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
-        return be.TryPutIngredient(activeHotbarSlot, ref op, slot1);
+        world.Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", invSlot.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
+        if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
+        {
+            // TODO: Don't pull from slot if gamemode is creative
+        }
+        if (activeHotbarSlot.TryPutInto(invSlot, ref op) < 1)
+        {
+            api.RcTriggerIngameError(this, "surfacefull");
+            return false;
+        }
+        be.MarkIngredientsDirty(op.ActingPlayer);
+        if (op.ActingPlayer != null)
+        {
+            api.World.PlaySoundAt(invSlot.Itemstack?.Block?.Sounds?.Place ?? GlobalConstants.DefaultBuildSound, op.ActingPlayer.Entity, op.ActingPlayer);
+        }
+
+        return true;
     }
 
     private ItemStackMoveOperation BuildItemStackOperation(IWorldAccessor world, IPlayer byPlayer, ItemSlot slot)
