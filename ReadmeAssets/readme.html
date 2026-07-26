@@ -30,6 +30,7 @@
 <ul>
     <li>The crafting surface can de destroyed to reclaim ingredients.</li>
     <li>In order to not functions as a hyper-efficient ground storage, any crafting surface will auto delete itself after 2 minutes of inactivity (configurable).</li>
+    <li>While mouse mode is enabled you can use many of the same controls as you would with UI grid. Including right click to take half, right click while holding to place only one, and left click to take and place whole stack.</li>
 </ul>
 <h4><strong>Crafting speed</strong></h4>
 <p>The time it takes to craft is measured as <code>baseCraftingTimeSeconds * craftingSurfaceTimeModifier * recipeCraftingTimeModifier * Max(ConsecutiveCraftingTimeModifierMin, ConsecutiveCraftingTimeModifier^(amount))</code>.</p>
@@ -112,6 +113,12 @@
         <td style="width: 53.3926%; height: 58.6px; text-align: left;">Block all right click interactions after crafting finished for this amount of seconds. This is to prevent unintentional actions right after crafting has ended when you are still holding right click. Releasing right click will also unblock interactions.</td>
         <td style="width: 13.2474%; height: 58.6px; text-align: center;">Client</td>
     </tr>
+    <tr>
+        <td style="width: 26.4139%;"><code>RenderAllSlots</code></td>
+        <td style="width: 6.94744%; text-align: center;"><code>false</code></td>
+        <td style="width: 53.3926%; text-align: left;">Render selection boxes for all slots at all times. Turning this config off is cleaner and makes it easier to see which slot you are aiming at. Turning it on can make it easier to get an overview of the whole grid on large surfaces. This config has no effect in gridless mode.</td>
+        <td style="width: 13.2474%; text-align: center;">Client</td>
+    </tr>
     </tbody>
 </table>
 <h2><strong>Required dependencies</strong></h2>
@@ -144,6 +151,7 @@
 <p>&nbsp;</p>
 <ul>
     <li>Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different. Unsure if this is possible to fix without proper recipe ids.</li>
+    <li>Particle effect don't work when playing on dedicated server</li>
 </ul>
 <h2><strong>Can I...?</strong></h2>
 <hr />
