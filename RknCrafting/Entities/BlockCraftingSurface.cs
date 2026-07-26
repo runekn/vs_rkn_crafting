@@ -1,7 +1,10 @@
+using System;
+using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 
 namespace RKN.Crafting.Entities;
 
@@ -53,6 +56,7 @@ public class BlockCraftingSurface : Block
         PlacedPriorityInteract = true;
         PartialSelection = !api.RcLocalConfig().RenderAllSlots;
         InteractionHelpYOffset = 0.6f;
+        //CollectibleBehaviors = CollectibleBehaviors.Append(new BlockBreakingParticleProps())
         interactions =
         [
             new WorldInteraction
@@ -185,10 +189,16 @@ public class BlockCraftingSurface : Block
             return false;
         }
         world.Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", invSlot.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
-        if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
+        // TODO: idk if I actually like not transferring in creative
+        /*if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
         {
-            // TODO: Don't pull from slot if gamemode is creative
-        }
+            if (invSlot.Empty)
+            {
+                invSlot.Itemstack = activeHotbarSlot.Itemstack.Clone();
+                invSlot.Itemstack.StackSize = 0;
+            }
+            invSlot.Itemstack.StackSize = Math.Min(invSlot.Itemstack.StackSize + op.RequestedQuantity, invSlot.Itemstack.Collectible.MaxStackSize);
+        }*/
         if (activeHotbarSlot.TryPutInto(invSlot, ref op) < 1)
         {
             api.RcTriggerIngameError(this, "surfacefull");
@@ -312,6 +322,16 @@ public class BlockCraftingSurface : Block
             }
         }
         world.BlockAccessor.SetBlock(0, pos);
+    }
+
+    public override int GetRandomColor(
+        ICoreClientAPI capi,
+        BlockPos pos,
+        BlockFacing facing,
+        int rndIndex = -1)
+    {
+        ItemStack? itemStack = capi.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(pos)?.Inventory.FirstNonEmptySlot?.Itemstack;
+        return itemStack == null ? 1 : itemStack.Collectible.GetRandomColor(capi, itemStack);
     }
 
     public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
