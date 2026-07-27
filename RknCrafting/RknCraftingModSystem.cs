@@ -73,7 +73,7 @@ public class RknCraftingModSystem : ModSystem
             });
         }
 
-        api.Gui.RegisterDialog(new HudMouseSlotInteract(api));
+        api.Gui.RegisterDialog(new HudMouseWorldSlotInteract(api));
     }
 
     private bool AddRecipeSelectionHandler(ref EnumHandling handling)

@@ -6,11 +6,11 @@ using Vintagestory.Client.NoObf;
 
 namespace RknCrafting;
 
-public class HudMouseSlotInteract : HudElement
+public class HudMouseWorldSlotInteract : HudElement
 {
     public override double DrawOrder => 1.01; // Little larger than HudDropItem
 
-    public HudMouseSlotInteract(ICoreClientAPI capi)
+    public HudMouseWorldSlotInteract(ICoreClientAPI capi)
         : base(capi)
     {
         TryOpen();
@@ -20,14 +20,18 @@ public class HudMouseSlotInteract : HudElement
 
     public override void OnMouseDown(MouseEvent args)
     {
-        if (args.Handled)
+        if (args.Handled || capi.Input.MouseGrabbed)
             return;
-        if (capi.Gui.OpenedGuis
-            .Where(openedGui => openedGui.IsOpened() && openedGui is not HudMouseTools)
-            .SelectMany(openedGui => openedGui.Composers.Values)
-            .Any(guiComposer => guiComposer.Bounds.PointInside(args.X, args.Y)))
+        foreach (GuiDialog openedGui in capi.Gui.OpenedGuis)
         {
-            return;
+            if (openedGui.IsOpened() && openedGui is not HudMouseTools && openedGui is not HudIngameDiscovery && openedGui is not HudElementInteractionHelp)
+            {
+                foreach (GuiComposer guiComposer in openedGui.Composers.Values)
+                {
+                    if (guiComposer.Bounds.PointInside(args.X, args.Y))
+                        return;
+                }
+            }
         }
 
         BlockSelection? blockSelection = capi.World.Player.CurrentBlockSelection;
