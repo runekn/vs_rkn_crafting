@@ -7,6 +7,7 @@
 	"error-surfacealreadycrafting": "Someone is already crafting here!",
 	"error-missingreciperequirement": "Missing requirement for crafting",
 	"error-unsuitablesurface": "Surface not suitable for crafting",
+	"error-noingredientheld": "Must hold an ingredient",
 	"help-craft": "Craft",
 	"help-craftbulk": "Craft bulk",
 	"help-addingredient": "Add ingredient",

@@ -24,6 +24,12 @@ public class BlockCraftingSurface : Block
         {
             return false;
         }
+        bool gridless = api.RcServerConfig().EnableGridless;
+        if (gridless && slot.Empty || slot.Itemstack?.Item?.Tool != null)
+        {
+            api.RcTriggerIngameError(block, "noingredientheld");
+            return false;
+        }
         api.World.BlockAccessor.SetBlock(block.Id, abovePos);
         BlockEntityCraftingSurface? blockEntity = api.World.BlockAccessor.GetBlockEntity<BlockEntityCraftingSurface>(abovePos);
         if (blockEntity == null)
@@ -33,7 +39,7 @@ public class BlockCraftingSurface : Block
             return false;
         }
         blockEntity.CraftingSurfaceTimeModifier = craftingTimeModifier;
-        if (api.RcServerConfig().EnableGridless)
+        if (gridless)
         {
             ItemStackMoveOperation op = new(api.World, EnumMouseButton.Right, 0, EnumMergePriority.AutoMerge, 1)
             {
@@ -42,7 +48,6 @@ public class BlockCraftingSurface : Block
             if (slot.Itemstack?.Item?.Tool == null && !block.TryPutIngredient(api.World, blockEntity, slot, ref op, null))
             {
                 api.RcLogger().Warning("Could not put initial items into newly spawned crafting block!");
-                return false;
             }
         }
         return true;

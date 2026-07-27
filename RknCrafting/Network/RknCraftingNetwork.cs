@@ -125,7 +125,13 @@ public class RknCraftingNetwork
     private void OnClientStartedCraftingMessage(IPlayer byPlayer, ClientStartedCraftingMessage message)
     {
         api.RcLogger().Debug("Received start crafting message from {0}!", byPlayer.PlayerName);
-        BlockCraftingSurface.GetBE(api.World, message.Position)!.ClientStartedCrafting(
+        BlockEntityCraftingSurface? be = BlockCraftingSurface.GetBE(api.World, message.Position);
+        if (be == null)
+        {
+            api.RcLogger().Error("Block position {0} has no crafting entity!", message.Position);
+            return;
+        }
+        be!.ClientStartedCrafting(
             byPlayer, 
             message.Animation,
             message.RecipeCraftingTimeModifier,
