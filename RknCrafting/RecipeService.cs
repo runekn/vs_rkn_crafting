@@ -16,11 +16,19 @@ public class RecipeService
 
     private ICoreAPI api;
     private List<GridRecipeWrapper> recipes;
+    private readonly List<ItemStack> toolSamples = [];
 
     public RecipeService(ICoreAPI api)
     {
         this.api = api;
         bool gridlesss = api.RcServerConfig().EnableGridless;
+        
+        foreach (Item item in api.World.Items)
+        {
+            if (item.Tool != null) 
+                toolSamples.Add(new ItemStack(item));
+        }
+        
         recipes = new List<GridRecipeWrapper>(api.World.GridRecipes.Count);
         for (int i = 0; i < api.World.GridRecipes.Count; i++)
         {
@@ -32,7 +40,7 @@ public class RecipeService
             // GridRecipe has RecipeId which the game doesn't seem to use itself. I'll steal it to connect FastSearchRecipeByIngredient to index.
             // I tried creating my own FastSearchRecipesByIngredient. But the vanilla map uses ingredients from before variants are resolved. So mine didn't work.
             recipe.RecipeId = i;
-            GridRecipeWrapper wrapper = new(recipe, gridlesss, i);
+            GridRecipeWrapper wrapper = new(recipe, gridlesss, i, this);
             recipes.Add(wrapper);
         }
 
@@ -45,6 +53,11 @@ public class RecipeService
                 pair.Key.ResolvedItemStack!.Attributes.RemoveAttribute("lidState");
             }
         }
+    }
+
+    public bool IngredientUsesActualTool(CraftingRecipeIngredient ingredient)
+    {
+        return toolSamples.Any(tool => ingredient.SatisfiesAsIngredient(tool));
     }
 
     public GridRecipeWrapper GetRecipeById(int id)
@@ -514,7 +527,7 @@ public class GridRecipeWrapper
     public int Id;
     public List<CraftingRecipeIngredient> ToolIngredients = [];
 
-    public GridRecipeWrapper(GridRecipe recipe, bool gridless, int id)
+    public GridRecipeWrapper(GridRecipe recipe, bool gridless, int id, RecipeService service)
     {
         RecipeWithTools = recipe;
         RecipeWithoutTools = recipe.Clone();
@@ -524,16 +537,16 @@ public class GridRecipeWrapper
             RecipeWithoutTools.Shapeless = true;
         }
 
-        ExtractToolIngredients();
+        ExtractToolIngredients(service);
         CorrectRecipeDimensions();
     }
 
-    private void ExtractToolIngredients()
+    private void ExtractToolIngredients(RecipeService service)
     {
         for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
         {
             CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
-            if (ingredient is { Consume: false, MatchingType: EnumRecipeMatchType.TagsOnly })
+            if (ingredient is { Consume: false } && service.IngredientUsesActualTool(ingredient))
             {
                 RecipeWithoutTools.ResolvedIngredients[i] = null;
                 ToolIngredients.Add(ingredient);
