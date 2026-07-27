@@ -101,16 +101,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     protected override MeshData getOrCreateMesh(ItemSlot slot, int index)
     {
         // Fix crates. Because they do not have proper config to display their custom mesh
-        if (slot.Itemstack?.Block is BlockCrate crate)
+        if (CraftingItemRenderer.NeedsCustomMesh(slot.Itemstack?.Block))
         {
             MeshData mesh = getMesh(slot);
             if (mesh != null)
                 return mesh;
-            ItemStack stack = slot.Itemstack;
-            string type = stack.Attributes.GetString("type");
-            mesh = crate.GenMesh(capi, stack, type, null, stack.Attributes.GetString("lidState"), crate.Props[type].Shape);
+            ItemStack stack = slot.Itemstack!;
+            mesh = CraftingItemRenderer.GenCustomMesh(capi, stack);
             applyDefaultTranforms(stack, mesh);
-            MeshCache[getMeshCacheKey(slot)] = mesh;
+            MeshCache[getMeshCacheKey(slot)] = mesh; // This means blocks whose shape are dependent on some internal attribute will not update for different itemstacks of same id. But if I don't cache then it doesn't work at all.
             return mesh;
         }
         return base.getOrCreateMesh(slot, index);

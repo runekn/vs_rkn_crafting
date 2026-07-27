@@ -2,6 +2,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace RknCrafting.Entities;
 
@@ -19,6 +20,29 @@ internal class CraftingItemRenderer
     private static readonly SurfacePosTransform R1_C3 = new(PosMax, PosMin, 1.02f, -2f, 0.01f, 0.02f);
     private static readonly SurfacePosTransform R2_C3 = new(PosMax, PosMid, 0.97f, -1.1f, 0.005f, 0.0f);
     private static readonly SurfacePosTransform R3_C3 = new(PosMax, PosMax, 1.02f, 0.5f, -0.01f, 0.005f);
+
+    public static bool NeedsCustomMesh(Block? block)
+    {
+        return block is BlockCrate or BlockGenericTypedContainer;
+    }
+
+    public static MeshData GenCustomMesh(ICoreClientAPI capi, ItemStack stack)
+    {
+        if (stack.Block is BlockCrate crate)
+        {
+            string type = stack.Attributes.GetString("type");
+            return crate.GenMesh(capi, stack, type, null, stack.Attributes.GetString("lidState"), crate.Props[type].Shape);
+        }
+
+        if (stack.Block is BlockGenericTypedContainer container)
+        {
+            string type = stack.Attributes.GetString("type");
+            string shapename = container.Attributes["shape"][type].AsString();
+            return container.GenMesh(capi, type, shapename);
+        }
+
+        throw new Exception("Unknown block type: " + stack.Block.GetType().Name);
+    }
 
     public static float[][] GenTransformationMatrices(InventoryGeneric inventory, string transformCode, bool gridless, Block block, System.Func<ItemSlot, MeshData> getMesh)
     {
