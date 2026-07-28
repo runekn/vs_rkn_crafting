@@ -20,7 +20,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private int slotCount = 9;
     private InventoryGeneric inventory;
     private RknCraftingConfig config;
-    internal float CraftingSurfaceTimeModifier = 1.0f;
+    private float craftingSurfaceTimeModifier = 1.0f;
 
     public override InventoryBase Inventory => inventory;
     public override string InventoryClassName => "craftingsurface";
@@ -170,6 +170,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
 
+        UpdateCraftingSurfaceModifier();
+
         craftingParams = new CraftingParams()
         {
             Player = byPlayer,
@@ -211,6 +213,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return false;
         }
         bool bulk = byPlayer.Entity.Controls.ShiftKey && Api.RcServerConfig().EnableBulkCrafting;
+        
+        UpdateCraftingSurfaceModifier();
+        
         craftingParams = new CraftingParams()
         {
             Player = byPlayer,
@@ -401,8 +406,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         float @base = craftingParams!.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.Amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float)Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.Amount));
-        float r = @base * CraftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
-        Api.RcLogger().Debug("Next time to craft: {0} * {1} * {2} * {3} = {4}", @base, CraftingSurfaceTimeModifier, craftingParams.RecipeCraftingTimeModifier, consecutiveModifer, r);
+        float r = @base * craftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
+        Api.RcLogger().Debug("Next time to craft: {0} * {1} * {2} * {3} = {4}", @base, craftingSurfaceTimeModifier, craftingParams.RecipeCraftingTimeModifier, consecutiveModifer, r);
         return r;
     }
 
@@ -552,6 +557,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool IsEmpty()
     {
         return inventory.Empty;
+    }
+
+    private void UpdateCraftingSurfaceModifier()
+    {
+        BlockPos down = Pos.DownCopy();
+        craftingSurfaceTimeModifier = Api.World.BlockAccessor.GetBlock(down).GetBehavior<BlockBehaviorSpawnCraftingSurface>().GetCraftingModifier(Api.World, down);
     }
 
     public void MarkIngredientsDirty(IPlayer? byPlayer)

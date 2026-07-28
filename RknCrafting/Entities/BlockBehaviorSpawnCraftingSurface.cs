@@ -31,7 +31,7 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
             world.Api.RcTriggerIngameError(this, "unsuitablesurface");
             return true;
         }
-        bool r = BlockCraftingSurface.TryPlace(world.Api, byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot, GetCraftingModifier(world, blockSel));
+        bool r = BlockCraftingSurface.TryPlace(world.Api, byPlayer, blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot);
         if (!r) {
             return true;
         }
@@ -42,7 +42,7 @@ public class BlockBehaviorSpawnCraftingSurface(Block block) : BlockBehavior(bloc
         return true; 
     }
 
-    public virtual float GetCraftingModifier(IWorldAccessor world, BlockSelection blockSel)
+    public virtual float GetCraftingModifier(IWorldAccessor world, BlockPos pos)
     {
         return craftingTimeModifier;
     }
