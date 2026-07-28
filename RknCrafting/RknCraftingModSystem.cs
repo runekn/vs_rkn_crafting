@@ -22,7 +22,7 @@ public class RknCraftingModSystem : ModSystem
     private ICoreAPI api;
     private ICoreClientAPI capi => api as ICoreClientAPI;
     private Harmony harmony;
-    private ActionConsumable<KeyCombination> oldToolModeHandler;
+    private ActionConsumable<KeyCombination>? oldToolModeHandler;
 
     public RknCraftingNetwork Network { get; internal set; }
     public RecipeService RecipeService { get; internal set; }
@@ -75,7 +75,8 @@ public class RknCraftingModSystem : ModSystem
 
     private bool AddRecipeSelectionHandler(ref EnumHandling handling)
     {
-        if (api.Side != EnumAppSide.Client)
+        // This event handler will be run several times when joining a new world. So make sure we only execute it once.
+        if (oldToolModeHandler != null || api.Side != EnumAppSide.Client)
         {
             return true;
         }

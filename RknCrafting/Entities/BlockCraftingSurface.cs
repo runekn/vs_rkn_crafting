@@ -25,7 +25,7 @@ public class BlockCraftingSurface : Block
             return false;
         }
         bool gridless = api.RcServerConfig().EnableGridless;
-        if (gridless && slot.Empty || slot.Itemstack?.Item?.Tool != null)
+        if (gridless && (slot.Empty || slot.Itemstack?.Item?.Tool != null))
         {
             api.RcTriggerIngameError(block, "noingredientheld");
             return false;
