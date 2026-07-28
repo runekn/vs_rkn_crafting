@@ -11,7 +11,6 @@ using RknCrafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.Client.NoObf;
 
@@ -49,8 +48,6 @@ public class RknCraftingModSystem : ModSystem
         Animator = new CraftingAnimator(api);
         
         ApplyHarmonyPatches();
-
-        api.RcLogger().Debug("Hello world!");
     }
 
     public override void StartClientSide(ICoreClientAPI api)
@@ -104,9 +101,9 @@ public class RknCraftingModSystem : ModSystem
 
     public override void StartServerSide(ICoreServerAPI api)
     {
-        InitCatalog();
         Network = new RknCraftingNetwork(api, Mod.Info.ModID);
         api.Event.PlayerJoin += SendConfig;
+        api.Event.ServerRunPhase(EnumServerRunPhase.GameReady, InitCatalog); // Needs to run after OnModAndConfigReady, because otherwise Collectibles won't have been called with OnLoadedNative
 
         api.ChatCommands.Create("addcraft")
             .WithDescription("Spawn crafting surface with held item, without player replication. For testing.")
@@ -141,6 +138,7 @@ public class RknCraftingModSystem : ModSystem
     public override void AssetsFinalize(ICoreAPI api)
     {
         // Add behavior to all remaining blocks
+        Mod.Logger.Event("Adding behavior to all blocks");
         foreach (Block block in api.World.Blocks)
         {
             if (block.Code == null ||
@@ -155,11 +153,13 @@ public class RknCraftingModSystem : ModSystem
 
     private void ApplyHarmonyPatches()
     {
+        Mod.Logger.Event("Applying harmony patches");
         harmony = new Harmony(Mod.Info.ModID);
         harmony.PatchAll();
 
         if (LocalConfig.DisableUICraftingGrid)
         {
+            Mod.Logger.Event("Applying DisableUICraftingGrid patch");
             MethodInfo? original = typeof(GuiDialogInventory).DeclaredMethod("ComposeSurvivalInvDialog");
             MethodInfo? prefix = typeof(GuiDialogInventoryPatch).DeclaredMethod("ComposeSurvivalInvDialogPrefix");
             MethodInfo? original2 = typeof(GuiDialogInventory).DeclaredMethod("OnGuiClosed");
@@ -171,6 +171,7 @@ public class RknCraftingModSystem : ModSystem
 
         if (LocalConfig.DisableInventoryGuiDialog)
         {
+            Mod.Logger.Event("Applying DisableInventoryGuiDialog patch");
             MethodInfo? original = typeof(GuiDialogInventory).DeclaredMethod("TryOpen");
             MethodInfo? prefix = typeof(GuiDialogInventoryPatch).DeclaredMethod("TryOpenPrefix");
             harmony.Patch(original, prefix: prefix);
@@ -179,6 +180,7 @@ public class RknCraftingModSystem : ModSystem
 
     private void TryLoadConfig()
     {
+        Mod.Logger.Event("Loading " + api.Side + " config");
         string filename = Mod.Info.ModID + ".json";
         try
         {
@@ -201,6 +203,7 @@ public class RknCraftingModSystem : ModSystem
 
     public void InitCatalog()
     {
+        Mod.Logger.Event("Initializing recipe service");
         RecipeService = new RecipeService(api);
     }
 
