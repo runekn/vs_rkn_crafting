@@ -11,6 +11,7 @@
 	"help-craft": "Craft",
 	"help-craftbulk": "Craft bulk",
 	"help-addingredient": "Add ingredient",
+	"help-addmanyingredient": "Add ingredient stack",
 	"help-takeingredient": "Take ingredient",
 	"help-addtoolingredient": "Add tool ingredient (only if consumed)",
 	"transform-craftingIngredientTransform": "On crafting surface",

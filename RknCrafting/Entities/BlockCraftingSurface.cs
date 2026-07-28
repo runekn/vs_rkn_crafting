@@ -58,7 +58,6 @@ public class BlockCraftingSurface : Block
         PlacedPriorityInteract = true;
         PartialSelection = !api.RcLocalConfig().RenderAllSlots;
         InteractionHelpYOffset = 0.6f;
-        //CollectibleBehaviors = CollectibleBehaviors.Append(new BlockBreakingParticleProps())
         interactions =
         [
             new WorldInteraction
@@ -77,6 +76,13 @@ public class BlockCraftingSurface : Block
             new WorldInteraction
             {
                 ActionLangCode = "rkncrafting:help-addingredient",
+                MouseButton = EnumMouseButton.Right,
+                ShouldApply = CanAddIngredient
+            },
+            new WorldInteraction
+            {
+                ActionLangCode = "rkncrafting:help-addmanyingredient",
+                HotKeyCode = "shift",
                 MouseButton = EnumMouseButton.Right,
                 ShouldApply = CanAddIngredient
             },
