@@ -132,10 +132,13 @@
 <h2><strong>Compatibility</strong></h2>
 <hr />
 <p>&nbsp;</p>
-<p>Fully safe to add to existing save. It is recommended that all crafting surfaces are deleted before removing from existing save. Though given the auto-delete feature this should be trivial.</p>
-<p>Unfinished crafting items may break after game update or installing/updating mods that add grid recipes. It is recommended that these are only temporary.</p>
-<p>Any mod that disables grid recipes will also disable for this mod.</p>
-<p><a href="https://mods.vintagestory.at/show/mod/59074">Immersive Inventory Slots</a> and this mod will override each other's UI changes if playing with DisableUICraftingGrid=true. To hide the grid again you must use HideCraftingGrid in that mod's config.</p>
+<ul>
+    <li>Fully safe to add to existing save. It is recommended that all crafting surfaces are deleted before removing from existing save. Though given the auto-delete feature this should be trivial.</li>
+    <li>Unfinished crafting items may break after game update or installing/updating mods that add grid recipes. It is recommended that these are only temporary.</li>
+    <li>Any mod that disables grid recipes will also disable for this mod.</li>
+    <li><a href="https://mods.vintagestory.at/show/mod/59074">Immersive Inventory Slots</a> and this mod will override each other's UI changes if playing with DisableUICraftingGrid=true. To hide the grid again you must use HideCraftingGrid in that mod's config.</li>
+    <li>Some mod recipes uses tools as ingredients. This includes <a href="https://mods.vintagestory.at/butchering">buthering tables</a> and <a href="https://mods.vintagestory.at/tailorsdelight">needles</a>. In this case you will need to add the tool to the crafting surface. Unfortuantly the handbook will not indicate if this is the casefor a recipe.</li>
+</ul>
 <h4><strong>Compatibility tips for other modders</strong></h4>
 <p>Use <code>craftingIngredientTransform</code> attribute to change how collectibles are rendered on crafting surfaces. This is also available in the <code>.tfedit</code> UI. By default the mod will auto-scale ingredients to fit the slot, but sometimes this does not work right.</p>
 <p>Blocks must have the <code>rkncrafting.spawncraftingsurface</code> behavior in order to be able to spawn crafting surface on top. The behavior can have the property <code>craftingTimeModifier</code> to change how fast crafting is on it.</p>
@@ -152,6 +155,7 @@
 <ul>
     <li>Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different. Unsure if this is possible to fix without proper recipe ids.</li>
     <li>Particle effect don't work when playing on dedicated server</li>
+    <li>Crates, reed and papyrus chests have cache collisions. Meaning they can be rendered as the wrong type.</li>
 </ul>
 <h2><strong>Can I...?</strong></h2>
 <hr />
