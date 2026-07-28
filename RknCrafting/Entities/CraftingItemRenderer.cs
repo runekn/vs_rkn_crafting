@@ -62,12 +62,16 @@ internal class CraftingItemRenderer
             customTransform = itemSlot.Itemstack.Collectible?.Attributes?[transformCode].AsObject<ModelTransform>();
             if (customTransform == null)
             {
-                scale = scale.Mul(0.30f);
+                //scale = scale.Mul(0.30f);
                 MeshData meshData = getMesh(itemSlot);
                 if (meshData != null)
                 {
                     float itemSize = GetMeshXZSize(meshData);
-                    scale = scale.Set(scale.X / itemSize, scale.Y / itemSize, scale.Z / itemSize);
+                    float maxSize = 0.35f;
+                    if (itemSize > maxSize)
+                    {
+                        scale = scale.Set(maxSize / itemSize, maxSize / itemSize, maxSize / itemSize);
+                    }
                 }
             }
 
