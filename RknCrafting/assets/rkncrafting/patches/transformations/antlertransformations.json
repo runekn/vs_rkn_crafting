@@ -1,0 +1,68 @@
+[
+  {
+    "file": "game:itemtypes/resource/antler",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "antler-moose-*": {
+          translation: { x: 0.58, y: -0.37, z: 0.35 },
+          rotation: { x: 0, y: 0, z: 78 },
+          origin: { x: 0, y: 0.3, z: 0.1 },
+          scale: 0.59
+        },
+        "antler-muskox-*": {
+          translation: { x: 0.45, y: -0.3, z: 0.42 },
+          rotation: { x: 0, y: 0, z: 78 },
+          origin: { x: 0, y: 0.3, z: 0.1 },
+          scale: 0.94
+        },
+        "antler-whitetail-01": {
+          translation: { x: 0.5, y: -0.3, z: 0.42 },
+          rotation: { x: 0, y: 0, z: 119 },
+          origin: { x: 0.05, y: 0.3, z: 0.1 },
+          scale: 0.78
+        },
+        "antler-redbrocket-*": {
+          translation: { x: 0.4, y: -0.3, z: 0.45 },
+          rotation: { x: 0, y: 0, z: 92 },
+          origin: { x: 0, y: 0.3, z: 0.05 }
+        },
+        "antler-elk-*": {
+          translation: { x: 0.58, y: -0.3, z: 0.39 },
+          rotation: { x: 0, y: 0, z: 78 },
+          origin: { x: 0, y: 0.3, z: 0.1 },
+          scale: 0.59
+        },
+        "antler-pudu-*": {
+          translation: { x: 0.45, y: -0.18, z: 0.45 },
+          rotation: { x: 0, y: 0, z: 92 },
+          origin: { x: 0.03, y: 0.2, z: 0.1 }
+        },
+        "antler-pampas-*": {
+          translation: { x: 0.45, y: -0.3, z: 0.45 },
+          rotation: { x: 0, y: 0, z: 108 },
+          origin: { x: 0.05, y: 0.3, z: 0.1 }
+        },
+        "*": {
+          translation: {
+            x: 0.58,
+            y: -0.3,
+            z: 0.42
+          },
+          rotation: {
+            x: 0,
+            y: 0,
+            z: 78
+          },
+          origin: {
+            x: 0,
+            y: 0.3,
+            z: 0.1
+          },
+          scale: 0.59
+        }
+      } 
+    }
+  }
+]

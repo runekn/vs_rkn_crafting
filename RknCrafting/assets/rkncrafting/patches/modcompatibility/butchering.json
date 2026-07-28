@@ -1,0 +1,38 @@
+[
+  {
+    "file": "butchering:itemtypes/tool/toolheads",
+    "op": "addmerge",
+    "path": "/attributes",
+    "dependsOn": [
+      { "modid": "butchering" }
+    ],
+    "value": {
+      "craftingIngredientTransformByType": {
+        "toolhead-pick-bone": {
+          "translation": {
+            "x": -0.48,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -46,
+            "z": 0
+          },
+          "origin": {
+            "x": 0.95,
+            "y": 0,
+            "z": 0.5
+          },
+          "scale": 0.84
+        },
+        "toolhead-arrow-bone": {
+          "translation": { "x": -0.5, "y": -0.02, "z": 0 },
+          "rotation": { "x": 0, "y": 0, "z": 1 },
+          "origin": { "x": 1, "y": 0, "z": 0.5 },
+          "scale": 0.72
+        }
+      }
+    }
+  }
+]
