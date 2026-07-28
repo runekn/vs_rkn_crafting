@@ -55,9 +55,30 @@ public class RecipeService
         }
     }
 
-    public bool IngredientUsesActualTool(CraftingRecipeIngredient ingredient)
+    public bool IngredientUsesActualTool(CraftingRecipeIngredient ingredient, GridRecipe recipe)
     {
-        return toolSamples.Any(tool => ingredient.SatisfiesAsIngredient(tool));
+        if (ingredient.Consume)
+        {
+            return false;
+        }
+        foreach (ItemStack tool in toolSamples)
+        {
+            try
+            {
+                if (ingredient.SatisfiesAsIngredient(tool, false))
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                api.RcLogger().Error("Got error while checking tool {0} for ingredient for recipe {1} {2}", tool.Collectible?.Code, recipe.Name, recipe.Output?.Code);
+                api.RcLogger().Error(e);
+                return false;
+            }
+        }
+
+        return false;
     }
 
     public GridRecipeWrapper GetRecipeById(int id)
@@ -546,7 +567,7 @@ public class GridRecipeWrapper
         for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
         {
             CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
-            if (ingredient is { Consume: false } && service.IngredientUsesActualTool(ingredient))
+            if (ingredient != null && service.IngredientUsesActualTool(ingredient, RecipeWithoutTools))
             {
                 RecipeWithoutTools.ResolvedIngredients[i] = null;
                 ToolIngredients.Add(ingredient);
