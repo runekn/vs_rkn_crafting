@@ -1,0 +1,14 @@
+﻿[
+  {
+    "file": "game:itemtypes/resource/firewood*",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransform": {
+        translation: { x: 0, y: -0.45, z: 0 },
+        rotation: { x: 0, y: 46, z: 0 },
+        scale: 0.39
+      }
+    }
+  }
+]
