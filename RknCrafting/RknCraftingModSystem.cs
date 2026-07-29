@@ -22,7 +22,6 @@ public class RknCraftingModSystem : ModSystem
     private ICoreAPI api;
     private ICoreClientAPI capi => api as ICoreClientAPI;
     private Harmony harmony;
-    private ActionConsumable<KeyCombination>? oldToolModeHandler;
 
     public RknCraftingNetwork Network { get; internal set; }
     public RecipeService RecipeService { get; internal set; }
@@ -59,8 +58,6 @@ public class RknCraftingModSystem : ModSystem
         api.Input.InWorldAction += CheckPauseInteractions;
         api.Event.MouseUp += CheckResumeInteractions;
 
-        api.Event.IsPlayerReady += AddRecipeSelectionHandler; // Add as late as possible since the vanilla handler is added at OnBlockTexturesLoaded
-
         if (!GuiDialogTransformEditor.extraTransforms.Any(c => c.AttributeName.Equals("craftingIngredientTransform")))
         {
             GuiDialogTransformEditor.extraTransforms.Add(new TransformConfig()
@@ -71,33 +68,7 @@ public class RknCraftingModSystem : ModSystem
         }
 
         api.Gui.RegisterDialog(new HudMouseWorldSlotInteract(api));
-    }
-
-    private bool AddRecipeSelectionHandler(ref EnumHandling handling)
-    {
-        // This event handler will be run several times when joining a new world. So make sure we only execute it once.
-        if (oldToolModeHandler != null || api.Side != EnumAppSide.Client)
-        {
-            return true;
-        }
-        
-        HotKey toolModeSelectHotkey = capi.Input.HotKeys["toolmodeselect"];
-        oldToolModeHandler = toolModeSelectHotkey.Handler;
-        toolModeSelectHotkey.Handler = CheckOpenRecipeSelection;
-        return true;
-    }
-
-    private bool CheckOpenRecipeSelection(KeyCombination keys)
-    {
-        BlockSelection sel = capi.World.Player.Entity.BlockSelection;
-        if (sel?.Block is BlockCraftingSurface)
-        {
-            BlockEntityCraftingSurface? entity = BlockCraftingSurface.GetBE(capi.World, sel.Position);
-            entity?.OpenRecipeSelection();
-            return true;
-        }
-
-        return oldToolModeHandler?.Invoke(keys) ?? false;
+        api.Gui.RegisterDialog(new RecipeSelectionDialog(api));
     }
 
     public override void StartServerSide(ICoreServerAPI api)

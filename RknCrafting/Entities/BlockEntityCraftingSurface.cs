@@ -27,9 +27,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public override string AttributeTransformCode => "craftingIngredientTransform";
 
     // Client Runtime fields
+    public List<ICraftingResult>? ValidRecipes;
     private int selectedRecipe = RecipeService.RecipeIdNone;
-    private int selectedLimit;
-    private List<ICraftingResult>? validRecipes;
+    public int SelectedLimit;
     private BlockFacing? lastFacing;
     private EnumTool? lastTool;
     private bool dirtyRecipes = true;
@@ -93,14 +93,14 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         sb.Append("Selected: ").AppendLine(scanResult.SelectionItemStack.GetName());
-        if (validRecipes is { Count: > 1 })
+        if (ValidRecipes is { Count: > 1 })
         {
-            sb.Append(validRecipes.Count - 1).AppendLine(" more valid recipes");
+            sb.Append(ValidRecipes.Count - 1).AppendLine(" more valid recipes");
         }
 
-        if (selectedLimit > 0)
+        if (SelectedLimit > 0)
         {
-            sb.Append("Crafting limit: ").AppendLine(selectedLimit.ToString());
+            sb.Append("Crafting limit: ").AppendLine(SelectedLimit.ToString());
         }
     }
 
@@ -231,7 +231,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Animation = Api.RcAnimator().StartCrafting(byPlayer, selectedRecipe, inputSlots.PrimaryTool, inputSlots.OffhandTool),
             Bulk = bulk,
             RecipeCraftingTimeModifier = result.CraftingTimeModifier,
-            Limit = selectedLimit
+            Limit = SelectedLimit
         };
         craftingParams.NextCraftingTime = GetCraftingTime();
         Api.RcNetwork().ClientStartedCrafting(craftingParams, Pos);
@@ -361,23 +361,14 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return null;
     }
 
-    public void OpenRecipeSelection()
+    public void SetLimit(int limit)
     {
-        if (validRecipes == null)
-        {
-            return;
-        }
-        recipeSelectionDialog ??= new RecipeSelectionDialog(capi);
-        recipeSelectionDialog
-            .TryOpen(validRecipes.ToArray(), selectedLimit, i =>
-            {
-                selectedRecipe = i;
-                Api.RcLogger().Debug("Selected recipe: {0} {1}", i, GetSelectedRecipe()!.Name);
-                recipeSelectionDialog.TryClose();
-            }, i =>
-            {
-                selectedLimit = i;
-            });
+        SelectedLimit = Math.Max(limit, 0);
+    }
+
+    public void SetRecipe(int id)
+    {
+        selectedRecipe = id;
     }
 
     public void CheckIfUpdateRecipes(IPlayer byPlayer)
@@ -439,19 +430,19 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, lastFacing);
         if (inputSlots == null) {
-            validRecipes = [];
+            ValidRecipes = [];
             selectedRecipe = RecipeService.RecipeIdNone;
             return;
         }
         List<ICraftingResult> recipes = Api.RcRecipeService().GetValidRecipes(inputSlots);
-        validRecipes = recipes;
+        ValidRecipes = recipes;
         if (recipes.Count == 0)
         {
             selectedRecipe = RecipeService.RecipeIdNone;
         }
         else if (GetSelectedRecipe() == null)
         {
-            selectedRecipe = validRecipes.First().Id;
+            selectedRecipe = ValidRecipes.First().Id;
         }
     }
 
@@ -568,10 +559,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private ICraftingResult? GetSelectedRecipe()
     {
-        if (validRecipes == null || selectedRecipe == RecipeService.RecipeIdNone || validRecipes.Count == 0)
+        if (ValidRecipes == null || selectedRecipe == RecipeService.RecipeIdNone || ValidRecipes.Count == 0)
             return null;
 
-        return validRecipes.FirstOrDefault(r => r.Id == selectedRecipe);
+        return ValidRecipes.FirstOrDefault(r => r.Id == selectedRecipe);
     }
 
     public bool IsEmpty()

@@ -1,5 +1,6 @@
 ﻿using System;
 using RKN.Crafting;
+using RKN.Crafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -10,19 +11,52 @@ namespace RknCrafting;
 internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
 {
     private IInventory recipeInventory;
-    private int startLimit;
-    private Action<int> onLimitChange;
-    public override string ToggleKeyCombinationCode => null;
+    private ActionConsumable<KeyCombination>? defaultHotKeyHandler;
+    private BlockEntityCraftingSurface entity;
+    public override double DrawOrder => 0.09f; // Little less than GuiDialogToolMode so we can replace its handler
+    public override string ToggleKeyCombinationCode => "toolmodeselect";
     
     /*private readonly double floatyDialogPosition = 0.5;
     private readonly double floatyDialogAlign = 0.75;*/
 
-    public bool TryOpen(ICraftingResult[] recipes, int limit, Action<int> selected, Action<int> onLimitChange)
+    public override void OnBlockTexturesLoaded()
     {
-        this.onLimitChange = onLimitChange;
-        recipeInventory = new RecipeSelectionInventory(capi, recipes, i => selected(recipes[i].Id));
-        startLimit = limit;
-        return TryOpen();
+        defaultHotKeyHandler = capi.Input.HotKeys[ToggleKeyCombinationCode]?.Handler;
+        capi.Input.SetHotKeyHandler(ToggleKeyCombinationCode, TryToggle);
+    }
+
+    private bool TryToggle(KeyCombination keys)
+    {
+        bool handled = IsOpened() ? TryClose() : TryOpen();
+        if (!handled && defaultHotKeyHandler != null)
+        {
+            return defaultHotKeyHandler(keys);
+        }
+        return handled;
+    }
+
+    public override bool TryOpen()
+    {
+        BlockSelection sel = capi.World.Player.Entity.BlockSelection;
+        if (sel?.Block is not BlockCraftingSurface)
+        {
+            return false;
+        }
+        
+        BlockEntityCraftingSurface? be = BlockCraftingSurface.GetBE(capi.World, sel.Position);
+        if (be == null)
+        {
+            return false;
+        }
+
+        entity = be;
+        ICraftingResult[] recipes = entity.ValidRecipes?.ToArray() ?? [];
+        recipeInventory = new RecipeSelectionInventory(capi, recipes, i =>
+        {
+            entity.SetRecipe(recipes[i].Id);
+            TryClose();
+        });
+        return base.TryOpen();
     }
 
     public override void OnGuiOpened()
@@ -75,7 +109,7 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
             .AddItemSlotGrid(recipeInventory, null, 6, inventoryBounds, "slotgrid")
             .EndClip()
             .Compose();
-        SingleComposer.GetNumberInput("limit").SetValue(startLimit);
+        SingleComposer.GetNumberInput("limit").SetValue(entity.SelectedLimit);
         SingleComposer.GetScrollbar("scrollbar").SetHeights((float)elementBounds.fixedHeight, (float)(inventoryBounds.fixedHeight + unscaledSlotPadding));
     }
 
@@ -99,7 +133,7 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
         }
         // TODO: doesn't work
         //input.Text = v.ToString();
-        onLimitChange((int)v);
+        entity.SetLimit((int)v);
     }
     
     private void CloseIconPressed() => TryClose();
@@ -130,42 +164,42 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
         }
         base.OnRenderGUI(deltaTime);
     }*/
-}
-
-public class RecipeSelectionInventory : InventoryBase
-{
-    private ItemSlot[] slots;
-    private Action<int> selected;
-
-    public RecipeSelectionInventory(ICoreAPI api, ICraftingResult[] recipes, Action<int> selected) : base("recipeSelection", "0", api)
+    
+    private  class RecipeSelectionInventory : InventoryBase
     {
-        slots = GenEmptySlots(recipes.Length);
-        this.selected = selected;
-        for (var index = 0; index < recipes.Length; index++)
+        private ItemSlot[] slots;
+        private Action<int> selected;
+
+        public RecipeSelectionInventory(ICoreAPI api, ICraftingResult[] recipes, Action<int> selected) : base("recipeSelection", "0", api)
         {
-            var wrapper = recipes[index];
-            ItemStack itemStack = wrapper.SelectionItemStack;
-            slots[index].Itemstack = itemStack;
+            slots = GenEmptySlots(recipes.Length);
+            this.selected = selected;
+            for (var index = 0; index < recipes.Length; index++)
+            {
+                var wrapper = recipes[index];
+                ItemStack itemStack = wrapper.SelectionItemStack;
+                slots[index].Itemstack = itemStack;
+            }
         }
-    }
 
-    public override ItemSlot this[int slotId] { get => slots[slotId]; set => throw new NotImplementedException(); }
+        public override ItemSlot this[int slotId] { get => slots[slotId]; set => throw new NotImplementedException(); }
 
-    public override int Count => slots.Length;
+        public override int Count => slots.Length;
 
-    public override object? ActivateSlot(int slotId, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
-    {
-        selected(slotId);
-        return null;
-    }
+        public override object? ActivateSlot(int slotId, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
+        {
+            selected(slotId);
+            return null;
+        }
 
-    public override void FromTreeAttributes(ITreeAttribute tree)
-    {
-        throw new NotImplementedException();
-    }
+        public override void FromTreeAttributes(ITreeAttribute tree)
+        {
+            throw new NotImplementedException();
+        }
 
-    public override void ToTreeAttributes(ITreeAttribute tree)
-    {
-        throw new NotImplementedException();
+        public override void ToTreeAttributes(ITreeAttribute tree)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
