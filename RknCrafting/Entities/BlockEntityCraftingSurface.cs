@@ -263,38 +263,38 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             CreateOutput();
 
             // Continue crafting if possible
-            if (craftingParams.Amount > craftingParams.Limit)
-            {
-                Api.RcLogger().Debug("Stopping crafting by {0} due to reaching the limit of {1}", byPlayer.PlayerName, craftingParams.Limit);
-                EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
-                Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
-                Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
-                ResetState();
-                return false;
-            }
             RecipeInputSlots inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
             if (inputSlots == null)
             {
                 Api.RcLogger().Debug("Stopping crafting by {0} and destroying block due to lack of any materials", byPlayer.PlayerName);
+                ServerStopCrafting();
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
-                EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
-                Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
-                Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
+                return false;
+            }
+            if (craftingParams.Limit > 0 && craftingParams.Amount >= craftingParams.Limit)
+            {
+                Api.RcLogger().Debug("Stopping crafting by {0} due to reaching the limit of {1}", byPlayer.PlayerName, craftingParams.Limit);
+                ServerStopCrafting();
                 return false;
             }
             if (!craftingParams.Recipe.Matches(inputSlots))
             {
                 Api.RcLogger().Debug("Stopping crafting by {0} due to lack of correct materials", byPlayer.PlayerName);
-                EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
-                Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
-                Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
-                ResetState();
+                ServerStopCrafting();
                 return false;
             }
             MarkDirty(true);
         }
 
         return true;
+    }
+
+    private void ServerStopCrafting()
+    {
+        EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
+        Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
+        Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
+        ResetState();
     }
 
     public void CancelCrafting(IPlayer byPlayer)
