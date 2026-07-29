@@ -118,7 +118,8 @@ public class RknCraftingNetwork
             Bulk = craftingParams.Bulk,
             Recipe = craftingParams.Recipe.Id,
             RecipeCraftingTimeModifier = craftingParams.RecipeCraftingTimeModifier,
-            Facing = craftingParams.Facing?.Flag ?? -1
+            Facing = craftingParams.Facing?.Flag ?? -1,
+            Limit = craftingParams.Limit
         });
     }
 
@@ -138,7 +139,8 @@ public class RknCraftingNetwork
             message.Recipe,
             message.Bulk,
             message.NextCraftingTime,
-            message.Facing == -1 ? null : BlockFacing.FromFlag(message.Facing)
+            message.Facing == -1 ? null : BlockFacing.FromFlag(message.Facing),
+            message.Limit
         );
     }
 

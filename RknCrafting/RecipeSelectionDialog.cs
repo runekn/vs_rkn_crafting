@@ -7,23 +7,21 @@ using Vintagestory.API.MathTools;
 
 namespace RknCrafting;
 
-internal class RecipeSelectionDialog : GuiDialog
+internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
 {
     private IInventory recipeInventory;
-    private BlockPos pos;
+    private int startLimit;
+    private Action<int> onLimitChange;
     public override string ToggleKeyCombinationCode => null;
     
-    private readonly double floatyDialogPosition = 0.5;
-    private readonly double floatyDialogAlign = 0.75;
+    /*private readonly double floatyDialogPosition = 0.5;
+    private readonly double floatyDialogAlign = 0.75;*/
 
-    public RecipeSelectionDialog(ICoreClientAPI capi, BlockPos pos) : base(capi)
+    public bool TryOpen(ICraftingResult[] recipes, int limit, Action<int> selected, Action<int> onLimitChange)
     {
-        this.pos = pos;
-    }
-    
-    public bool TryOpen(ICraftingResult[] recipes, Action<int> selected)
-    {
+        this.onLimitChange = onLimitChange;
         recipeInventory = new RecipeSelectionInventory(capi, recipes, i => selected(recipes[i].Id));
+        startLimit = limit;
         return TryOpen();
     }
 
@@ -35,27 +33,73 @@ internal class RecipeSelectionDialog : GuiDialog
     private void ComposeDialog()
     {
         ClearComposers();
-        double elementToDialogPadding = GuiStyle.ElementToDialogPadding;
+        double dialogPadding = GuiStyle.ElementToDialogPadding;
         double unscaledSlotPadding = GuiElementItemSlotGridBase.unscaledSlotPadding;
         int rows = (int)Math.Ceiling(recipeInventory.Count / 6f);
-        ElementBounds elementBounds = ElementStdBounds.SlotGrid(EnumDialogArea.None, unscaledSlotPadding, unscaledSlotPadding, 6, 2).FixedGrow(2.0 * unscaledSlotPadding, 2.0 * unscaledSlotPadding);
+        ElementBounds elementBounds = ElementStdBounds
+            .SlotGrid(EnumDialogArea.None, unscaledSlotPadding, unscaledSlotPadding, 6, 2)
+            .FixedGrow(2.0 * unscaledSlotPadding, 2.0 * unscaledSlotPadding);
         ElementBounds inventoryBounds = ElementStdBounds.SlotGrid(EnumDialogArea.None, 0.0, 0.0, 6, rows);
         ElementBounds insetBounds = elementBounds.ForkBoundingParent(3.0, 3.0, 3.0, 3.0);
         ElementBounds clipBounds = elementBounds.CopyOffsetedSibling();
         clipBounds.fixedHeight -= 3.0;
-        ElementBounds compoBounds = insetBounds.ForkBoundingParent(elementToDialogPadding, elementToDialogPadding + 30.0, elementToDialogPadding + 20.0, elementToDialogPadding);
+        double countWidth = 60;
+        ElementBounds countBounds = new()
+        {
+            Alignment = EnumDialogArea.LeftTop,
+            BothSizing = ElementSizing.Fixed,
+            fixedHeight = 90,
+            fixedWidth = countWidth,
+            fixedX = dialogPadding,
+            fixedY = dialogPadding + 30.0,
+            /*fixedPaddingX = 2.0,
+            fixedPaddingY = 2.0*/
+        };
+        ElementBounds compoBounds = insetBounds.ForkBoundingParent(dialogPadding + 10 + countWidth, dialogPadding + 30.0, dialogPadding + 20.0, dialogPadding);
         compoBounds.WithAlignment(EnumDialogArea.CenterMiddle).WithFixedAlignmentOffset(20.0, 0.0);
         ElementBounds scrollbarBounds = ElementStdBounds.VerticalScrollbar(insetBounds).WithParent(compoBounds);
         scrollbarBounds.fixedOffsetX -= 2.0;
         scrollbarBounds.fixedWidth = 15.0;
-        SingleComposer = capi.Gui.CreateCompo("inventory-recipes", compoBounds).AddShadedDialogBG(ElementBounds.Fill).AddDialogTitleBar("Select Recipe", CloseIconPressed)
+        SingleComposer = capi.Gui.CreateCompo("inventory-recipes", compoBounds)
+            .AddShadedDialogBG(ElementBounds.Fill)
+            .AddDialogTitleBar("Select Recipe", CloseIconPressed)
+            .AddInset(countBounds, 1)
+            .BeginChildElements()
+            .AddStaticText("Limit", CairoFont.WhiteSmallText(), ElementBounds.Fixed(EnumDialogArea.CenterTop, 0, 0, countWidth, 30))
+            .AddNumberInput(ElementBounds.Fixed(EnumDialogArea.CenterMiddle, 0, 0, countWidth, 30), OnCountChanged, key: "limit")
+            .AddSmallButton("Reset", OnLimitReset, ElementBounds.Fixed(EnumDialogArea.CenterBottom, 0, 0, countWidth, 30))
+            .EndChildElements()
             .AddVerticalScrollbar(OnNewScrollbarvalue, scrollbarBounds, "scrollbar")
             .AddInset(insetBounds, 3)
             .BeginClip(clipBounds)
             .AddItemSlotGrid(recipeInventory, null, 6, inventoryBounds, "slotgrid")
             .EndClip()
             .Compose();
+        SingleComposer.GetNumberInput("limit").SetValue(startLimit);
         SingleComposer.GetScrollbar("scrollbar").SetHeights((float)elementBounds.fixedHeight, (float)(inventoryBounds.fixedHeight + unscaledSlotPadding));
+    }
+
+    private bool OnLimitReset()
+    {
+        SingleComposer.GetNumberInput("limit").SetValue(0);
+        return true;
+    }
+
+    private void OnCountChanged(string _)
+    {
+        var input = SingleComposer.GetNumberInput("limit");
+        float v = input.GetValue();
+        if (v < 0)
+        {
+            v = 0;
+        }
+        else if (v != Math.Floor(v))
+        {
+            v = (float) Math.Floor(v);
+        }
+        // TODO: doesn't work
+        //input.Text = v.ToString();
+        onLimitChange((int)v);
     }
     
     private void CloseIconPressed() => TryClose();

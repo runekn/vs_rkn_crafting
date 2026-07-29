@@ -21,9 +21,9 @@
                 // "--openWorld" , "modding test world",
                 "--tracelog",
                 "--addModPath",
-                "${workspaceFolder}/GridlessCrafting/bin/Debug/Mods",
+                "${workspaceFolder}/RknCrafting/bin/Debug/Mods",
                 "--addOrigin",
-                "${workspaceFolder}/GridlessCrafting/assets"
+                "${workspaceFolder}/RknCrafting/assets"
             ],
             "console": "internalConsole",
             "stopAtEntry": false
@@ -43,9 +43,9 @@
             "args": [
                 "--tracelog",
                 "--addModPath",
-                "${workspaceFolder}/GridlessCrafting/bin/Debug/Mods",
+                "${workspaceFolder}/RknCrafting/bin/Debug/Mods",
                  "--addOrigin",
-                 "${workspaceFolder}/GridlessCrafting/assets"
+                 "${workspaceFolder}/RknCrafting/assets"
             ],
             "console": "internalConsole",
             "stopAtEntry": false

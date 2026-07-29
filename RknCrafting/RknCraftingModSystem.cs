@@ -97,7 +97,7 @@ public class RknCraftingModSystem : ModSystem
             return true;
         }
 
-        return oldToolModeHandler(keys);
+        return oldToolModeHandler?.Invoke(keys) ?? false;
     }
 
     public override void StartServerSide(ICoreServerAPI api)

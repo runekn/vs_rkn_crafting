@@ -62,6 +62,8 @@ public class ClientStartedCraftingMessage
     public int Recipe;
     [ProtoMember(7)]
     public int Facing;
+    [ProtoMember(8)]
+    public int Limit;
 }
 
 [ProtoContract]

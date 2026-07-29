@@ -28,6 +28,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     // Client Runtime fields
     private int selectedRecipe = RecipeService.RecipeIdNone;
+    private int selectedLimit;
     private List<ICraftingResult>? validRecipes;
     private BlockFacing? lastFacing;
     private EnumTool? lastTool;
@@ -94,7 +95,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         sb.Append("Selected: ").AppendLine(scanResult.SelectionItemStack.GetName());
         if (validRecipes is { Count: > 1 })
         {
-            sb.Append(validRecipes.Count - 1).Append(" more valid recipes");
+            sb.Append(validRecipes.Count - 1).AppendLine(" more valid recipes");
+        }
+
+        if (selectedLimit > 0)
+        {
+            sb.Append("Crafting limit: ").AppendLine(selectedLimit.ToString());
         }
     }
 
@@ -155,7 +161,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.Player.ClientId == byPlayer.ClientId;
     }
 
-    public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing)
+    public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing, int limit)
     {
         RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, blockFacing);
         if (inputSlots == null)
@@ -180,7 +186,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Bulk = bulk,
             RecipeCraftingTimeModifier = recipeModifier,
             NextCraftingTime = nextCraftingTime,
-            Facing = blockFacing
+            Facing = blockFacing,
+            Limit = limit
         };
         Api.RcAnimator().StartCrafting(byPlayer, animation);
     }
@@ -224,6 +231,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             Animation = Api.RcAnimator().StartCrafting(byPlayer, selectedRecipe, inputSlots.PrimaryTool, inputSlots.OffhandTool),
             Bulk = bulk,
             RecipeCraftingTimeModifier = result.CraftingTimeModifier,
+            Limit = selectedLimit
         };
         craftingParams.NextCraftingTime = GetCraftingTime();
         Api.RcNetwork().ClientStartedCrafting(craftingParams, Pos);
@@ -255,6 +263,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             CreateOutput();
 
             // Continue crafting if possible
+            if (craftingParams.Amount > craftingParams.Limit)
+            {
+                Api.RcLogger().Debug("Stopping crafting by {0} due to reaching the limit of {1}", byPlayer.PlayerName, craftingParams.Limit);
+                EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
+                Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
+                Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
+                ResetState();
+                return false;
+            }
             RecipeInputSlots inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
             if (inputSlots == null)
             {
@@ -350,13 +367,16 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        recipeSelectionDialog ??= new RecipeSelectionDialog(capi, Pos);
+        recipeSelectionDialog ??= new RecipeSelectionDialog(capi);
         recipeSelectionDialog
-            .TryOpen(validRecipes.ToArray(), i =>
+            .TryOpen(validRecipes.ToArray(), selectedLimit, i =>
             {
                 selectedRecipe = i;
                 Api.RcLogger().Debug("Selected recipe: {0} {1}", i, GetSelectedRecipe()!.Name);
                 recipeSelectionDialog.TryClose();
+            }, i =>
+            {
+                selectedLimit = i;
             });
     }
 
@@ -600,6 +620,7 @@ public class CraftingParams
     public ICraftingResult Recipe;
     public float NextCraftingTime;
     public BlockFacing? Facing;
+    public int Limit;
     public int Amount;
 }
 
