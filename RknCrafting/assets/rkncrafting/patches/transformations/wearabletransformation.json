@@ -1,0 +1,351 @@
+﻿[
+  {
+    "file": "game:itemtypes/wearable/seraph/armor",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "armor-body-plate-*": {
+          translation: { x: 0, y: -0.7, z: 0 },
+          scale: 0.61
+        },
+        "armor-legs-*": {
+          translation: { x: 0, y: -0.2, z: 0 },
+          scale: 0.61
+        },
+        "armor-head-*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        },
+        "*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        } 
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/armor-hide",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "armor-body-*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        },
+        "armor-legs-*": {
+          translation: { x: 0, y: -0.2, z: 0 },
+          scale: 0.61
+        },
+        "armor-head-*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/head",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/head-fur",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/lowerbody",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.2, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/upperbody",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/upperbodyover",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/face",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/waist",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.75, z: 0 },
+          scale: 0.62
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/neck",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/hand",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.58, z: 0 },
+          scale: 0.56
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/arm",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.75, z: 0 },
+          scale: 0.65
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/shoulder",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1, z: 0 },
+          scale: 0.65
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/emblem",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0.15, y: -1.3, z: 0 },
+          rotation: { x: 0, y: 0, z: -90 },
+          origin: { x: 0.35, y: 1.3, z: 0.5 },
+          scale: 0.74
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/emblem-butterflypin",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0.15, y: -1.3, z: 0 },
+          rotation: { x: 0, y: 0, z: -90 },
+          origin: { x: 0.35, y: 1.3, z: 0.5 },
+          scale: 0.74
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/head",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/lowerbody",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.2, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/upperbody",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/upperbodyover",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.55, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/face",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1.15, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/waist",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.75, z: 0 },
+          scale: 0.62
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/neck",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1, z: 0 },
+          scale: 0.61
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/hand",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.58, z: 0 },
+          scale: 0.56
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/arm",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -0.75, z: 0 },
+          scale: 0.65
+        }
+      }
+    }
+  },
+  {
+    "file": "game:itemtypes/wearable/seraph/villager/nadiya/shoulder",
+    "op": "addmerge",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransformByType": {
+        "*": {
+          translation: { x: 0, y: -1, z: 0 },
+          scale: 0.65
+        }
+      }
+    }
+  }
+]
