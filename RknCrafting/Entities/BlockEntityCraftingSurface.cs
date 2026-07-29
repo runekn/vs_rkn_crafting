@@ -8,6 +8,7 @@ using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
@@ -92,15 +93,15 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        sb.Append("Selected: ").AppendLine(scanResult.SelectionItemStack.GetName());
+        sb.Append(Lang.Get("rkncrafting:ui-info-selectedrecipe")).AppendLine(scanResult.SelectionItemStack.GetName());
         if (ValidRecipes is { Count: > 1 })
         {
-            sb.Append(ValidRecipes.Count - 1).AppendLine(" more valid recipes");
+            sb.Append(ValidRecipes.Count - 1).AppendLine(Lang.Get("rkncrafting:ui-info-recipesextra"));
         }
 
         if (SelectedLimit > 0)
         {
-            sb.Append("Crafting limit: ").AppendLine(SelectedLimit.ToString());
+            sb.Append(Lang.Get("rkncrafting:ui-info-selectedlimit")).AppendLine(SelectedLimit.ToString());
         }
     }
 

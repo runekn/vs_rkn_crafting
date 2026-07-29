@@ -3,6 +3,7 @@ using RKN.Crafting;
 using RKN.Crafting.Entities;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
@@ -77,37 +78,37 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
         ElementBounds insetBounds = elementBounds.ForkBoundingParent(3.0, 3.0, 3.0, 3.0);
         ElementBounds clipBounds = elementBounds.CopyOffsetedSibling();
         clipBounds.fixedHeight -= 3.0;
-        double countWidth = 60;
-        ElementBounds countBounds = new()
-        {
-            Alignment = EnumDialogArea.LeftTop,
-            BothSizing = ElementSizing.Fixed,
-            fixedHeight = 90,
-            fixedWidth = countWidth,
-            fixedX = dialogPadding,
-            fixedY = dialogPadding + 30.0,
-            /*fixedPaddingX = 2.0,
-            fixedPaddingY = 2.0*/
-        };
-        ElementBounds compoBounds = insetBounds.ForkBoundingParent(dialogPadding + 10 + countWidth, dialogPadding + 30.0, dialogPadding + 20.0, dialogPadding);
+        ElementBounds compoBounds = insetBounds.ForkBoundingParent(dialogPadding, dialogPadding + 30.0, dialogPadding + 20.0, dialogPadding + 30 + 10);
         compoBounds.WithAlignment(EnumDialogArea.CenterMiddle).WithFixedAlignmentOffset(20.0, 0.0);
         ElementBounds scrollbarBounds = ElementStdBounds.VerticalScrollbar(insetBounds).WithParent(compoBounds);
         scrollbarBounds.fixedOffsetX -= 2.0;
         scrollbarBounds.fixedWidth = 15.0;
+        ElementBounds limitLabelBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 80, 30);
+        ElementBounds limitInputBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 70, 30);
+        ElementBounds limitResetBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 70, 30);
+        ElementBounds limitBounds = new()
+        {
+            Alignment = EnumDialogArea.LeftTop,
+            BothSizing = ElementSizing.FitToChildren,
+            fixedX = dialogPadding
+        };
+        limitBounds.FixedUnder(insetBounds, 10f);
+        limitInputBounds.FixedRightOf(limitLabelBounds);
+        limitResetBounds.FixedRightOf(limitInputBounds);
         SingleComposer = capi.Gui.CreateCompo("inventory-recipes", compoBounds)
             .AddShadedDialogBG(ElementBounds.Fill)
-            .AddDialogTitleBar("Select Recipe", CloseIconPressed)
-            .AddInset(countBounds, 1)
-            .BeginChildElements()
-            .AddStaticText("Limit", CairoFont.WhiteSmallText(), ElementBounds.Fixed(EnumDialogArea.CenterTop, 0, 0, countWidth, 30))
-            .AddNumberInput(ElementBounds.Fixed(EnumDialogArea.CenterMiddle, 0, 0, countWidth, 30), OnCountChanged, key: "limit")
-            .AddSmallButton("Reset", OnLimitReset, ElementBounds.Fixed(EnumDialogArea.CenterBottom, 0, 0, countWidth, 30))
-            .EndChildElements()
+            .AddDialogTitleBar(Lang.Get("rkncrafting:ui-selectrecipe-title"), CloseIconPressed)
             .AddVerticalScrollbar(OnNewScrollbarvalue, scrollbarBounds, "scrollbar")
             .AddInset(insetBounds, 3)
             .BeginClip(clipBounds)
             .AddItemSlotGrid(recipeInventory, null, 6, inventoryBounds, "slotgrid")
             .EndClip()
+            .AddInset(limitBounds, 1)
+            .BeginChildElements()
+            .AddStaticText(Lang.Get("rkncrafting:ui-selectrecipe-limit-label"), CairoFont.WhiteSmallishText(), limitLabelBounds)
+            .AddNumberInput(limitInputBounds, OnCountChanged, key: "limit")
+            .AddSmallButton(Lang.Get("rkncrafting:ui-selectrecipe-limit-reset"), OnLimitReset, limitResetBounds)
+            .EndChildElements()
             .Compose();
         SingleComposer.GetNumberInput("limit").SetValue(entity.SelectedLimit);
         SingleComposer.GetScrollbar("scrollbar").SetHeights((float)elementBounds.fixedHeight, (float)(inventoryBounds.fixedHeight + unscaledSlotPadding));
