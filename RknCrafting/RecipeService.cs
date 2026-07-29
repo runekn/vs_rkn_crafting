@@ -342,16 +342,33 @@ public class RecipeService
     
     private int ConsumeRecipe(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemStack result, bool bulk)
     {
-        if (api.RcServerConfig().EnableGridless)
-        {
-            return ConsumeRecipeGridless(wrapper.RecipeWithoutTools.ResolvedIngredients!, wrapper, inputSlots, result, bulk);
-        }
+        GridRecipe recipe = wrapper.RecipeWithoutTools;
+        List<ItemSlot> allItems = [.. inputSlots.Items];
+        if (inputSlots.PrimaryTool != null) allItems.Add(inputSlots.PrimaryTool);
+        if (inputSlots.OffhandTool != null) allItems.Add(inputSlots.OffhandTool);
+        ItemSlot[] itemsArr = allItems.ToArray();
+        bool gridless = api.RcServerConfig().EnableGridless;
         int amount = 0;
-        while (
-            MatchesRecipe(inputSlots, wrapper, false, null) && 
-            wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.Player, inputSlots.Items, 3) &&
-            ConsumeRecipeTools(wrapper, inputSlots))
+        while (MatchesRecipe(inputSlots, wrapper, gridless, null))
         {
+            if (!result.Collectible.ConsumeCraftingIngredients(itemsArr, new DummySlot(result), recipe))
+            {
+                if (gridless)
+                {
+                    if (!ConsumeRecipeGridless(wrapper.RecipeWithoutTools.ResolvedIngredients!, wrapper, inputSlots,
+                            itemsArr))
+                    {
+                        return amount;
+                    }
+                }
+                else
+                {
+                    if (!ConsumeRecipeGridful(wrapper, inputSlots))
+                    {
+                        return amount;
+                    }
+                }
+            }
             amount++;
             if (!bulk)
             {
@@ -360,6 +377,12 @@ public class RecipeService
         }
 
         return amount;
+    }
+
+    private bool ConsumeRecipeGridful(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
+    {
+        return wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.Player, inputSlots.Items, 3) &&
+               ConsumeRecipeTools(wrapper, inputSlots);
     }
 
     private bool ConsumeRecipeTools(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
@@ -385,51 +408,37 @@ public class RecipeService
         return anyMatch;
     }
 
-    private int ConsumeRecipeGridless(CraftingRecipeIngredient?[] ingredients, GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemStack result, bool bulk)
+    private bool ConsumeRecipeGridless(CraftingRecipeIngredient?[] ingredients, GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemSlot[] inputArr)
     {
-        GridRecipe recipe = wrapper.RecipeWithoutTools;
-        List<ItemSlot> allItems = [.. inputSlots.Items];
-        if (inputSlots.PrimaryTool != null) allItems.Add(inputSlots.PrimaryTool);
-        if (inputSlots.OffhandTool != null) allItems.Add(inputSlots.OffhandTool);
-        ItemSlot[] itemsArr = allItems.ToArray();
-        if (result.Collectible.ConsumeCraftingIngredients(itemsArr, new DummySlot(result), recipe))
+        foreach (CraftingRecipeIngredient? ingredient in ingredients)
         {
-            api.RcLogger().Debug("Recipe {0} was rejected by collectible!", recipe.Name);
-            return 0;
-        }
-        int amount = 0;
-        while (true)
-        {
-            foreach (CraftingRecipeIngredient? ingredient in ingredients)
+            if (ingredient == null)
             {
-                if (ingredient == null)
+                continue;
+            }
+            int quantity = ingredient.Quantity;
+            foreach (ItemSlot slot in inputArr)
+            {
+                if (slot.Empty || !ingredient.SatisfiesAsIngredient(slot.Itemstack, false))
                 {
                     continue;
                 }
-                int quantity = ingredient.Quantity;
-                foreach (ItemSlot slot in itemsArr)
+                int size = slot.Itemstack.StackSize;
+                slot.Itemstack.Collectible.OnConsumedByCrafting(inputArr, slot, wrapper.RecipeWithoutTools, ingredient, inputSlots.Player, quantity);
+                quantity -= size;
+                if (quantity <= 0)
                 {
-                    if (slot.Empty || !ingredient.SatisfiesAsIngredient(slot.Itemstack, false))
-                    {
-                        continue;
-                    }
-                    int size = slot.Itemstack.StackSize;
-                    slot.Itemstack.Collectible.OnConsumedByCrafting(itemsArr, slot, recipe, ingredient, inputSlots.Player, quantity);
-                    quantity -= size;
-                    if (quantity <= 0)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
-            amount++;
-            if (!bulk || 
-                !inputSlots.Items.Any(i => i != null) || 
-                !MatchesRecipe(inputSlots, wrapper, true, null))
+
+            if (quantity > 0)
             {
-                return amount;
+                return false;
             }
         }
+
+        return true;
     }
 
     private class UnfinishedCraftingResult : ICraftingResult
@@ -529,7 +538,7 @@ public class RecipeService
 
         public ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
         {
-            int amount = service.ConsumeRecipe(wrapper, inputSlots, output, bulk);
+            int amount = service.ConsumeRecipe(wrapper, inputSlots, output.Clone(), bulk);
             if (amount <= 0)
             {
                 return null;
