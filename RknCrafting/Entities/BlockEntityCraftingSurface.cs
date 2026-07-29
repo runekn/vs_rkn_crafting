@@ -562,7 +562,13 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private void UpdateCraftingSurfaceModifier()
     {
         BlockPos down = Pos.DownCopy();
-        craftingSurfaceTimeModifier = Api.World.BlockAccessor.GetBlock(down).GetBehavior<BlockBehaviorSpawnCraftingSurface>().GetCraftingModifier(Api.World, down);
+        BlockBehavior? behavior = Api.World.BlockAccessor.GetBlock(down)?.GetBehavior(typeof(BlockBehaviorSpawnCraftingSurface), true);
+        if (behavior is not BlockBehaviorSpawnCraftingSurface spawnBehavior)
+        {
+            Api.RcLogger().Error("Could not find BlockBehaviorSpawnCraftingSurface at ({0}, {1}, {2})", down.X, down.Y, down.Z);
+            return;
+        }
+        craftingSurfaceTimeModifier = spawnBehavior.GetCraftingModifier(Api.World, down);
     }
 
     public void MarkIngredientsDirty(IPlayer? byPlayer)
