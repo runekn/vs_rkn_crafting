@@ -83,7 +83,7 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
         ElementBounds scrollbarBounds = ElementStdBounds.VerticalScrollbar(insetBounds).WithParent(compoBounds);
         scrollbarBounds.fixedOffsetX -= 2.0;
         scrollbarBounds.fixedWidth = 15.0;
-        ElementBounds limitLabelBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 80, 30);
+        ElementBounds limitLabelBounds = ElementBounds.FixedSize(EnumDialogArea.LeftMiddle, 70, 25);
         ElementBounds limitInputBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 70, 30);
         ElementBounds limitResetBounds = ElementBounds.FixedSize(EnumDialogArea.LeftTop, 70, 30);
         ElementBounds limitBounds = new()
@@ -132,7 +132,7 @@ internal class RecipeSelectionDialog(ICoreClientAPI capi) : GuiDialog(capi)
         {
             v = (float) Math.Floor(v);
         }
-        // TODO: doesn't work
+        // TODO: doesn't work. Can't use SetValue since that will be recursive
         //input.Text = v.ToString();
         entity.SetLimit((int)v);
     }
