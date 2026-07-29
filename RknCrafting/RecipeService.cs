@@ -481,7 +481,7 @@ public class RecipeService
             {
                 slot.TakeOut(1);
                 amount++;
-                if (!bulk)
+                if (!bulk || slot.Empty || slot.Itemstack.StackSize <= 0)
                 {
                     break;
                 }
