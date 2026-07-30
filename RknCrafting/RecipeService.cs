@@ -44,13 +44,16 @@ public class RecipeService
             recipes.Add(wrapper);
         }
 
-        // Fix client-side crate open recipe. Because in the recipes the client receives the fast search ingredient has attribute lidState="opened", which it doesn't on server. 
+        // Fix client-side recipes. Because the client receives the fast search ingredients with attributes, which it doesn't have on server.
+        if (!api.RcLocalConfig().ExperimentalFixAttributeRecipes)
+        {
+            return;
+        }
         foreach (KeyValuePair<IRecipeIngredientBase, List<IRecipeBase>> pair in api.World.FastSearchRecipesByIngredient)
         {
-            AssetLocation? code = pair.Key.Code;
-            if (code != null && code.Domain.Equals("game") && code.Path.Equals("crate"))
+            if (pair.Key.ResolvedItemStack?.Attributes?.Count > 0)
             {
-                pair.Key.ResolvedItemStack!.Attributes.RemoveAttribute("lidState");
+                pair.Key.ResolvedItemStack.Attributes = new TreeAttribute();
             }
         }
     }

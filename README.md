@@ -8,6 +8,7 @@ See [Documentation](ReadmeAssets/readme.html) for more details.
 
 ## Major release changelog
 
+* 1.3.x: Add optional consecutive crafting limit
 * 1.2.x: Support mod blocks as crafting surfaces. Support more mouse mode controls. Support partial selection box render.
 * 1.1.x: Support mouse mode
 * 1.0.x: Nothing

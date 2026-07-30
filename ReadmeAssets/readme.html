@@ -45,7 +45,7 @@
 <hr />
 <p>&nbsp;</p>
 <p>File: <code>%AppData%/Roaming/VintagestoryData/ModConfig/rkncrafting.json</code></p>
-<table style="border-collapse: collapse; width: 67.8532%; height: 328.7px; border-spacing: 100pxpx;" border="1" cellpadding="1">
+<table style="border-collapse: collapse; width: 67.8532%; height: 409px;" border="1" cellpadding="1">
     <tbody>
     <tr style="height: 39.4px;">
         <td style="width: 26.4139%; height: 39.4px;"><strong>&nbsp;Key</strong></td>
@@ -113,11 +113,17 @@
         <td style="width: 53.3926%; height: 58.6px; text-align: left;">Block all right click interactions after crafting finished for this amount of seconds. This is to prevent unintentional actions right after crafting has ended when you are still holding right click. Releasing right click will also unblock interactions.</td>
         <td style="width: 13.2474%; height: 58.6px; text-align: center;">Client</td>
     </tr>
-    <tr>
-        <td style="width: 26.4139%;"><code>RenderAllSlots</code></td>
-        <td style="width: 6.94744%; text-align: center;"><code>false</code></td>
-        <td style="width: 53.3926%; text-align: left;">Render selection boxes for all slots at all times. Turning this config off is cleaner and makes it easier to see which slot you are aiming at. Turning it on can make it easier to get an overview of the whole grid on large surfaces. This config has no effect in gridless mode.</td>
-        <td style="width: 13.2474%; text-align: center;">Client</td>
+    <tr style="height: 58.6px;">
+        <td style="width: 26.4139%; height: 58.6px;"><code>RenderAllSlots</code></td>
+        <td style="width: 6.94744%; text-align: center; height: 58.6px;"><code>false</code></td>
+        <td style="width: 53.3926%; text-align: left; height: 58.6px;">Render selection boxes for all slots at all times. Turning this config off is cleaner and makes it easier to see which slot you are aiming at. Turning it on can make it easier to get an overview of the whole grid on large surfaces. This config has no effect in gridless mode.</td>
+        <td style="width: 13.2474%; text-align: center; height: 58.6px;">Client</td>
+    </tr>
+    <tr style="height: 21.7px;">
+        <td style="width: 26.4139%; height: 21.7px;"><code>ExperimentalFixAttributeRecipes</code></td>
+        <td style="width: 6.94744%; text-align: center; height: 21.7px;"><code>true</code></td>
+        <td style="width: 53.3926%; text-align: left; height: 21.7px;">An experimental fix to recipes that use attribute matching. Try disabling if you get weird recipe results.</td>
+        <td style="width: 13.2474%; text-align: center; height: 21.7px;">Client</td>
     </tr>
     </tbody>
 </table>
@@ -148,6 +154,7 @@
 <p>&nbsp;</p>
 <ul>
     <li>More and better animations based on tools and recipe</li>
+    <li>If gridless enabled, change handbook grid recipes to simple list of ingredients.</li>
 </ul>
 <h2><strong>Known issues</strong></h2>
 <hr />
