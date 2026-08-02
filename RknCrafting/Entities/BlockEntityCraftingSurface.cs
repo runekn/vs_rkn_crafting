@@ -249,11 +249,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         if (craftingParams.Bulk && !byPlayer.Entity.Controls.ShiftKey)
         {
-            // Player let go of bulk modifier key
-            EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
-            Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
-            Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
-            ResetState();
+            Api.RcLogger().Debug("Stopping crafting by {0} due to releasing the bulk key", byPlayer.PlayerName);
+            ServerStopCrafting();
             return false;
         }
         if (secondsUsed > craftingParams.NextCraftingTime && IsCrafting(byPlayer))
