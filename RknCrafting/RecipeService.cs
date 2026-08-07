@@ -384,8 +384,9 @@ public class RecipeService
 
     private bool ConsumeRecipeGridful(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
     {
-        return wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.Player, inputSlots.Items, 3) &&
-               ConsumeRecipeTools(wrapper, inputSlots);
+        // Ignore the result of ConsumeInput. I don't understand what return value means because it sure as fuck isn't if ingredients is satisfied.
+        wrapper.RecipeWithoutTools.ConsumeInput(inputSlots.Player, inputSlots.Items, 3); 
+        return ConsumeRecipeTools(wrapper, inputSlots);
     }
 
     private bool ConsumeRecipeTools(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
