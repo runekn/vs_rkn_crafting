@@ -159,7 +159,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     public bool IsCrafting(IPlayer byPlayer)
     {
-        return craftingParams?.Player.ClientId == byPlayer.ClientId;
+        return craftingParams?.Player?.ClientId == byPlayer.ClientId;
     }
 
     public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing, int limit)
@@ -298,7 +298,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public void CancelCrafting(IPlayer byPlayer)
     {
         timeoutTimer = 0;
-        if (craftingParams?.Player?.ClientId != byPlayer.ClientId)
+        if (IsCrafting(byPlayer))
         {
             return;
         }
@@ -601,7 +601,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
 public class CraftingParams
 {
-    public IPlayer Player;
+    public IPlayer? Player;
     public bool Bulk;
     public bool OtherPlayer;
     public float RecipeCraftingTimeModifier;
