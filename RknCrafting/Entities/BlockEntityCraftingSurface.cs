@@ -126,16 +126,22 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         base.FromTreeAttributes(tree, worldForResolving);
         timeoutTimer = tree.GetFloat("timeoutTimer");
-        if (tree.GetBool("isCrafting"))
-        {
-            craftingParams ??= new CraftingParams()
+        if (Api is { Side: EnumAppSide.Client }) { 
+            string? player = tree.GetString("craftingPlayer");
+            if (player != null)
             {
-                OtherPlayer = true
-            };
-        }
-        else if (craftingParams?.OtherPlayer == true)
-        {
-            craftingParams = null;
+                if (player != capi.World.Player.PlayerUID)
+                {
+                    craftingParams = new CraftingParams()
+                    {
+                        Player = capi.World.PlayerByUid(player)
+                    };
+                }
+            }
+            else if (craftingParams?.Player != capi.World.Player)
+            {
+                craftingParams = null;
+            }
         }
         dirtyRecipes = true;
         if (recipeSelectionDialog != null && recipeSelectionDialog.IsOpened())
@@ -149,7 +155,11 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     {
         base.ToTreeAttributes(tree);
         tree.SetFloat("timeoutTimer", timeoutTimer);
-        tree.SetBool("isCrafting", craftingParams != null);
+        if (craftingParams?.Player != null)
+        {
+            string player = craftingParams.Player.PlayerUID;
+            tree.SetString("craftingPlayer", player);
+        }
     }
 
     protected override float[][] genTransformationMatrices()
@@ -243,17 +253,21 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public bool OnCraftingStep(float secondsUsed, IPlayer byPlayer)
     {
         timeoutTimer = 0;
-        if (Api.Side != EnumAppSide.Server || craftingParams == null)
+        if (!IsCrafting(byPlayer))
+        {
+            return false;
+        }
+        if (Api.Side != EnumAppSide.Server)
         {
             return true;
         }
-        if (craftingParams.Bulk && !byPlayer.Entity.Controls.ShiftKey)
+        if (craftingParams!.Bulk && !byPlayer.Entity.Controls.ShiftKey)
         {
             Api.RcLogger().Debug("Stopping crafting by {0} due to releasing the bulk key", byPlayer.PlayerName);
             ServerStopCrafting();
             return false;
         }
-        if (secondsUsed > craftingParams.NextCraftingTime && IsCrafting(byPlayer))
+        if (secondsUsed > craftingParams.NextCraftingTime)
         {
             craftingParams.Amount++;
             craftingParams.NextCraftingTime = secondsUsed + GetCraftingTime();
@@ -298,7 +312,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     public void CancelCrafting(IPlayer byPlayer)
     {
         timeoutTimer = 0;
-        if (IsCrafting(byPlayer))
+        if (!IsCrafting(byPlayer))
         {
             return;
         }
@@ -601,9 +615,8 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
 public class CraftingParams
 {
-    public IPlayer? Player;
+    public IPlayer Player;
     public bool Bulk;
-    public bool OtherPlayer;
     public float RecipeCraftingTimeModifier;
     public EnumCraftingAnimation Animation;
     public ICraftingResult Recipe;

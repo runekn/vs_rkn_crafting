@@ -237,11 +237,7 @@ public class BlockCraftingSurface : Block
         {
             return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
         }
-        if (be.IsCrafting(byPlayer))
-        {
-            return be.OnCraftingStep(secondsUsed, byPlayer);
-        }
-        return false;
+        return be.OnCraftingStep(secondsUsed, byPlayer);
     }
     
     public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -252,10 +248,7 @@ public class BlockCraftingSurface : Block
             base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
             return;
         }
-        if (be.IsCrafting(byPlayer))
-        {
-            be.CancelCrafting(byPlayer);
-        }
+        be.CancelCrafting(byPlayer);
     }
 
     public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
@@ -266,10 +259,7 @@ public class BlockCraftingSurface : Block
             base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
             return true;
         }
-        if (be.IsCrafting(byPlayer))
-        {
-            be.CancelCrafting(byPlayer);
-        }
+        be.CancelCrafting(byPlayer);
         return true;
     }
 
