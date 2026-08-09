@@ -189,7 +189,7 @@ public class RknCraftingModSystem : ModSystem
 
     private void CheckPauseInteractions(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
-        if (action == EnumEntityAction.InWorldRightMouseDown && (Environment.TickCount - BeginPauseInteractions) < (LocalConfig.PauseInteractPostCraftSeconds * 1000))
+        if (BeginPauseInteractions > 0 && action == EnumEntityAction.InWorldRightMouseDown && ((uint) Environment.TickCount - BeginPauseInteractions) < (LocalConfig.PauseInteractPostCraftSeconds * 1000))
         {
             handled = EnumHandling.PreventDefault;
         }

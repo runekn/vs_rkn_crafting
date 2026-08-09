@@ -52,7 +52,7 @@ public static class CoreApiExtensions
 
     public static void RcPauseInteractions(this ICoreAPI api)
     {
-        api.ModLoader.GetModSystem<RknCraftingModSystem>().BeginPauseInteractions = Environment.TickCount;
+        api.ModLoader.GetModSystem<RknCraftingModSystem>().BeginPauseInteractions = (uint) Environment.TickCount; // uint so it does not overflow into negative
     }
     
     public static void RcTriggerIngameError(this ICoreAPI api, object sender, string error)

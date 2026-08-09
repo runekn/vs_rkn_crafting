@@ -132,7 +132,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             {
                 if (player != capi.World.Player.PlayerUID)
                 {
-                    craftingParams = new CraftingParams()
+                    craftingParams = new CraftingParams
                     {
                         Player = capi.World.PlayerByUid(player)
                     };
