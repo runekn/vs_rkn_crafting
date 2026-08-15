@@ -625,13 +625,3 @@ public class CraftingParams
     public int Limit;
     public int Amount;
 }
-
-// We don't use the DummySlot that comes with VanillaAPI, because the game assumes it is only used by handbook.
-internal class DummySlot : ItemSlot
-{
-    public DummySlot(ItemStack? stack) : base(null)
-    {
-        Itemstack = stack;
-        MarkDirty();
-    }
-}

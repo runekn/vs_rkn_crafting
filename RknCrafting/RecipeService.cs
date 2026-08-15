@@ -4,7 +4,6 @@ using System.Linq;
 using RknCrafting.Entities;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
-using DummySlot = RKN.Crafting.Entities.DummySlot;
 
 namespace RKN.Crafting;
 
@@ -323,7 +322,7 @@ public class RecipeService
     {
         if (output == null)
         {
-            ItemSlot slot = new DummySlot(null);
+            ItemSlot slot = new DummyInventory(null, inputSlots.Player, api)[0]!;
             wrapper.RecipeWithoutTools.GenerateOutputStack(inputSlots.Items, slot);
             output = slot.Itemstack;
         }
@@ -354,7 +353,7 @@ public class RecipeService
         int amount = 0;
         while (MatchesRecipe(inputSlots, wrapper, gridless, null))
         {
-            if (!result.Collectible.ConsumeCraftingIngredients(itemsArr, new DummySlot(result), recipe))
+            if (!result.Collectible.ConsumeCraftingIngredients(itemsArr, new DummyInventory(result, inputSlots.Player, api)[0]!, recipe))
             {
                 if (gridless)
                 {
@@ -649,3 +648,44 @@ public interface ICraftingResult
 }
 
 public record RecipeInputSlots(ItemSlot[] Items, IPlayer Player, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);
+
+// We don't use the DummySlot that comes with VanillaAPI, because the game assumes it is only used by handbook.
+internal class DummySlot : ItemSlot
+{
+    public DummySlot(ItemStack? stack, InventoryBase inventory) : base(inventory)
+    {
+        Itemstack = stack;
+    }
+}
+
+internal class DummyInventory : InventoryBase
+{
+    private ItemSlot? slot;
+    
+    public DummyInventory(ItemStack? stack, IPlayer? player, ICoreAPI api) : base("crafting-output-dummy-inventory", "0", api)
+    {
+        if (player != null)
+        {
+            openedByPlayerGUIds.Add(player.PlayerUID);   
+        }
+        slot = new DummySlot(stack, this);
+    }
+
+    public override void FromTreeAttributes(ITreeAttribute tree)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ToTreeAttributes(ITreeAttribute tree)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override int Count => 1;
+
+    public override ItemSlot? this[int slotId]
+    {
+        get => slot;
+        set => slot = value;
+    }
+}
