@@ -187,7 +187,7 @@ public class RecipeService
 
     private bool MatchesRecipe(RecipeInputSlots inputSlots, GridRecipeWrapper wrapper, bool gridless, AssetLocation?[]? usedTools)
     {
-        if (!wrapper.RecipeWithoutTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
+        if (!wrapper.RecipeWithTools.Enabled || wrapper.RecipeWithoutTools.ResolvedIngredients == null)
         {
             return false;
         }
