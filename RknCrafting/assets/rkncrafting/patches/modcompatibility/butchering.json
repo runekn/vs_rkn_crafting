@@ -34,15 +34,5 @@
         }
       }
     }
-  },
-  {
-    "file": "butchering:itemtypes/tool/hook",
-    "op": "remove",
-    "path": "/particlesTextureCode",
-    "dependsOn": [
-      {
-        "modid": "butchering"
-      }
-    ]
   }
 ]
