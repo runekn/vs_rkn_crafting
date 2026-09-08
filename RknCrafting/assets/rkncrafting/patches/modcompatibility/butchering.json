@@ -34,5 +34,53 @@
         }
       }
     }
+  },
+  {
+    "file": "butchering:itemtypes/tool/hook",
+    "op": "addmerge",
+    "path": "/attributes",
+    "dependsOn": [
+      { "modid": "butchering" }
+    ],
+    "value": {
+      "craftingIngredientTransform": {
+        "translation": { "x": 0, "y": -0.61, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": -90 },
+        "origin": { "x": 0.5, "y": 0.65, "z": 0.5 }
+      }
+    }
+  },
+
+  {
+    "file": "butchering:blocktypes/butcherhook",
+    "op": "addmerge",
+    "path": "/attributes",
+    "dependsOn": [
+      { "modid": "butchering" }
+    ],
+    "value": {
+      "craftingIngredientTransform": {
+        "translation": { "x": 0, "y": -0.48, "z": 0.2 },
+        "rotation": { "x": -8, "y": 0, "z": 0 },
+        "scale": 0.75
+      }
+    }
+  },
+
+  {
+    "file": "butchering:blocktypes/butcherhookceiling",
+    "op": "addmerge",
+    "path": "/attributes",
+    "dependsOn": [
+      { "modid": "butchering" }
+    ],
+    "value": {
+      "craftingIngredientTransform": {
+        "translation": { "x": 0, "y": -1, "z": 0 },
+        "rotation": { "x": -180, "y": 0, "z": 0 },
+        "origin": { "x": 0.5, "y": 1, "z": 0.5 },
+        "scale": 0.75
+      }
+    }
   }
 ]
