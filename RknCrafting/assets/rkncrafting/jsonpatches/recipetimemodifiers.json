@@ -399,11 +399,9 @@
     "file": "game:recipes/grid/oillamp",
     "side": "server",
     "op": "addmerge",
-    "path": "/-/",
+    "path": "/-/attributes/",
     "value": {
-      "attributes": {
-        "craftingTimeModifier": 3
-      }
+      "craftingTimeModifier": 3
     }
   },
   {
