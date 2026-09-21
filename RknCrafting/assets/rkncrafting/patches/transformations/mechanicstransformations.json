@@ -1,0 +1,15 @@
+﻿[
+  {
+    "file": "game:blocktypes/mechanics/angledgears",
+    "op": "add",
+    "path": "/attributes",
+    "value": {
+      "craftingIngredientTransform": {
+        "translation": { "x": 0, "y": -0.43, "z": -0.4 },
+        "rotation": { "x": 90, "y": 0, "z": 0 },
+        "origin": { "x": 0.5, "y": 0.5, "z": 0.9 },
+        "scale": 0.65
+      }
+    }
+  }
+]
