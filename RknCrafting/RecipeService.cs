@@ -444,6 +444,27 @@ public class RecipeService
         return true;
     }
 
+    private static ItemStack[] CompileOutput(ItemStack itemStack, int amount)
+    {
+        if (amount <= 0)
+        {
+            return [];
+        }
+        int total = itemStack.StackSize * amount;
+        int maxSize = itemStack.Collectible.MaxStackSize;
+        ItemStack[] results = new ItemStack[(int) Math.Ceiling((double) total / maxSize)];
+        for (int i = 0; i < results.Length; i++)
+        {
+            int stack = Math.Min(total, maxSize);
+            ItemStack outputStack = itemStack.Clone();
+            outputStack.StackSize = stack;
+            total -= stack;
+            results[i] = outputStack;
+        }
+
+        return results;
+    }
+
     private class UnfinishedCraftingResult : ICraftingResult
     {
         private readonly RecipeService service;
@@ -483,7 +504,7 @@ public class RecipeService
             return service.ToolsMatchesRecipe(wrapper.ToolIngredients, usedTools, inputSlots, false);
         }
 
-        public ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
+        public ItemStack[] GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
         {
             ItemSlot slot = inputSlots.Items.First(s => !s.Empty);
             int amount = 0;
@@ -498,9 +519,7 @@ public class RecipeService
                     break;
                 }
             }
-            ItemStack outputStack = output.Clone();
-            outputStack.StackSize *= amount;
-            return outputStack;
+            return CompileOutput(output, amount);
         }
     }
 
@@ -539,16 +558,14 @@ public class RecipeService
             return service.MatchesRecipe(inputSlots, wrapper, gridless, null);
         }
 
-        public ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
+        public ItemStack[] GenerateOutput(RecipeInputSlots inputSlots, bool bulk)
         {
             int amount = service.ConsumeRecipe(wrapper, inputSlots, output.Clone(), bulk);
             if (amount <= 0)
             {
-                return null;
+                return [];
             }
-            ItemStack outputStack = intermediateOutput.Clone();
-            outputStack.StackSize *= amount;
-            return outputStack;
+            return CompileOutput(intermediateOutput, amount);
         }
     }
 }
@@ -644,7 +661,7 @@ public interface ICraftingResult
     ItemStack SelectionItemStack { get; }
     float CraftingTimeModifier { get; }
     bool Matches(RecipeInputSlots inputSlots);
-    ItemStack? GenerateOutput(RecipeInputSlots inputSlots, bool bulk);
+    ItemStack[] GenerateOutput(RecipeInputSlots inputSlots, bool bulk);
 }
 
 public record RecipeInputSlots(ItemSlot[] Items, IPlayer Player, ItemSlot? PrimaryTool, ItemSlot? OffhandTool);

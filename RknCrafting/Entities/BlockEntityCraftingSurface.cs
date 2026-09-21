@@ -470,14 +470,13 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
 
-        ItemStack? output = craftingParams.Recipe.GenerateOutput(inputSlots, craftingParams.Bulk);
-        if (output == null)
+        ItemStack[] outputs = craftingParams.Recipe.GenerateOutput(inputSlots, craftingParams.Bulk);
+        foreach (ItemStack output in outputs)
         {
-            return;
+            Api.World.SpawnCubeParticles(Pos.ToVec3d().Add(0.5f, 0, 0.5f), output, 1f, 6, 1f, null, new Vec3f(0.07f, 0.75f, 0.07f));
+            Api.World.SpawnItemEntity(output, Pos);
+            Api.RcLogger().Debug("Crafted {0}x {1} by {2}!", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
         }
-        Api.World.SpawnCubeParticles(Pos.ToVec3d().Add(0.5f, 0, 0.5f), output, 1f, 6, 1f, null, new Vec3f(0.07f, 0.75f, 0.07f));
-        Api.World.SpawnItemEntity(output, Pos);
-        Api.RcLogger().Debug("Crafted {0}x {1} by {2}!", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
     }
 
     private RecipeInputSlots? GetCraftingInputSlots(IPlayer byPlayer, BlockFacing? facing)
