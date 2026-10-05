@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RknCrafting.Entities;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -323,7 +324,7 @@ public class RecipeService
         if (output == null)
         {
             ItemSlot slot = new DummyInventory(null, inputSlots.Player, api)[0]!;
-            wrapper.RecipeWithoutTools.GenerateOutputStack(inputSlots.Items, slot);
+            wrapper.RecipeWithTools.GenerateOutputStack(GetIngredientGridWithTools(wrapper, inputSlots), slot);
             output = slot.Itemstack;
         }
         ItemStack actualOutput = output!;
@@ -341,7 +342,13 @@ public class RecipeService
         AssetLocation?[] usedTools = ItemUnfinishedCraft.GetUsedTools(inputSlots.Items.First(s => !s.Empty).Itemstack!, wrapper)!;
         return new UnfinishedCraftingResult(wrapper, usedTools, actualOutput!, output!, this);     
     }
-    
+
+    private ItemSlot[] GetIngredientGridWithTools(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
+    {
+        ItemSlot?[] arr = [inputSlots.OffhandTool, inputSlots.PrimaryTool];
+        return inputSlots.Items.AddRangeToArray(arr.Where(a => a != null).ToArray());
+    }
+
     private int ConsumeRecipe(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemStack result, bool bulk)
     {
         GridRecipe recipe = wrapper.RecipeWithoutTools;
