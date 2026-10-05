@@ -26,7 +26,7 @@ public class ItemUnfinishedCraft : Item
                 continue;
             }
 
-            string name = world.GetItem(asset).GetHeldItemName(null); // Hope this doesn't crash from NPE...
+            string name = world.GetItem(asset).GetHeldItemName(GetOutputStack(inSlot.Itemstack!));
             if (!first)
             {
                 dsc.Append(", ");
@@ -38,7 +38,7 @@ public class ItemUnfinishedCraft : Item
 
     public override string GetHeldItemName(ItemStack itemStack)
     {
-        ItemStack outputStack = itemStack.Attributes.GetItemstack("output");
+        ItemStack? outputStack = GetOutputStack(itemStack);
         if (outputStack == null)
         {
             return "ERROR: Unknown output";
