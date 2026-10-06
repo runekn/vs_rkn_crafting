@@ -173,10 +173,22 @@ public class RknCraftingModSystem : ModSystem
         }
     }
 
-    public void InitCatalog()
+    private void InitCatalog()
     {
         Mod.Logger.Event("Initializing recipe service");
         RecipeService = new RecipeService(api);
+    }
+    
+    public void OnServerConfigReceived()
+    {
+        InitCatalog();
+        
+        Mod.Logger.Event("Initializing floating count renderer");
+        if (api.RcLocalConfig().EnableFloatingCount && !api.RcServerConfig().EnableGridless)
+        {
+            GridCountRenderer renderer = new(capi);
+            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Ortho);
+        }
     }
 
     private void CheckResumeInteractions(MouseEvent e)

@@ -67,11 +67,11 @@ public class RknCraftingConfig
     public bool RenderAllSlots = false;
     [ProtoIgnore]
     public string RenderAllSlots_Comment = "Render selection boxes for all slots at all times. Turning this config off is cleaner and makes it easier to see which slot you are aiming at. Turning it on can make it easier to get an overview of the whole grid on large surfaces. This config has no effect in gridless mode.";
-    
-    [ProtoMember(12)]
-    public bool ExperimentalFixAttributeRecipes = true;
+
+    [ProtoMember(13)]
+    public bool EnableFloatingCount = true;
     [ProtoIgnore]
-    public string ExperimentalFixAttributeRecipes_Comment = "An experimental fix to recipes that use attribute matching. Try disabling if you get weird recipe results.";
+    public string EnableFloatingCount_Comment = "Display an in-world slot count. Only relevant for grid mode.";
 
     public override string ToString()
     {

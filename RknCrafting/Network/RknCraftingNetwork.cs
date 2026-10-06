@@ -105,7 +105,7 @@ public class RknCraftingNetwork
     {
         api.RcLogger().Debug("Received config from server: {0}", message.Config);
         api.RcSystem().ServerConfig = message.Config;
-        api.RcSystem().InitCatalog();
+        api.RcSystem().OnServerConfigReceived();
     }
 
     public void ClientStartedCrafting(CraftingParams craftingParams, BlockPos pos)
