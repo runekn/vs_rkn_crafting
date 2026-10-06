@@ -43,12 +43,7 @@ public class RecipeService
             GridRecipeWrapper wrapper = new(recipe, gridlesss, i, this);
             recipes.Add(wrapper);
         }
-
-        // Fix client-side recipes. Because the client receives the fast search ingredients with attributes, which it doesn't have on server.
-        if (!api.RcLocalConfig().ExperimentalFixAttributeRecipes)
-        {
-            return;
-        }
+        
         foreach (KeyValuePair<IRecipeIngredientBase, List<IRecipeBase>> pair in api.World.FastSearchRecipesByIngredient)
         {
             if (pair.Key.ResolvedItemStack?.Attributes?.Count > 0)
