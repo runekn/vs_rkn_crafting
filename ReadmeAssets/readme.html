@@ -120,9 +120,9 @@
         <td style="width: 13.2474%; text-align: center; height: 58.6px;">Client</td>
     </tr>
     <tr style="height: 21.7px;">
-        <td style="width: 26.4139%; height: 21.7px;"><code>ExperimentalFixAttributeRecipes</code></td>
+        <td style="width: 26.4139%; height: 21.7px;"><code>EnableFloatingCount</code></td>
         <td style="width: 6.94744%; text-align: center; height: 21.7px;"><code>true</code></td>
-        <td style="width: 53.3926%; text-align: left; height: 21.7px;">An experimental fix to recipes that use attribute matching. Try disabling if you get weird recipe results.</td>
+        <td style="width: 53.3926%; text-align: left; height: 21.7px;">Display an in-world slot count. Only relevant for grid mode.</td>
         <td style="width: 13.2474%; text-align: center; height: 21.7px;">Client</td>
     </tr>
     </tbody>
@@ -143,7 +143,8 @@
     <li>Unfinished crafting items may break after game update or installing/updating mods that add grid recipes. It is recommended that these are only temporary.</li>
     <li>Any mod that disables grid recipes will also disable for this mod.</li>
     <li><a href="https://mods.vintagestory.at/show/mod/59074">Immersive Inventory Slots</a> and this mod will override each other's UI changes if playing with DisableUICraftingGrid=true. To hide the grid again you must use HideCraftingGrid in that mod's config.</li>
-    <li>Some mod recipes uses tools as ingredients. This includes <a href="https://mods.vintagestory.at/butchering">buthering tables</a> and <a href="https://mods.vintagestory.at/tailorsdelight">needles</a>. In this case you will need to add the tool to the crafting surface. Unfortuantly the handbook will not indicate if this is the casefor a recipe.</li>
+    <li>Some mod recipes uses tools as ingredients. This includes <a href="https://mods.vintagestory.at/butchering">buthering tables</a> and <a href="https://mods.vintagestory.at/tailorsdelight">needles</a>. In this case you will need to add the tool to the crafting surface. Unfortuantly the handbook will not indicate if this is the case for a recipe.</li>
+    <li><a href="https://mods.vintagestory.at/overhaulliblegacycompat">Over Haul Lib Legacy Compat</a> may prevent <code>DisableUICraftingGrid</code> from working.</li>
 </ul>
 <h4><strong>Compatibility tips for other modders</strong></h4>
 <p>Use <code>craftingIngredientTransform</code> attribute to change how collectibles are rendered on crafting surfaces. This is also available in the <code>.tfedit</code> UI. By default the mod will auto-scale ingredients to fit the slot, but sometimes this does not work right.</p>
@@ -163,6 +164,8 @@
     <li>Existing unfinished crafting items may break after updating game or installing/updating mods. This is due to their reference to recipe that is not so resilient. It should not crash the game. Just makes you unable to complete the craft or recover the ingredients. In rare cases it may allow you to craft, but the output is different. Unsure if this is possible to fix without proper recipe ids.</li>
     <li>Particle effect don't work when playing on dedicated server</li>
     <li>Crates, reed and papyrus chests have cache collisions. Meaning they can be rendered as the wrong type.</li>
+    <li>Horsetail (and probably other plants) has no proper model</li>
+    <li>Coinage coins will result in question mark block when placed on crafting surface.</li>
 </ul>
 <h2><strong>Can I...?</strong></h2>
 <hr />
