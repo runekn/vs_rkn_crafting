@@ -341,7 +341,11 @@ public class RecipeService
     private ItemSlot[] GetIngredientGridWithTools(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots)
     {
         ItemSlot?[] arr = [inputSlots.OffhandTool, inputSlots.PrimaryTool];
-        return inputSlots.Items.AddRangeToArray(arr.Where(a => a != null).ToArray());
+        arr = arr
+            .Where(t => t != null)
+            .Where(t => wrapper.ToolIngredients.Any(i => i.SatisfiesAsIngredient(t.Itemstack)))
+            .ToArray();
+        return inputSlots.Items.AddRangeToArray(arr);
     }
 
     private int ConsumeRecipe(GridRecipeWrapper wrapper, RecipeInputSlots inputSlots, ItemStack result, bool bulk)
