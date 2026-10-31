@@ -76,7 +76,7 @@ public class RknCraftingConfig
     
     [ProtoMember(8)]
     [DefaultValue(true)]
-    public bool EnableExperimentalToolDetection = true; // TODO: WHY DO YOU NOT WORK!
+    public bool EnableExperimentalToolDetection = true;
     [ProtoIgnore]
     public string EnableExperimentalToolDetection_Comment = "Better support for mod tools. Optional for now until I'm sure it doesn't break something.";
 
