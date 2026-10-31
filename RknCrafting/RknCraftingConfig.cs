@@ -74,7 +74,7 @@ public class RknCraftingConfig
     public string EnableFloatingCount_Comment = "Display an in-world slot count. Only relevant for grid mode.";
     
     [ProtoMember(14)]
-    public bool EnableExperimentalToolDetection = false;
+    public bool EnableExperimentalToolDetection = true;
     [ProtoIgnore]
     public string EnableExperimentalToolDetection_Comment = "Better support for mod tools. Optional for now until I'm sure it doesn't break something.";
 
