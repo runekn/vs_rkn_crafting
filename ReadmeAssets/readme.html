@@ -6,7 +6,7 @@
 <ul style="text-align: left;">
     <li><span style="color: #34495e;"><strong><span style="font-size: 12pt;">Inworld crafting</span></strong></span><span style="font-size: 12pt;">: No more UI. Place ingredients on nearly any flat surface in the world and interact with them to craft.</span></li>
     <li><span style="color: #34495e;"><strong><span style="font-size: 12pt;">Grid or gridless</span></strong></span><span style="font-size: 12pt;">: Play with shaped recipes, like vanilla, in which case recipes are grid matched based on your perspective. Or play without any grid and simply craft from a heap of ingredients.</span></li>
-    <li><span style="font-size: 12pt;"><span style="color: #34495e;"><strong>Use your tools</strong></span>: Tools are no longer simple ingredients. They must now be used on the crafting surface. With animation, sounds, and effects!</span></li>
+    <li><span style="font-size: 12pt;"><span style="color: #34495e;"><strong>Use your tools</strong></span>: Tools are no longer simple ingredients. They must now be used on the crafting surface while held in hand. With animation, sounds, and effects!</span></li>
     <li><span style="color: #34495e;"><strong><span style="font-size: 12pt;">It matters where</span></strong></span>: Crafting on soil out in the wilderness will be slower than on a nice flat table.</li>
 </ul>
 <h4 style="text-align: left;"><strong><span style="font-size: 12pt;">What it <em>doesn't</em> do</span></strong></h4>
@@ -22,7 +22,7 @@
 <p>In this case, the crafting surface will only allow you to craft crude ladder if you look at it from north or south.</p>
 <h4><strong>Crafting</strong></h4>
 <p>Hold right click to start crafting. Once crafting has completed the recipe output will spawn and the ingredients will be consumed.<br />If a recipe requires tools, then these must be held in your hands while trying to craft. If a recipe requires two tools then the second one must be held in offhand slot.</p>
-<p>If there are enough remaining ingredients to continue crafting, then continuing to hold rick click will continue crafting at a slightly faster pace.</p>
+<p>If there are enough remaining ingredients to continue crafting, then continuing to hold right click will continue crafting at a slightly faster pace.</p>
 <h4><strong>Multi-stage crafting</strong></h4>
 <p>In case a recipe requires more tools than can be held at one time, you can start crafting with any of the required tools. Instead of producing the recipe output, it will instead produce an Unfinished Craft item. This item can be placed on a new crafting surface where you can then proceed to use one or more of the remaining tool requirements in the recipe. Only once all required tool has been used will it produce the final recipe output.</p>
 <p>Clicking the handbook hotkey on an Unfinished Craft itemslot will open the handbook page for the recipe output. Combining this with list of used tools in the itemslot hover description, allows you to see what tools remains to be used.</p>
@@ -37,10 +37,6 @@
 <p>Where <code>baseCraftingTimeSeconds</code> is configurable, <code>craftingSurfaceTimeModifier</code> depends on what block is under the crafting surface, <code>recipeCraftingTimeModifier</code> depends on the recipe, and <code>consecutiveModifer</code> decreases after each consecutive crafting (with minimnum cap).</p>
 <p>As an example for <code>craftingSurfaceTimeModifier</code>: tables provides the fastest crafting speed, while cobble stone is a bit slower, and soil is the slowest.</p>
 <p>For <code>recipeCraftingTimeModifier</code> the only recipes currently that modifies this are tool and weapon recipes.</p>
-<h4><strong>Adjusted recipes</strong></h4>
-<ul>
-    <li>Plank blocks, slabs, and stairs now requires hammer. Just because I wanted more recipes to have tool requirements now that it plays animations. Though I disabled durability cost at least.</li>
-</ul>
 <h2><strong>Config</strong></h2>
 <hr />
 <p>&nbsp;</p>
@@ -124,6 +120,18 @@
         <td style="width: 6.94744%; text-align: center; height: 21.7px;"><code>true</code></td>
         <td style="width: 53.3926%; text-align: left; height: 21.7px;">Display an in-world slot count. Only relevant for grid mode.</td>
         <td style="width: 13.2474%; text-align: center; height: 21.7px;">Client</td>
+    </tr>
+    <tr>
+        <td style="width: 26.4139%;"><code>EnableExperimentalToolDetection</code></td>
+        <td style="width: 6.94744%; text-align: center;">true</td>
+        <td style="width: 53.3926%; text-align: left;">Better support for mod tools. Optional for now until I'm sure it doesn't break something.</td>
+        <td style="width: 13.2474%; text-align: center;">Server</td>
+    </tr>
+    <tr>
+        <td style="width: 26.4139%;"><code>EnableHoldConsumedTools</code></td>
+        <td style="width: 6.94744%; text-align: center;">true</td>
+        <td style="width: 53.3926%; text-align: left;">Tools that are consumed must still be held in hand (as opposed to added as ingredient).</td>
+        <td style="width: 13.2474%; text-align: center;">Server</td>
     </tr>
     </tbody>
 </table>
