@@ -17,29 +17,22 @@ public class RecipeService
     private ICoreAPI api;
     private List<GridRecipeWrapper> recipes;
     private readonly List<ItemStack> toolSamples = [];
+    private bool useToolTag;
     private bool enableHoldConsumedTools;
+    private TagSet toolTags;
 
     public RecipeService(ICoreAPI api)
     {
         this.api = api;
         bool gridlesss = api.RcServerConfig().EnableGridless;
-        bool useToolTag = api.RcServerConfig().EnableExperimentalToolDetection;
+        useToolTag = api.RcServerConfig().EnableExperimentalToolDetection;
         enableHoldConsumedTools = api.RcServerConfig().EnableHoldConsumedTools;
-        TagSet toolTags = api.CollectibleTagRegistry.CreateTagSet("tool");
+        toolTags = api.CollectibleTagRegistry.CreateTagSet("tool");
         
         foreach (Item item in api.World.Items)
         {
-            if (useToolTag)
-            {
-                if (toolTags.IsFullyContainedIn(item.Tags))
-                    toolSamples.Add(new ItemStack(item));
-            }
-            else
-            {
-                // TODO: Deprecated
-                if (item.Tool != null) 
-                    toolSamples.Add(new ItemStack(item));
-            }
+            if (IsTool(item))
+                toolSamples.Add(new ItemStack(item));
         }
         
         recipes = new List<GridRecipeWrapper>(api.World.GridRecipes.Count);
@@ -64,6 +57,18 @@ public class RecipeService
                 pair.Key.ResolvedItemStack.Attributes = new TreeAttribute();
             }
         }
+    }
+
+    public bool IsTool(Item? item)
+    {
+        if (item == null)
+            return false;
+        if (!useToolTag)
+        {
+            // TODO: Deprecated
+            return item.Tool != null;
+        }
+        return toolTags.IsFullyContainedIn(item.Tags);
     }
 
     public bool IngredientUsesActualTool(CraftingRecipeIngredient ingredient, GridRecipe recipe)
@@ -133,7 +138,7 @@ public class RecipeService
             }
         }
         long time = Environment.TickCount - start;
-        api.RcLogger().Debug("Scanning recipes took {0} ms", [time]);
+        api.RcVerboseDebug(2, "Scanning recipes took {0} ms", [time]);
         return result;
     }
 

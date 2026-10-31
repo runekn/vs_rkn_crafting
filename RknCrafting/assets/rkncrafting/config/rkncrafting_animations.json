@@ -14,7 +14,7 @@
     },
     {
       "animationCode": "rkncrafting.hammer",
-      "primaryTags": ["tool-hammer"]
+      "primaryTags": ["tool-hammer", "tool-cleaver"]
     },
     {
       "animationCode": "rkncrafting.axe",

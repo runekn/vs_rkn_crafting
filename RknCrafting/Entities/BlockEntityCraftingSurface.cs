@@ -32,7 +32,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
     private int selectedRecipe = RecipeService.RecipeIdNone;
     public int SelectedLimit;
     private BlockFacing? lastFacing;
-    private EnumTool? lastTool;
+    private Item? lastTool;
     private bool dirtyRecipes = true;
     private RecipeSelectionDialog? recipeSelectionDialog;
 
@@ -246,7 +246,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         };
         craftingParams.NextCraftingTime = GetCraftingTime();
         Api.RcNetwork().ClientStartedCrafting(craftingParams, Pos);
-        Api.RcLogger().Debug("Started crafting {0} by {1}!", craftingParams.Recipe.Name, craftingParams.Player.PlayerName);
+        Api.RcVerboseDebug(2, "Started crafting {0} by {1}!", craftingParams.Recipe.Name, craftingParams.Player.PlayerName);
         return true;
     }
 
@@ -263,7 +263,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         }
         if (craftingParams!.Bulk && !byPlayer.Entity.Controls.ShiftKey)
         {
-            Api.RcLogger().Debug("Stopping crafting by {0} due to releasing the bulk key", byPlayer.PlayerName);
+            Api.RcVerboseDebug(2, "Stopping crafting by {0} due to releasing the bulk key", byPlayer.PlayerName);
             ServerStopCrafting();
             return false;
         }
@@ -278,20 +278,20 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             RecipeInputSlots inputSlots = GetCraftingInputSlots(craftingParams.Player, craftingParams.Facing);
             if (inputSlots == null)
             {
-                Api.RcLogger().Debug("Stopping crafting by {0} and destroying block due to lack of any materials", byPlayer.PlayerName);
+                Api.RcVerboseDebug(2, "Stopping crafting by {0} and destroying block due to lack of any materials", byPlayer.PlayerName);
                 ServerStopCrafting();
                 Api.World.BlockAccessor.BreakBlock(Pos, byPlayer);
                 return false;
             }
             if (craftingParams.Limit > 0 && craftingParams.Amount >= craftingParams.Limit)
             {
-                Api.RcLogger().Debug("Stopping crafting by {0} due to reaching the limit of {1}", byPlayer.PlayerName, craftingParams.Limit);
+                Api.RcVerboseDebug(2, "Stopping crafting by {0} due to reaching the limit of {1}", byPlayer.PlayerName, craftingParams.Limit);
                 ServerStopCrafting();
                 return false;
             }
             if (!craftingParams.Recipe.Matches(inputSlots))
             {
-                Api.RcLogger().Debug("Stopping crafting by {0} due to lack of correct materials", byPlayer.PlayerName);
+                Api.RcVerboseDebug(2, "Stopping crafting by {0} due to lack of correct materials", byPlayer.PlayerName);
                 ServerStopCrafting();
                 return false;
             }
@@ -316,7 +316,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             return;
         }
-        Api.RcLogger().Debug("Cancelled crafting by {0}!", craftingParams.Player.PlayerName);
+        Api.RcVerboseDebug(2, "Cancelled crafting by {0}!", craftingParams.Player.PlayerName);
         string anim = GetCraftingAnimation();
         Api.RcAnimator().StopCrafting(byPlayer, anim);
         ResetState();
@@ -397,9 +397,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
                 dirtyRecipes = true;
             }
         }
-        if (byPlayer.InventoryManager.ActiveTool != lastTool)
+
+        Item? activeItem = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack?.Item;
+        bool isTool = Api.RcRecipeService().IsTool(activeItem);
+        if ((isTool && lastTool != activeItem) || (!isTool && lastTool != null))
         {
-            lastTool = byPlayer.InventoryManager.ActiveTool;
+            lastTool = isTool ? byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack!.Item : null;
             dirtyRecipes = true;
         }
 
@@ -430,7 +433,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         float @base = craftingParams!.Bulk ? config.BulkBaseCraftingTimeSeconds : config.BaseCraftingTimeSeconds;
         float consecutiveModifer = craftingParams.Amount == 0 ? 1 : Math.Max(config.ConsecutiveCraftingTimeModifierMin, (float)Math.Pow(config.ConsecutiveCraftingTimeModifier, craftingParams.Amount));
         float r = @base * craftingSurfaceTimeModifier * craftingParams.RecipeCraftingTimeModifier * consecutiveModifer;
-        Api.RcLogger().Debug("Next time to craft: {0} * {1} * {2} * {3} = {4}", @base, craftingSurfaceTimeModifier, craftingParams.RecipeCraftingTimeModifier, consecutiveModifer, r);
+        Api.RcVerboseDebug(2, "Next time to craft: {0} * {1} * {2} * {3} = {4}", @base, craftingSurfaceTimeModifier, craftingParams.RecipeCraftingTimeModifier, consecutiveModifer, r);
         return r;
     }
 
@@ -475,7 +478,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         {
             Api.World.SpawnCubeParticles(Pos.ToVec3d().Add(0.5f, 0, 0.5f), output, 1f, 6, 1f, null, new Vec3f(0.07f, 0.75f, 0.07f));
             Api.World.SpawnItemEntity(output, Pos);
-            Api.RcLogger().Debug("Crafted {0}x {1} by {2}!", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
+            Api.RcVerboseDebug(1, "Player {2} crafted {0}x {1}", output.StackSize, output.GetName(), craftingParams.Player.PlayerName);
         }
     }
 
@@ -486,9 +489,10 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return null;
         }
 
+        RecipeService recipeService = Api.RcRecipeService();
         IPlayerInventoryManager inventoryManager = byPlayer.InventoryManager;
-        ItemSlot? primaryTool = inventoryManager.ActiveTool != null ? inventoryManager.ActiveHotbarSlot : null;
-        ItemSlot? offhandTool = inventoryManager.OffhandTool != null ? inventoryManager.OffhandHotbarSlot : null;
+        ItemSlot? primaryTool = recipeService.IsTool(inventoryManager.ActiveHotbarSlot.Itemstack?.Item) ? inventoryManager.ActiveHotbarSlot : null;
+        ItemSlot? offhandTool = recipeService.IsTool(inventoryManager.OffhandHotbarSlot.Itemstack?.Item) ? inventoryManager.OffhandHotbarSlot : null;
         return new RecipeInputSlots(RearrangeGridByFacing(inventory.ToArray(), facing), byPlayer, primaryTool, offhandTool);
     }
 

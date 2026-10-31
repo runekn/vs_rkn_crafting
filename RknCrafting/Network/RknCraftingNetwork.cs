@@ -76,13 +76,13 @@ public class RknCraftingNetwork
 
     public void StopCrafting(IPlayer player, string enumCraftingAnimation, BlockPos pos)
     {
-        api.RcLogger().Debug("Sending stop crafting animation to {0}! Animation: {1}", player.PlayerName, enumCraftingAnimation);
+        api.RcVerboseDebug(2, "Sending stop crafting animation to {0}! Animation: {1}", player.PlayerName, enumCraftingAnimation);
         ServerChannel.SendPacket(new CraftingStoppedMessage() { Position = pos, animation = enumCraftingAnimation }, player as IServerPlayer);
     }
 
     protected void OnCraftingStoppedMessage(CraftingStoppedMessage message)
     {
-        api.RcLogger().Debug("Received stop crafting message with animation: {0}!", message.animation);
+        api.RcVerboseDebug(2, "Received stop crafting message with animation: {0}!", message.animation);
         BlockEntityCraftingSurface? entity = BlockCraftingSurface.GetBE(api.World, message.Position);
         if (entity != null)
         {
@@ -97,13 +97,13 @@ public class RknCraftingNetwork
 
     public void TransferConfig(RknCraftingConfig config, IServerPlayer player)
     {
-        api.RcLogger().Debug("Sending config to player {0}: {1}", [player.PlayerName, config]);
+        api.RcVerboseDebug(1, "Sending config to player {0}: {1}", [player.PlayerName, config]);
         ServerChannel.SendPacket(new ConfigMessage() { Config = config }, player);
     }
 
     private void OnConfigMessage(ConfigMessage message)
     {
-        api.RcLogger().Debug("Received config from server: {0}", message.Config);
+        api.RcVerboseDebug(1, "Received config from server: {0}", message.Config);
         api.RcSystem().ServerConfig = message.Config;
         api.RcSystem().OnServerConfigReceived();
     }
@@ -125,7 +125,7 @@ public class RknCraftingNetwork
 
     private void OnClientStartedCraftingMessage(IPlayer byPlayer, ClientStartedCraftingMessage message)
     {
-        api.RcLogger().Debug("Received start crafting message from {0}!", byPlayer.PlayerName);
+        api.RcVerboseDebug(2, "Received start crafting message from {0}!", byPlayer.PlayerName);
         BlockEntityCraftingSurface? be = BlockCraftingSurface.GetBE(api.World, message.Position);
         if (be == null)
         {

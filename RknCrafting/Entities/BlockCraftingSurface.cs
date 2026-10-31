@@ -18,14 +18,14 @@ public class BlockCraftingSurface : Block
             api.RcLogger().Error("Crafting block did not spawn with BlockEntityCraftingSurface!");
             return false;
         }
-        api.RcLogger().Debug("Trying to place crafting block at " + blockPos);
+        api.RcVerboseDebug(2, "Trying to place crafting block at " + blockPos);
         BlockPos abovePos = blockPos.UpCopy(1);
         if (api.World.BlockAccessor.GetBlock(abovePos).Replaceable < 6000)
         {
             return false;
         }
         bool gridless = api.RcServerConfig().EnableGridless;
-        if (gridless && (slot.Empty || slot.Itemstack?.Item?.Tool != null))
+        if (gridless && (slot.Empty || api.RcRecipeService().IsTool(slot.Itemstack?.Item)))
         {
             api.RcTriggerIngameError(block, "noingredientheld");
             return false;
@@ -44,7 +44,7 @@ public class BlockCraftingSurface : Block
             {
                 ActingPlayer = byPlayer
             };
-            if (slot.Itemstack?.Item?.Tool == null && !block.TryPutIngredient(api.World, blockEntity, slot, ref op, null))
+            if (!api.RcRecipeService().IsTool(slot.Itemstack?.Item) && !block.TryPutIngredient(api.World, blockEntity, slot, ref op, null))
             {
                 api.RcLogger().Warning("Could not put initial items into newly spawned crafting block!");
             }
@@ -146,7 +146,7 @@ public class BlockCraftingSurface : Block
             }
             return be.StartCrafting(byPlayer);
         }
-        if (activeHotbarSlot.Itemstack?.Item?.Tool != null)
+        if (api.RcRecipeService().IsTool(activeHotbarSlot.Itemstack?.Item))
         {
             if ((api as ICoreClientAPI)?.Input.IsHoldingCraftingButton() ?? false)
             {
@@ -195,17 +195,7 @@ public class BlockCraftingSurface : Block
             world.Api.RcTriggerIngameError(this, "surfacefull");
             return false;
         }
-        world.Api.RcLogger().Debug("Inserting {0} into slot {1} by player {2}", invSlot.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
-        // TODO: idk if I actually like not transferring in creative
-        /*if (op.ActingPlayer != null && op.ActingPlayer.WorldData.CurrentGameMode == EnumGameMode.Creative)
-        {
-            if (invSlot.Empty)
-            {
-                invSlot.Itemstack = activeHotbarSlot.Itemstack.Clone();
-                invSlot.Itemstack.StackSize = 0;
-            }
-            invSlot.Itemstack.StackSize = Math.Min(invSlot.Itemstack.StackSize + op.RequestedQuantity, invSlot.Itemstack.Collectible.MaxStackSize);
-        }*/
+        world.Api.RcVerboseDebug(2, "Inserting {0} into slot {1} by player {2}", invSlot.Itemstack?.Collectible.Code, blockSel?.SelectionBoxIndex ?? 0, op.ActingPlayer?.PlayerName);
         if (activeHotbarSlot.TryPutInto(invSlot, ref op) < 1)
         {
             api.RcTriggerIngameError(this, "surfacefull");
@@ -339,7 +329,7 @@ public class BlockCraftingSurface : Block
     private bool IsCraftable(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
     {
         ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
-        if (!activeSlot.Empty && activeSlot.Itemstack.Item?.Tool == null)
+        if (!activeSlot.Empty && !api.RcRecipeService().IsTool(activeSlot.Itemstack.Item))
         {
             return false;
         }
@@ -362,7 +352,7 @@ public class BlockCraftingSurface : Block
     private bool CanAddIngredient(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)
     {
         ItemSlot activeSlot = (api as ICoreClientAPI)!.World.Player.InventoryManager.ActiveHotbarSlot;
-        return !activeSlot.Empty && activeSlot.Itemstack?.Item?.Tool == null; 
+        return !activeSlot.Empty && !api.RcRecipeService().IsTool(activeSlot.Itemstack?.Item); 
     }
 
     private bool CanTakeIngredient(WorldInteraction wi, BlockSelection blockSelection, EntitySelection entitySelection)

@@ -2,6 +2,7 @@
 using RKN.Crafting.Network;
 using RknCrafting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -42,7 +43,7 @@ public static class CoreApiExtensions
 
     public static ILogger RcLogger(this ICoreAPI api)
     {
-        return api.ModLoader.GetMod("rkncrafting").Logger;
+        return api.ModLoader.GetModSystem<RknCraftingModSystem>().Mod.Logger;
     }
 
     public static bool IsHoldingCraftingButton(this IInputAPI api)
@@ -58,5 +59,13 @@ public static class CoreApiExtensions
     public static void RcTriggerIngameError(this ICoreAPI api, object sender, string error)
     {
         (api as ICoreClientAPI)?.TriggerIngameError(sender, "rkncrafting." + error, Lang.Get("rkncrafting:error-" + error));
+    }
+    
+    public static void RcVerboseDebug(this ICoreAPI api, int verbosity, [StringSyntax("CompositeFormat")] string format, params object[] args)
+    {
+        RknCraftingModSystem modSystem = api.ModLoader.GetModSystem<RknCraftingModSystem>();
+        if (modSystem.LocalConfig.DebugVerbosity < verbosity) 
+            return;
+        modSystem.Mod.Logger.Debug(format, args);
     }
 }
