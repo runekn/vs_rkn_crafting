@@ -1,5 +1,6 @@
 ﻿{
   "defaultAnimation": "rkncrafting.handsmixing",
+  "toolCraftingAnimation": "rkncrafting.handsmixing",
   "tagMatch": [
     {
       "animationCode": "rkncrafting.axehammer",
