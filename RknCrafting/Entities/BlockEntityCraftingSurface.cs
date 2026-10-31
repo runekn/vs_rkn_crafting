@@ -172,7 +172,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         return craftingParams?.Player?.ClientId == byPlayer.ClientId;
     }
 
-    public void ClientStartedCrafting(IPlayer byPlayer, EnumCraftingAnimation animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing, int limit)
+    public void ClientStartedCrafting(IPlayer byPlayer, string animation, float recipeModifier, int recipe, bool bulk, float nextCraftingTime, BlockFacing? blockFacing, int limit)
     {
         RecipeInputSlots? inputSlots = GetCraftingInputSlots(byPlayer, blockFacing);
         if (inputSlots == null)
@@ -303,7 +303,7 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
 
     private void ServerStopCrafting()
     {
-        EnumCraftingAnimation enumCraftingAnimation = GetCraftingAnimation();
+        string enumCraftingAnimation = GetCraftingAnimation();
         Api.RcNetwork().StopCrafting(craftingParams.Player, enumCraftingAnimation, Pos);
         Api.RcAnimator().StopCrafting(craftingParams.Player, enumCraftingAnimation);
         ResetState();
@@ -317,12 +317,12 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
             return;
         }
         Api.RcLogger().Debug("Cancelled crafting by {0}!", craftingParams.Player.PlayerName);
-        EnumCraftingAnimation anim = GetCraftingAnimation();
+        string anim = GetCraftingAnimation();
         Api.RcAnimator().StopCrafting(byPlayer, anim);
         ResetState();
     }
 
-    public void ClientStopCrafting(EnumCraftingAnimation anim)
+    public void ClientStopCrafting(string anim)
     {
         timeoutTimer = 0;
         IPlayer player = capi.World.Player;
@@ -331,9 +331,9 @@ public class BlockEntityCraftingSurface : BlockEntityDisplay
         ResetState();
     }
 
-    private EnumCraftingAnimation GetCraftingAnimation()
+    private string GetCraftingAnimation()
     {
-        return craftingParams?.Animation ?? EnumCraftingAnimation.HandsGeneric;
+        return craftingParams?.Animation ?? Api.RcAnimator().Config.DefaultAnimation;
     }
 
     public ItemSlot? GetInventorySlotForTaking(ItemSlot slot, out int slotId, int selectionBoxIndex = 0)
@@ -617,7 +617,7 @@ public class CraftingParams
     public IPlayer Player;
     public bool Bulk;
     public float RecipeCraftingTimeModifier;
-    public EnumCraftingAnimation Animation;
+    public string Animation;
     public ICraftingResult Recipe;
     public float NextCraftingTime;
     public BlockFacing? Facing;

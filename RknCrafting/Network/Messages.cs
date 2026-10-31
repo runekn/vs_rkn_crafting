@@ -21,7 +21,7 @@ public class CraftingStoppedMessage
     [ProtoMember(1)]
     public required BlockPos Position;
     [ProtoMember(2)]
-    public required EnumCraftingAnimation animation;
+    public required string animation;
 }
 
 [ProtoContract]
@@ -55,7 +55,7 @@ public class ClientStartedCraftingMessage
     [ProtoMember(3)]
     public required float RecipeCraftingTimeModifier;
     [ProtoMember(4)]
-    public required EnumCraftingAnimation Animation;
+    public required string Animation;
     [ProtoMember(5)]
     public float NextCraftingTime;
     [ProtoMember(6)]

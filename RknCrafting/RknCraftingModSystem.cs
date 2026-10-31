@@ -43,8 +43,6 @@ public class RknCraftingModSystem : ModSystem
         api.RegisterBlockBehaviorClass(Mod.Info.ModID + ".spawnchiselcraftingsurface", typeof(BlockBehaviorChiselSpawnCraftingSurface));
         api.RegisterItemClass(Mod.Info.ModID + ".unfinishedcraft", typeof(ItemUnfinishedCraft));
         api.RegisterBlockEntityBehaviorClass(Mod.Info.ModID + ".craftingsurfacemouseslotrecipient", typeof(BlockEntityBehaviorCraftingSurfaceInWorldInventory));
-
-        Animator = new CraftingAnimator(api);
         
         ApplyHarmonyPatches();
     }
@@ -121,6 +119,7 @@ public class RknCraftingModSystem : ModSystem
             }
             block.BlockBehaviors = block.BlockBehaviors.Append(new BlockBehaviorSpawnCraftingSurface(block)).ToArray();
         }
+        Animator = new CraftingAnimator(api);
     }
 
     private void ApplyHarmonyPatches()

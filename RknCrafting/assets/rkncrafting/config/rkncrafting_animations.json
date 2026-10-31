@@ -1,0 +1,43 @@
+﻿{
+  "defaultAnimation": "rkncrafting.handsmixing",
+  "tagMatch": [
+    {
+      "animationCode": "rkncrafting.axehammer",
+      "primaryTags": ["tool-axe"],
+      "offhandTags": ["tool-hammer"]
+    },
+    {
+      "animationCode": "rkncrafting.chiselhammer",
+      "primaryTags": ["tool-chisel"],
+      "offhandTags": ["tool-hammer"]
+    },
+    {
+      "animationCode": "rkncrafting.hammer",
+      "primaryTags": ["tool-hammer"]
+    },
+    {
+      "animationCode": "rkncrafting.axe",
+      "primaryTags": ["tool-axe"]
+    },
+    {
+      "animationCode": "rkncrafting.saw",
+      "primaryTags": ["tool-saw"]
+    },
+    {
+      "animationCode": "rkncrafting.shears",
+      "primaryTags": ["tool-shears"]
+    },
+    {
+      "animationCode": "rkncrafting.chisel",
+      "primaryTags": ["tool-chisel"]
+    },
+    {
+      "animationCode": "rkncrafting.knife",
+      "primaryTags": ["tool-knife"]
+    },
+    {
+      "animationCode": "rkncrafting.hammer",
+      "primaryTags": ["tool-club"]
+    }
+  ]
+}

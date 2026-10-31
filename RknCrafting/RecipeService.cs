@@ -17,16 +17,29 @@ public class RecipeService
     private ICoreAPI api;
     private List<GridRecipeWrapper> recipes;
     private readonly List<ItemStack> toolSamples = [];
+    private bool enableHoldConsumedTools;
 
     public RecipeService(ICoreAPI api)
     {
         this.api = api;
         bool gridlesss = api.RcServerConfig().EnableGridless;
+        bool useToolTag = api.RcServerConfig().EnableExperimentalToolDetection;
+        enableHoldConsumedTools = api.RcServerConfig().EnableHoldConsumedTools;
+        TagSet toolTags = api.CollectibleTagRegistry.CreateTagSet("tool");
         
         foreach (Item item in api.World.Items)
         {
-            if (item.Tool != null) 
-                toolSamples.Add(new ItemStack(item));
+            if (useToolTag)
+            {
+                if (toolTags.IsFullyContainedIn(item.Tags))
+                    toolSamples.Add(new ItemStack(item));
+            }
+            else
+            {
+                // TODO: Deprecated
+                if (item.Tool != null) 
+                    toolSamples.Add(new ItemStack(item));
+            }
         }
         
         recipes = new List<GridRecipeWrapper>(api.World.GridRecipes.Count);
@@ -55,7 +68,7 @@ public class RecipeService
 
     public bool IngredientUsesActualTool(CraftingRecipeIngredient ingredient, GridRecipe recipe)
     {
-        if (ingredient.Consume)
+        if (!enableHoldConsumedTools && ingredient.Consume)
         {
             return false;
         }
@@ -406,11 +419,13 @@ public class RecipeService
             if (inputSlots.PrimaryTool != null && ingredient.SatisfiesAsIngredient(inputSlots.PrimaryTool.Itemstack!))
             {
                 inputSlots.PrimaryTool.Itemstack!.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.PrimaryTool, wrapper.RecipeWithTools, ingredient, inputSlots.Player, ingredient.Quantity);
+                inputSlots.PrimaryTool.MarkDirty();
                 anyMatch = true;
             }
             else if (inputSlots.OffhandTool != null && ingredient.SatisfiesAsIngredient(inputSlots.OffhandTool.Itemstack!))
             {
                 inputSlots.OffhandTool.Itemstack!.Collectible.OnConsumedByCrafting(inputSlots.Items, inputSlots.OffhandTool, wrapper.RecipeWithTools, ingredient, inputSlots.Player, ingredient.Quantity);
+                inputSlots.OffhandTool.MarkDirty();
                 anyMatch = true;
             }
         }

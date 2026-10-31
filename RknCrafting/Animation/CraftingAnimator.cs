@@ -1,96 +1,80 @@
 ﻿using System;
+using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 
 namespace RKN.Crafting.Animation;
 
 public class CraftingAnimator
 {
+    public AnimationConfig Config;
     private ICoreAPI api;
 
     public CraftingAnimator(ICoreAPI api)
     {
         this.api = api;
+        Config = api.Assets.Get("rkncrafting:config/rkncrafting_animations.json").ToObject<AnimationConfig>();
+        ITagRegistry<TagSet> tagReg = api.CollectibleTagRegistry;
+        foreach (AnimationConfigTagMatch tagMatch in Config.TagMatch)
+        {
+            if (tagReg.TryRegisterAndCreateTagSet(out TagSet tagSet, tagMatch.PrimaryTags) == TagRegistryError.None)
+            {
+                tagMatch.PrimaryTagSet = tagSet;
+            }
+            if (tagMatch.OffhandTags != null && tagReg.TryRegisterAndCreateTagSet(out TagSet tagSet2, tagMatch.OffhandTags) == TagRegistryError.None)
+            {
+                tagMatch.OffhandTagSet = tagSet2;
+            }
+        }
     }
 
-    private ICoreClientAPI CoreClientAPI { get { return api as ICoreClientAPI; } }
-
-    private static string ToAnimationCode(EnumCraftingAnimation state) => state switch
+    public string StartCrafting(IPlayer byPlayer, int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
     {
-        EnumCraftingAnimation.HandsGeneric => "rkncrafting.handsmixing",
-        EnumCraftingAnimation.HandsTool => "rkncrafting.handsmixing", // TODO
-        EnumCraftingAnimation.Hammer => "rkncrafting.hammer",
-        EnumCraftingAnimation.Axe => "rkncrafting.axe",
-        EnumCraftingAnimation.AxeHammer => "rkncrafting.axehammer",
-        EnumCraftingAnimation.Saw => "rkncrafting.saw",
-        EnumCraftingAnimation.Shears => "rkncrafting.shears",
-        EnumCraftingAnimation.ChiselHammer => "rkncrafting.chiselhammer",
-        EnumCraftingAnimation.Chisel => "rkncrafting.chisel",
-        EnumCraftingAnimation.Knife => "rkncrafting.knife",
-        EnumCraftingAnimation.Club => "rkncrafting.hammer",
-        _ => throw new ArgumentOutOfRangeException(nameof(state), $"Not expected animation value: {state}"),
-    };
-
-    public EnumCraftingAnimation StartCrafting(IPlayer byPlayer, int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
-    {
-        EnumCraftingAnimation animation = GetCraftingAnimation(recipe, primaryTool, offhandTool);
+        string animation = GetCraftingAnimation(recipe, primaryTool, offhandTool);
         StartCrafting(byPlayer, animation);
         return animation;
     }
 
-    public void StartCrafting(IPlayer byPlayer, EnumCraftingAnimation animation)
+    public void StartCrafting(IPlayer byPlayer, string animation)
     {
-        string anim = ToAnimationCode(animation);
-        if (!byPlayer.Entity.AnimManager.StartAnimation(anim))
+        if (!byPlayer.Entity.AnimManager.StartAnimation(animation))
         {
-            api.RcLogger().Warning("Could not start animation: " + anim);
+            api.RcLogger().Warning("Could not start animation: " + animation);
         }
     }
 
-    public void StopCrafting(IPlayer byPlayer, EnumCraftingAnimation animation)
+    public void StopCrafting(IPlayer byPlayer, string animation)
     {
-        string anim = ToAnimationCode(animation);
-        byPlayer.Entity.AnimManager.StopAnimation(anim);
+        byPlayer.Entity.AnimManager.StopAnimation(animation);
     }
 
-    private EnumCraftingAnimation GetCraftingAnimation(int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
+    private string GetCraftingAnimation(int recipe, ItemSlot? primaryTool, ItemSlot? offhandTool)
     {
         if (primaryTool == null)
         {
             if (api.RcRecipeService().GetRecipeById(recipe).RecipeWithTools.Output?.ResolvedItemStack?.Item?.Tool != null)
             {
-                return EnumCraftingAnimation.HandsTool;
+                return Config.ToolCraftingAnimation;
             }
-            return EnumCraftingAnimation.HandsGeneric;
+            return Config.DefaultAnimation;
         }
-        EnumTool? primary = primaryTool?.Itemstack?.Item?.Tool;
-        EnumTool? offhand = offhandTool?.Itemstack?.Item?.Tool;
-        return primary switch
+
+        TagSet? primary = primaryTool.Itemstack?.Item?.Tags;
+        if (primary == null)
         {
-            EnumTool.Knife => EnumCraftingAnimation.Knife,
-            EnumTool.Axe => offhand == EnumTool.Hammer ? EnumCraftingAnimation.AxeHammer : EnumCraftingAnimation.Axe,
-            EnumTool.Hammer => EnumCraftingAnimation.Hammer,
-            EnumTool.Shears => EnumCraftingAnimation.Shears,
-            EnumTool.Saw => EnumCraftingAnimation.Saw,
-            EnumTool.Chisel => offhand == EnumTool.Hammer ? EnumCraftingAnimation.ChiselHammer : EnumCraftingAnimation.Chisel,
-            EnumTool.Club => EnumCraftingAnimation.Club,
-            _ => EnumCraftingAnimation.HandsGeneric
-        };
+            return Config.DefaultAnimation;
+        }
+        TagSet? offhand = offhandTool?.Itemstack?.Item?.Tags;
+        foreach (AnimationConfigTagMatch tagMatch in Config.TagMatch)
+        {
+            if (tagMatch.PrimaryTagSet.Overlaps((TagSet) primary) &&
+                (tagMatch.OffhandTagSet == null || (offhand != null && tagMatch.OffhandTagSet!.Value.Overlaps((TagSet)offhand))))
+            {
+                return tagMatch.AnimationCode;
+            }
+        }
 
+        return Config.DefaultAnimation;
     }
-}
-
-public enum EnumCraftingAnimation
-{
-    HandsTool,
-    HandsGeneric,
-    Hammer,
-    Chisel,
-    ChiselHammer,
-    Axe,
-    AxeHammer,
-    Knife,
-    Shears,
-    Saw,
-    Club,
 }

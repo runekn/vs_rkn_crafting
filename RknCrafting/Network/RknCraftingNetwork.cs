@@ -74,7 +74,7 @@ public class RknCraftingNetwork
         BlockCraftingSurface.TryPlace(api, fromPlayer, message.Position, fromPlayer.InventoryManager.ActiveHotbarSlot);
     }
 
-    public void StopCrafting(IPlayer player, EnumCraftingAnimation enumCraftingAnimation, BlockPos pos)
+    public void StopCrafting(IPlayer player, string enumCraftingAnimation, BlockPos pos)
     {
         api.RcLogger().Debug("Sending stop crafting animation to {0}! Animation: {1}", player.PlayerName, enumCraftingAnimation);
         ServerChannel.SendPacket(new CraftingStoppedMessage() { Position = pos, animation = enumCraftingAnimation }, player as IServerPlayer);
