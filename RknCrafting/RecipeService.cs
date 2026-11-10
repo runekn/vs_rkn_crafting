@@ -619,6 +619,11 @@ public class GridRecipeWrapper
 
     private void ExtractToolIngredients(RecipeService service)
     {
+        if (RecipeWithoutTools.ResolvedIngredients!.Length <= 1)
+        {
+            // Ignore recipes that are only composed of a single tool
+            return;
+        }
         for (int i = 0; i < RecipeWithoutTools.ResolvedIngredients!.Length; i++)
         {
             CraftingRecipeIngredient? ingredient = RecipeWithoutTools.ResolvedIngredients[i];
